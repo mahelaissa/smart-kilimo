@@ -302,7 +302,7 @@
     function askAI() {
         const txt = document.getElementById("chatIn").value.trim().toLowerCase(); if(!txt) return;
         const l = document.getElementById("lang").value;
-        let reply = (l === 'sw') ? "Samahani, sijaelewa. Jaribu kuuliza kuhusu 'mbolea', 'mazao', au 'jinsi ya kutumia'." : "Sorry, I didn't get that. Try asking about 'fertilizer' or 'how to use'.";
+        let reply = "";
         
         for (let item of chatKnowledge[l]) {
             if (item.key.some(k => txt.includes(k))) { reply = item.ans; break; }

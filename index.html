@@ -220,28 +220,48 @@
         reader.readAsDataURL(file);
     }
 
-    async function predict(src, manual = false) {
-        const p = await model.predict(src);
-        let h = p[0]; for(let i=1; i<p.length; i++) if(p[i].probability > h.probability) h = p[i];
+   async function predict(src, manual = false) {
+    const p = await model.predict(src);
+    let h = p[0]; 
+    for(let i=1; i<p.length; i++) if(p[i].probability > h.probability) h = p[i];
 
-        if(h.probability > 0.45) {
-            document.getElementById("result-area").style.display = "block";
-            currentD = h.className;
-            const acc = (h.probability * 100).toFixed(1);
-            const badge = document.getElementById("acc-badge");
-            badge.innerText = acc + "% Accuracy";
-            badge.style.background = acc > 80 ? "#2e7d32" : (acc > 50 ? "#ff9800" : "#d32f2f");
+    const l = document.getElementById("lang").value;
 
-            document.getElementById("res-name").innerText = currentD;
-            const info = db[currentD] ? db[currentD][document.getElementById("lang").value] : "N/A";
-            
-            if(lastSol !== info || manual) {
-                document.getElementById("sol-text").innerText = info;
-                speak(info); lastSol = info;
-                if(manual) saveHistory(currentD + " (" + acc + "%)");
-            }
-        }
+    // 1. Kama AI ina uhakika mdogo sana (chini ya 35%)
+    // 2. Au kama picha haifanani kabisa na database yetu
+    if(h.probability < 0.35) {
+        document.getElementById("result-area").style.display = "block";
+        document.getElementById("acc-badge").innerText = "Ups! ⚠️";
+        document.getElementById("acc-badge").style.background = "#777";
+        document.getElementById("res-name").innerText = (l === 'sw') ? "Mmea Haujatambulika" : "Crop Not Recognized";
+        
+        const sorryMsg = (l === 'sw') 
+            ? "Samahani Mkulima, mfumo wetu kwa sasa unatambua Mahindi, Kabichi na Mchicha tu. Tunaendelea kuboresha mfumo huu ili utambue mazao mengine zaidi hivi karibuni. Endelea nasi!" 
+            : "Sorry Farmer, our system currently recognizes Maize, Cabbage, and Spinach only. We are working hard to include more crops soon. Stay tuned!";
+        
+        document.getElementById("sol-text").innerText = sorryMsg;
+        if(manual) speak(sorryMsg);
+        return; // Acha kuendelea na kodi nyingine
     }
+
+    // KAMA AI INA UHAKIKA (ZAIDI YA 35%)
+    document.getElementById("result-area").style.display = "block";
+    currentD = h.className;
+    const acc = (h.probability * 100).toFixed(1);
+    const badge = document.getElementById("acc-badge");
+    badge.innerText = acc + "% Accuracy";
+    badge.style.background = acc > 80 ? "#2e7d32" : (acc > 50 ? "#ff9800" : "#d32f2f");
+
+    document.getElementById("res-name").innerText = currentD;
+    const info = db[currentD] ? db[currentD][l] : "N/A";
+    
+    if(lastSol !== info || manual) {
+        document.getElementById("sol-text").innerText = info;
+        speak(info); 
+        lastSol = info;
+        if(manual) saveHistory(currentD + " (" + acc + "%)");
+    }
+}
 
     function switchTab(t) {
         currentTab = t;

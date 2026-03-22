@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Kilimo AI Ultimate PRO</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <style>
+        :root { --p: #2e7d32; --s: #1b5e20; --a: #ff9800; --bg: #f4f7f4; --white: #ffffff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 30px; }
+        header { background: var(--p); color: white; padding: 18px; text-align: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top:0; z-index: 1000; }
+        
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        .card { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); text-align: center; border: 1px solid rgba(0,0,0,0.03); }
+
+        /* Scanner Area */
+        .view-box { position: relative; width: 100%; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 4px solid var(--p); background: #000; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        #webcam-container, #upload-preview-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #uploaded-img { width: 100%; height: 100%; object-fit: contain; }
+
+        .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 15px #00ff00; z-index: 20; animation: moveLaser 2.5s infinite linear; }
+        @keyframes moveLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+
+        /* UI Elements */
+        .acc-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85rem; margin-bottom: 10px; }
+        button { background: var(--p); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 48%; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        button:active { transform: scale(0.92); }
+        .btn-full { width: 100%; margin-top: 10px; background: #f0f0f0; color: #333; border: 1.5px dashed #aaa; }
+        .btn-alt { background: var(--a); }
+        .btn-wa { background: #25d366; width: 100%; margin-top: 12px; font-size: 0.9rem; }
+
+        #result-area { display: none; padding: 18px; border-radius: 15px; background: #f9fdf9; border-left: 6px solid var(--p); text-align: left; animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Tabs & Content */
+        .tabs { display: flex; gap: 8px; margin-top: 10px; }
+        .tab-btn { flex: 1; padding: 12px; background: #e0e0e0; border-radius: 12px; font-size: 0.85rem; color: #666; cursor: pointer; border: none; font-weight: 600; }
+        .tab-btn.active { background: var(--p); color: white; }
+        
+        .content-wrapper { position: relative; margin-top: 10px; }
+        .content-box { height: 250px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 12px; font-size: 0.9rem; text-align: left; line-height: 1.4; }
+        .btn-delete { position: absolute; top: 8px; right: 8px; background: rgba(255, 68, 68, 0.8); color: white; border: none; padding: 5px 10px; border-radius: 8px; font-size: 0.7rem; cursor: pointer; z-index: 10; }
+        
+        #chat-input-area { display: flex; gap: 8px; margin-top: 12px; }
+        #chatIn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ccc; outline: none; }
+    </style>
+</head>
+<body>
+
+<header>🌽 Smart Kilimo AI Ultimate PRO</header>
+
+<div class="container">
+    <div id="login-section" class="card">
+        <img src="https://cdn-icons-png.flaticon.com/512/1995/1995471.png" width="90" alt="Farmer">
+        <h2 style="color: var(--p);">Karibu Mkulima</h2>
+        <p style="font-size: 0.9rem; color: #666;">Ingia ili kuanza kuscani na kutunza kumbukumbu zako.</p>
+        <input type="text" id="username" placeholder="Andika jina lako hapa..." style="width: 85%; padding: 15px; border-radius: 12px; border: 1.5px solid #ddd; margin-bottom: 20px; font-size: 1rem;">
+        <button onclick="loginUser()" style="width: 90%; font-size: 1.1rem;">INGIA KWENYE MFUMO</button>
+    </div>
+
+    <div id="main-app" style="display: none;">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span id="display-user" style="font-weight: 800; color: var(--p); font-size: 0.9rem;"></span>
+                <button onclick="logout()" style="width: auto; padding: 6px 12px; font-size: 0.75rem; background: #666;">Badili Akaunti</button>
+            </div>
+            
+            <select id="lang" onchange="updateLang()" style="width: 100%; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; border: 1px solid #ccc;">
+                <option value="sw">🇹🇿 Kiswahili (Tanzania)</option>
+                <option value="en">🇺🇸 English (US)</option>
+            </select>
+
+            <div class="view-box">
+                <div id="laser-line" class="laser"></div>
+                <div id="webcam-container"></div>
+                <div id="upload-preview-container" style="display:none;">
+                    <img id="uploaded-img" src="" alt="Scanner Preview">
+                </div>
+            </div>
+
+            <div id="result-area">
+                <div id="acc-badge" class="acc-badge"></div>
+                <div id="res-name" style="font-size: 1.4rem; font-weight: 800; color: var(--p);"></div>
+                <p id="sol-text" style="font-size: 1rem; color: #333; margin-top: 8px;"></p>
+                <button class="btn-wa" onclick="sendWA()">💬 Ongea na Mtaalamu (WhatsApp)</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <button onclick="startCam()">📷 Kamera Live</button>
+                <button class="btn-alt" onclick="repeatVoice()">🔊 Sikiliza Sauti</button>
+            </div>
+            
+            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(event)">
+            <button class="btn-full" onclick="document.getElementById('fileInput').click()">📁 Pakia Picha kutoka Gallery</button>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat AI</button>
+                <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia Yangu</button>
+            </div>
+            
+            <div class="content-wrapper">
+                <button class="btn-delete" id="del-btn" onclick="clearData()">Futa Zote</button>
+                
+                <div id="chat-content" class="content-box"><b>AI:</b> Habari! Mimi ni msaidizi wako wa Smart Kilimo. Unaweza kuniuliza kuhusu mbolea, magonjwa ya mazao, au jinsi ya kutumia mfumo huu.</div>
+                <div id="hist-content" class="content-box" style="display:none;">Bado haujascani jani lolote leo.</div>
+            </div>
+
+            <div id="chat-input-area">
+                <input type="text" id="chatIn" placeholder="Uliza swali lako..." onkeypress="if(event.key==='Enter') askAI()">
+                <button onclick="askAI()" style="width: 60px;">📩</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let model, webcam, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
+    const MODEL_URL = "./model/";
+
+    const db = {
+        "Cabbage Healthy": { sw: "Kabichi ina afya! Endelea na usafi wa shamba na kumwagilia.", en: "Cabbage is healthy! Continue with farm hygiene and watering." },
+        "Black Rot": { sw: "Black Rot: Ugonjwa wa bakteria. Ng'oa mimea iliyoathirika na epuka kumwagilia juu ya majani.", en: "Black Rot: Bacterial disease. Uproot infected plants and avoid overhead irrigation." },
+        "Downy Mildew Cabbage": { sw: "Downy Mildew: Ukungu mweupe/kijivu. Punguza unyevu na tumia fungicide ya kopa (copper).", en: "Downy Mildew: White/gray mold. Reduce humidity and use copper-based fungicide." },
+        "Maize Healthy": { sw: "Mahindi yana afya! Hakikisha unapalilia kwa wakati kuzuia wadudu.", en: "Maize is healthy! Ensure timely weeding to prevent pests." },
+        "MLN": { sw: "MLN: Ugonjwa wa virusi (hatari). Ng'oa na choma mmea haraka. Usipande mahindi kwenye shamba hilo msimu unaofuata.", en: "MLN: Viral disease (dangerous). Quickly uproot and burn. Do not plant maize next season in that field." },
+        "MSV": { sw: "MSV: Mistari ya njano. Husababishwa na wadudu wadogo. Dhibiti 'Leafhoppers' kwa insecticide.", en: "MSV: Yellow streaks. Caused by insects. Control leafhoppers using insecticide." },
+        "Common Rust": { sw: "Common Rust: Madoa ya rangi ya kutu. Tumia dawa za kuzuia kuvu (fungicides) kama Mancozeb.", en: "Common Rust: Rust-colored spots. Use fungicides like Mancozeb." },
+        "Northern Leaf Blight": { sw: "Leaf Blight: Madoa marefu ya kijivu. Ondoa majani ya chini na choma.", en: "Leaf Blight: Long gray spots. Remove lower leaves and burn them." },
+        "Gray Leaf Spot": { sw: "Gray Leaf Spot: Madoa ya mstatili ya kijivu. Punguza msongamano wa mimea ili hewa ipite.", en: "Gray Leaf Spot: Rectangular gray spots. Improve spacing for better air circulation." },
+        "Spinach Healthy": { sw: "Mchicha una afya! Unaweza kuanza kuvuna majani ya nje.", en: "Spinach is healthy! You can start harvesting the outer leaves." },
+        "Anthracnose": { sw: "Anthracnose: Madoa meusi yenye unyevu. Tumia fungicide na epuka kugusa mimea ikiwa miloanisha.", en: "Anthracnose: Dark water-soaked spots. Use fungicide and avoid touching plants when wet." },
+        "Bacterial Spot": { sw: "Bacterial Spot: Madoa madogo ya kahawia. Tumia dawa ya kopa na mbegu bora.", en: "Bacterial Spot: Small brown spots. Use copper spray and certified seeds." },
+        "Downy Mildew Spinach": { sw: "Downy Mildew (Mchicha): Ukungu wa zambarau au kijivu chini ya jani. Punguza kumwagilia usiku.", en: "Downy Mildew (Spinach): Purple or gray mold under the leaf. Avoid night watering." },
+        "Pest Damage": { sw: "Uharibifu wa Wadudu: Majani yametobolewa. Tumia dawa za asili (Neem) au insecticide ya kundi la 'Pyrethroids'.", en: "Pest Damage: Holes in leaves. Use organic (Neem) or pyrethroid insecticides." }
+    };
+
+    const chatKnowledge = {
+        "sw": [
+            { key: ["jinsi", "tumia", "kufanya"], ans: "Ili kunitumia: 1. Bonyeza Kamera au Pakia Jani. 2. Subiri AI isome picha. 3. Angalia majibu na ushauri wa kitaalamu chini ya picha." },
+            { key: ["mbolea", "mahindi"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (kukuzia - wiki 3-4), na CAN (wakati wa kutoa mbelewele)." },
+            { key: ["mbolea", "kabichi"], ans: "Kabichi inapenda mbolea ya samadi (bolea) iliyooza vizuri na NPK 10-10-10 kwa ajili ya vichwa vikubwa." },
+            { key: ["mbolea", "mchicha"], ans: "Mchicha unahitaji Nitrojeni nyingi. Tumia samadi au mbolea ya majani (Foliar) kila baada ya kuvuna." },
+            { key: ["mln", "virusi", "hatari"], ans: "MLN haina dawa. Ukiona mmea una madoa ya njano na unanyauka kuanzia juu, ung'oe na uuchome mara moja kuzuia kuenea." },
+            { key: ["wadudu", "funza", "kiwavi"], ans: "Kwa funza wa mahindi (Fall Armyworm), tumia dawa kama 'Belt' au 'Emamectin Benzoate' mapema asubuhi au jioni." },
+            { key: ["offline", "internet"], ans: "App hii inafanya kazi hata kama huna bando (Offline) kwa sababu model ya AI ipo ndani ya simu yako!" },
+            { key: ["history", "kumbukumbu"], ans: "Kila matokeo unayopata yanahifadhiwa kwenye tab ya 'Historia Yangu' ili uweze kuyaona baadae." },
+            { key: ["nani", "tengeneza"], ans: "Smart Kilimo AI imetengenezwa kusaidia wakulima wadogo na wa kati kupata utambuzi wa magonjwa kwa haraka." },
+            { key: ["bei", "soko"], ans: "Kwa sasa najihusisha na afya ya mimea zaidi. Kwa bei za soko, tafadhali wasiliana na viongozi wa soko la karibu nawe." },
+            { key: ["habari", "mambo"], ans: "Safi sana mkulima! Karibu. Una swali gani kuhusu mazao yako leo?" }
+        ],
+        "en": [
+            { key: ["how", "use", "work"], ans: "1. Click Camera or Upload a leaf image. 2. Wait for AI to scan. 3. Read the diagnosis and advice provided below the image." },
+            { key: ["fertilizer", "maize"], ans: "For maize: Use DAP for planting, UREA for top dressing (3-4 weeks), and CAN during tasseling." },
+            { key: ["fertilizer", "cabbage"], ans: "Cabbage loves well-decomposed manure and NPK 10-10-10 for firm, large heads." },
+            { key: ["mln", "lethal"], ans: "MLN has no cure. If you see yellowing and stunted growth, uproot and burn the plant immediately to save your farm." },
+            { key: ["pest", "insect", "worm"], ans: "For Fall Armyworm in maize, use insecticides like 'Belt' or 'Emamectin' during early morning or evening hours." },
+            { key: ["offline"], ans: "This app works offline! Once installed, you can scan crops without an active internet connection." }
+        ]
+    };
+
+    function loginUser() {
+        const u = document.getElementById("username").value.trim();
+        if(u) { localStorage.setItem("active_farmer", u); location.reload(); }
+        else { alert("Tafadhali andika jina lako!"); }
+    }
+
+    function logout() { localStorage.removeItem("active_farmer"); location.reload(); }
+
+    window.onload = () => {
+        const user = localStorage.getItem("active_farmer");
+        if(user) {
+            currentUser = user;
+            document.getElementById("login-section").style.display = "none";
+            document.getElementById("main-app").style.display = "block";
+            document.getElementById("display-user").innerText = "Mkulima: " + currentUser;
+            loadData();
+        }
+        if('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(e => console.log(e)); }
+    };
+
+    async function startCam() {
+        if (!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+        document.getElementById("upload-preview-container").style.display = "none";
+        document.getElementById("webcam-container").style.display = "block";
+        document.getElementById("laser-line").style.display = "block";
+        if (!webcam) {
+            webcam = new tmImage.Webcam(400, 400, true);
+            await webcam.setup({ facingMode: "environment" });
+            await webcam.play();
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+        }
+        requestAnimationFrame(loop);
+    }
+
+    async function loop() { if(webcam){ webcam.update(); await predict(webcam.canvas); requestAnimationFrame(loop); } }
+
+    async function handleUpload(e) {
+        const file = e.target.files[0]; if(!file) return;
+        if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = document.getElementById("uploaded-img");
+            img.src = event.target.result;
+            document.getElementById("webcam-container").style.display = "none";
+            document.getElementById("upload-preview-container").style.display = "block";
+            document.getElementById("laser-line").style.display = "block";
+            img.onload = () => {
+                setTimeout(async () => {
+                    const c = document.createElement("canvas"); c.width=400; c.height=400;
+                    c.getContext("2d").drawImage(img, 0,0,400,400);
+                    document.getElementById("laser-line").style.display = "none";
+                    await predict(c, true);
+                }, 1500);
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function predict(src, manual = false) {
+        const p = await model.predict(src);
+        let h = p[0]; for(let i=1; i<p.length; i++) if(p[i].probability > h.probability) h = p[i];
+
+        if(h.probability > 0.45) {
+            document.getElementById("result-area").style.display = "block";
+            currentD = h.className;
+            const acc = (h.probability * 100).toFixed(1);
+            const badge = document.getElementById("acc-badge");
+            badge.innerText = acc + "% Accuracy";
+            badge.style.background = acc > 80 ? "#2e7d32" : (acc > 50 ? "#ff9800" : "#d32f2f");
+
+            document.getElementById("res-name").innerText = currentD;
+            const info = db[currentD] ? db[currentD][document.getElementById("lang").value] : "N/A";
+            
+            if(lastSol !== info || manual) {
+                document.getElementById("sol-text").innerText = info;
+                speak(info); lastSol = info;
+                if(manual) saveHistory(currentD + " (" + acc + "%)");
+            }
+        }
+    }
+
+    function switchTab(t) {
+        currentTab = t;
+        document.getElementById("chat-content").style.display = (t === 'chat') ? 'block' : 'none';
+        document.getElementById("chat-input-area").style.display = (t === 'chat') ? 'flex' : 'none';
+        document.getElementById("hist-content").style.display = (t === 'hist') ? 'block' : 'none';
+        document.getElementById("t-chat").classList.toggle("active", t === 'chat');
+        document.getElementById("t-hist").classList.toggle("active", t === 'hist');
+        document.getElementById("del-btn").innerText = (t === 'chat') ? "Futa Chats" : "Futa Historia";
+    }
+
+    function askAI() {
+        const txt = document.getElementById("chatIn").value.trim().toLowerCase(); if(!txt) return;
+        const l = document.getElementById("lang").value;
+        let reply = (l === 'sw') ? "Samahani, sijaelewa. Jaribu kuuliza kuhusu 'mbolea', 'mazao', au 'jinsi ya kutumia'." : "Sorry, I didn't get that. Try asking about 'fertilizer' or 'how to use'.";
+        
+        for (let item of chatKnowledge[l]) {
+            if (item.key.some(k => txt.includes(k))) { reply = item.ans; break; }
+        }
+        
+        const box = document.getElementById("chat-content");
+        box.innerHTML += `<div style="margin-top:10px;"><b>Wewe:</b> ${txt}<br><b style="color:var(--p)">AI:</b> ${reply}</div><hr style="border:0; border-top:1px solid #eee;">`;
+        box.scrollTop = box.scrollHeight;
+        document.getElementById("chatIn").value = "";
+        localStorage.setItem("chat_" + currentUser, box.innerHTML);
+    }
+
+    function saveHistory(msg) {
+        const h = document.getElementById("hist-content");
+        if(h.innerText.includes("Bado")) h.innerHTML = "";
+        h.innerHTML = `<div style="padding:5px 0; border-bottom:1px solid #eee;">📅 ${new Date().toLocaleTimeString()} - <b>${msg}</b></div>` + h.innerHTML;
+        localStorage.setItem("hist_" + currentUser, h.innerHTML);
+    }
+
+    function loadData() {
+        document.getElementById("chat-content").innerHTML = localStorage.getItem("chat_" + currentUser) || document.getElementById("chat-content").innerHTML;
+        document.getElementById("hist-content").innerHTML = localStorage.getItem("hist_" + currentUser) || "Bado haujascani jani lolote.";
+    }
+
+    function clearData() {
+        if(confirm("Je, una uhakika unataka kufuta rekodi hizi?")) {
+            const key = (currentTab === 'chat') ? "chat_" + currentUser : "hist_" + currentUser;
+            localStorage.removeItem(key);
+            location.reload();
+        }
+    }
+
+    function sendWA() {
+        const msg = `Habari, AI yangu imegundua ${currentD} kwenye jani langu. Ushauri: ${document.getElementById("sol-text").innerText}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    }
+
+    function speak(t) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(t);
+        u.lang = document.getElementById("lang").value === 'sw' ? 'sw-TZ' : 'en-US';
+        window.speechSynthesis.speak(u);
+    }
+
+    function repeatVoice() { speak(document.getElementById("sol-text").innerText); }
+    function updateLang() { lastSol = ""; }
+</script>
+</body>
+</html>

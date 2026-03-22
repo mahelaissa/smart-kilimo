@@ -151,6 +151,30 @@
             { key: ["nani", "tengeneza"], ans: "Smart Kilimo AI imetengenezwa kusaidia wakulima wadogo na wa kati kupata utambuzi wa magonjwa kwa haraka." },
             { key: ["bei", "soko"], ans: "Kwa sasa najihusisha na afya ya mimea zaidi. Kwa bei za soko, tafadhali wasiliana na viongozi wa soko la karibu nawe." },
             { key: ["habari", "mambo"], ans: "Safi sana mkulima! Karibu. Una swali gani kuhusu mazao yako leo?" }
+            { key: ["jinsi", "tumia", "fanya", "shamba"], ans: "Ili kunitumia: 1. Bonyeza 'Kamera' au 'Pakia' picha ya jani. 2. Subiri AI isome picha. 3. Angalia majibu na ushauri chini ya picha." },
+        { key: ["offline", "internet", "bando"], ans: "App hii inafanya kazi hata bila internet (Offline) mara baada ya kuinstall kwenye simu yako." },
+        { key: ["futa", "history", "kumbukumbu"], ans: "Unaweza kufuta kumbukumbu zako kwa kubonyeza kitufe chekundu cha 'Futa Historia' au 'Futa Chats' hapo juu." },
+        
+        // MAZOO NA MBOLEA
+        { key: ["mahindi", "maize"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (wiki 3-4), na CAN (wakati wa kutoa mbelewele). Hakikisha unapalilia mapema." },
+        { key: ["kabichi", "cabbage"], ans: "Kabichi inahitaji mbolea ya samadi iliyooza vizuri na NPK kwa ajili ya vichwa vikubwa na vyenye afya." },
+        { key: ["mchicha", "spinach"], ans: "Mchicha unahitaji Nitrojeni nyingi. Tumia samadi au mbolea ya majani (Foliar) kila baada ya kuvuna ili yachipue tena haraka." },
+        
+        // MAGONJWA YA MAHINDI
+        { key: ["mln", "maize lethal"], ans: "MLN ni virusi hatari. Ukiona madoa ya njano na mmea unanyauka juu, ng'oa na uchome moto shamba zima haraka." },
+        { key: ["msv", "streak"], ans: "MSV husababisha mistari ya njano. Inazuiliwa kwa kupanda mbegu bora na kudhibiti wadudu wa leafhoppers." },
+        { key: ["rust", "kutu"], ans: "Common Rust huleta madoa ya kahawia kama kutu. Tumia dawa za kuzuia kuvu (fungicides) kama Mancozeb." },
+        { key: ["blight", "northern"], ans: "Leaf Blight huleta madoa marefu ya kijivu. Punguza unyevu na ondoa majani ya chini yaliyoathirika." },
+        { key: ["gray leaf"], ans: "Gray Leaf Spot huleta madoa yenye pembe. Inatokea sana kukiwa na unyevu mwingi na hewa isiyopita vizuri." },
+        
+        // MAGONJWA YA KABICHI
+        { key: ["black rot", "oza"], ans: "Black Rot husababishwa na bakteria. Epuka kumwagilia maji juu ya majani, mwagilia kwenye mizizi tu." },
+        { key: ["mildew", "downy"], ans: "Downy Mildew huleta ukungu mweupe chini ya jani. Tumia dawa za kuzuia kuvu (Copper fungicides)." },
+        
+        // MAGONJWA YA MCHICHA
+        { key: ["anthracnose"], ans: "Anthracnose huleta madoa meusi yaliyozama. Usiguse mimea ikiwa na unyevu wa mvua kuzuia kuenea." },
+        { key: ["bacterial spot"], ans: "Bacterial Spot huleta madoa madogo ya maji. Tumia mbegu zilizoidhinishwa na TOSCI pekee." },
+        { key: ["wadudu", "funza", "kiwavi"], ans: "Kwa wadudu kama funza, tumia dawa ya asili ya Neem au insecticide kama Dudumeki mapema asubuhi." }
         ],
         "en": [
             { key: ["how", "use", "work"], ans: "1. Click Camera or Upload a leaf image. 2. Wait for AI to scan. 3. Read the diagnosis and advice provided below the image." },
@@ -158,9 +182,49 @@
             { key: ["fertilizer", "cabbage"], ans: "Cabbage loves well-decomposed manure and NPK 10-10-10 for firm, large heads." },
             { key: ["mln", "lethal"], ans: "MLN has no cure. If you see yellowing and stunted growth, uproot and burn the plant immediately to save your farm." },
             { key: ["pest", "insect", "worm"], ans: "For Fall Armyworm in maize, use insecticides like 'Belt' or 'Emamectin' during early morning or evening hours." },
-            { key: ["offline"], ans: "This app works offline! Once installed, you can scan crops without an active internet connection." }
+            { key: ["offline"], ans: "This app works offline! Once installed, you can scan crops without an active internet connection." 
+            }
         ]
     };
+    function askAI() {
+    const txt = document.getElementById("chatIn").value.trim().toLowerCase(); 
+    if(!txt) return;
+    
+    const l = document.getElementById("lang").value;
+    let reply = "";
+
+    // TAFUTA JIBU KWENYE DATABASE
+    for (let item of chatKnowledge[l]) {
+        if (item.key.some(k => txt.includes(k))) { 
+            reply = item.ans; 
+            break; 
+        }
+    }
+
+    // KAMA JIBU HALIJAPATIKANA (MASWALI YA MAZAO MENGINE)
+    if (!reply) {
+        // Mazao mengine yanayoweza kuulizwa
+        const extraCrops = ["nyanya", "tomato", "maharagwe", "beans", "pamba", "cotton", "mpunga", "rice", "viazi", "potato", "karoti", "onion", "kitunguu"];
+        
+        const isExtraCrop = extraCrops.some(c => txt.includes(c));
+        
+        if (isExtraCrop) {
+            reply = (l === 'sw') 
+                ? "Asante mkulima. Kwa sasa mfumo wetu umejikita kwenye Mahindi, Kabichi na Mchicha tu. Tunaendelea kuboresha AI yetu ili iweze kutambua mazao mengine hivi karibuni. Endelea nasi!" 
+                : "Thank you farmer. Currently, we focus on Maize, Cabbage, and Spinach. We are working to include other crops soon. Stay with us!";
+        } else {
+            reply = (l === 'sw') 
+                ? "Samahani, sijaelewa swali lako vizuri. Jaribu kuuliza kuhusu mbolea, magonjwa ya mahindi, au jinsi ya kutumia mfumo huu." 
+                : "Sorry, I didn't quite catch that. Try asking about fertilizers, maize diseases, or how to use the system.";
+        }
+    }
+    
+    const box = document.getElementById("chat-content");
+    box.innerHTML += `<div style="margin-top:10px;"><b>Wewe:</b> ${txt}<br><b style="color:var(--p)">AI:</b> ${reply}</div><hr style="border:0; border-top:1px solid #eee;">`;
+    box.scrollTop = box.scrollHeight;
+    document.getElementById("chatIn").value = "";
+    localStorage.setItem("chat_" + currentUser, box.innerHTML);
+}
 
     function loginUser() {
         const u = document.getElementById("username").value.trim();

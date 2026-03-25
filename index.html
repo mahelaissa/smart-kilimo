@@ -354,6 +354,16 @@ const db = {
 
     document.getElementById("res-name").innerText = currentD;
     const info = db[currentD] ? db[currentD][l] : "N/A";
+
+    // 4. ONYESHA PICHA YA MFANO KUTOKA KWENYE DB
+    if(db[currentD]) {
+        document.getElementById("sol-text").innerText = db[currentD][l];
+        
+        if(db[currentD].img && refImg) {
+            refImg.src = db[currentD].img;
+            refImg.style.display = "block"; // Inawasha picha
+        }
+    }
     
     if(lastSol !== info || manual) {
         document.getElementById("sol-text").innerText = info;

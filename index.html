@@ -113,10 +113,17 @@
                 <div id="hist-content" class="content-box" style="display:none;">Bado haujascani jani lolote leo.</div>
             </div>
 
-            <div id="chat-input-area">
-                <input type="text" id="chatIn" placeholder="Uliza swali lako..." onkeypress="if(event.key==='Enter') askAI()">
-                <button onclick="askAI()" style="width: 60px;">📩</button>
-            </div>
+         <div id="chat-input-area" style="display:flex; gap:5px; margin-top:10px;">
+    <input type="text" id="chatIn" placeholder="Uliza au ongea swali..." onkeypress="if(event.key==='Enter') askAI()" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ccc;">
+    
+    <button onclick="startListening()" id="mic-btn" style="width: 50px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
+        🎤
+    </button>
+    
+    <button onclick="askAI()" style="width: 60px; background:#2e7d32; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
+        📩
+    </button>
+</div>
         </div>
     </div>
 </div>
@@ -549,6 +556,48 @@ function showGuide(crop) {
 
     resultDiv.innerHTML = maelezo;
     resultDiv.style.display = "block";
+}
+ function startListening() {
+    const micBtn = document.getElementById("mic-btn");
+    const chatInput = document.getElementById("chatIn"); // Inatumia ID yako ya chatIn
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        alert("Browser yako haisapoti kutambua sauti. Tumia Chrome.");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'sw-TZ'; // Inatambua Kiswahili cha Tanzania
+    recognition.interimResults = false;
+
+    // Badilisha rangi kuonyesha inarekodi
+    micBtn.style.background = "#ff5722";
+    micBtn.innerText = "🛑";
+
+    recognition.start();
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        chatInput.value = transcript; // Inajaza maneno uliyosema kwenye chatIn
+        micBtn.style.background = "#4caf50";
+        micBtn.innerText = "🎤";
+        
+        // Ukipenda itume swali moja kwa moja baada ya kuongea, ondoa "//" hapa chini:
+        // askAI(); 
+    };
+
+    recognition.onspeechend = function() {
+        recognition.stop();
+        micBtn.style.background = "#4caf50";
+        micBtn.innerText = "🎤";
+    };
+
+    recognition.onerror = function() {
+        micBtn.style.background = "#4caf50";
+        micBtn.innerText = "🎤";
+    };
 }
  
 </script>

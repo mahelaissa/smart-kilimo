@@ -136,24 +136,91 @@
     let model, webcam, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
     const MODEL_URL = "./model/";
 
-    const db = {
-        "Cabbage Healthy": { sw: "Kabichi ina afya! Endelea na usafi wa shamba na kumwagilia.", en: "Cabbage is healthy! Continue with farm hygiene and watering." },
-        "Black Rot": { sw: "Black Rot: Ugonjwa wa bakteria. Ng'oa mimea iliyoathirika na epuka kumwagilia juu ya majani.", en: "Black Rot: Bacterial disease. Uproot infected plants and avoid overhead irrigation." },
-        "Downy Mildew Cabbage": { sw: "Downy Mildew: Ukungu mweupe/kijivu. Punguza unyevu na tumia fungicide ya kopa (copper).", en: "Downy Mildew: White/gray mold. Reduce humidity and use copper-based fungicide." },
-        "Maize Healthy": { sw: "Mahindi yana afya! Hakikisha unapalilia kwa wakati kuzuia wadudu.", en: "Maize is healthy! Ensure timely weeding to prevent pests." },
-        "MLN": { sw: "MLN: Ugonjwa wa virusi (hatari). Ng'oa na choma mmea haraka. Usipande mahindi kwenye shamba hilo msimu unaofuata.", en: "MLN: Viral disease (dangerous). Quickly uproot and burn. Do not plant maize next season in that field." },
-        "MSV": { sw: "MSV: Mistari ya njano. Husababishwa na wadudu wadogo. Dhibiti 'Leafhoppers' kwa insecticide.", en: "MSV: Yellow streaks. Caused by insects. Control leafhoppers using insecticide." },
-        "Common Rust": { sw: "Common Rust: Madoa ya rangi ya kutu. Tumia dawa za kuzuia kuvu (fungicides) kama Mancozeb.", en: "Common Rust: Rust-colored spots. Use fungicides like Mancozeb." },
-        "Northern Leaf Blight": { sw: "Leaf Blight: Madoa marefu ya kijivu. Ondoa majani ya chini na choma.", en: "Leaf Blight: Long gray spots. Remove lower leaves and burn them." },
-        "Gray Leaf Spot": { sw: "Gray Leaf Spot: Madoa ya mstatili ya kijivu. Punguza msongamano wa mimea ili hewa ipite.", en: "Gray Leaf Spot: Rectangular gray spots. Improve spacing for better air circulation." },
-        "Spinach Healthy": { sw: "Mchicha una afya! Unaweza kuanza kuvuna majani ya nje.", en: "Spinach is healthy! You can start harvesting the outer leaves." },
-        "Anthracnose": { sw: "Anthracnose: Madoa meusi yenye unyevu. Tumia fungicide na epuka kugusa mimea ikiwa miloanisha.", en: "Anthracnose: Dark water-soaked spots. Use fungicide and avoid touching plants when wet." },
-        "Bacterial Spot": { sw: "Bacterial Spot: Madoa madogo ya kahawia. Tumia dawa ya kopa na mbegu bora.", en: "Bacterial Spot: Small brown spots. Use copper spray and certified seeds." },
-        "Downy Mildew Spinach": { sw: "Downy Mildew (Mchicha): Ukungu wa zambarau au kijivu chini ya jani. Punguza kumwagilia usiku.", en: "Downy Mildew (Spinach): Purple or gray mold under the leaf. Avoid night watering." },
-        "Pest Damage": { sw: "Uharibifu wa Wadudu: Majani yametobolewa. Tumia dawa za asili (Neem) au insecticide ya kundi la 'Pyrethroids'.", en: "Pest Damage: Holes in leaves. Use organic (Neem) or pyrethroid insecticides." }
-    };
+const db = {
+  "Cabbage Healthy": {
+    "sw": "Kabichi yako haina ugonjwa. Endelea kumwagilia, tumia mbolea na linda dhidi ya wadudu.",
+    "en": "Your cabbage is healthy. Continue watering, fertilizing, and pest control.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Cabbage_Field.jpg/300px-Cabbage_Field.jpg"
+  },
 
-    const chatKnowledge = {
+  "Black Rot": {
+    "sw": "Black Rot: Majani yanakuwa ya njano yenye umbo la 'V' na mishipa myeusi. Tumia mbegu safi, badilisha mazao kila msimu na epuka maji kusimama shambani.",
+    "en": "Black Rot: Causes V-shaped yellow leaves and black veins. Use clean seeds, rotate crops, and avoid water stagnation.",
+    "img": "https://content.ces.ncsu.edu/media/images/black-rot-cabbage-v-shaped-lesion.JPG"
+  },
+
+  "Downy Mildew Cabbage": {
+    "sw": "Downy Mildew: Husababishwa na unyevu mwingi. Utaona ukungu wa kijivu chini ya jani. Tumia fungicide (mfano: Copper) na punguza msongamano wa mimea.",
+    "en": "Downy Mildew: Caused by high moisture. Look for grey mold under leaves. Use fungicide and reduce plant congestion.",
+    "img": "https://gardenerspath.com/wp-content/uploads/2021/04/Downy-Mildew-on-Cabbage-Leaves.jpg"
+  },
+
+  "Maize Healthy": {
+    "sw": "Mahindi yako yako salama na yana afya. Endelea na matunzo bora ya shamba kama palizi na mbolea ya kukuzia.",
+    "en": "Your maize is healthy. Maintain good farming practices like weeding and top-dressing.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Zea_mays_-_Kohl-5.jpg/300px-Zea_mays_-_Kohl-5.jpg"
+  },
+
+  "MLN": {
+    "sw": "MLN: Ugonjwa hatari sana wa virusi. Ukiona mmea unadumaa na majani yananyauka kuanzia juu, ng'oa na uchome moto mmea huo haraka sana.",
+    "en": "MLN: A very dangerous viral disease. If you see stunting and drying from the top, uproot and burn the plant immediately.",
+    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Lethal-Necrosis.jpg"
+  },
+
+  "MSV": {
+    "sw": "MSV (Maize Streak Virus): Husababisha mistari myembamba ya njano inayofuata mishipa ya jani. Dhibiti wadudu wa Leafhoppers (siyo whiteflies) na panda mbegu zinazovumilia.",
+    "en": "MSV: Causes thin yellow streaks along veins. Control Leafhoppers and plant resistant varieties.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Maize_streak_virus.jpg/300px-Maize_streak_virus.jpg"
+  },
+
+  "Common Rust": {
+    "sw": "Common Rust: Madoa madogo ya kahawia yaliyoinuka kama kutu pande zote za jani. Tumia fungicide mapema kabla ugonjwa haujaenea.",
+    "en": "Common Rust: Small raised brown pustules on both sides of the leaf. Apply fungicide early.",
+    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Common-Rust.jpg"
+  },
+
+  "Northern Leaf Blight": {
+    "sw": "Leaf Blight: Madoa marefu ya kijivu au kahawia yanayofanana na sigara. Ondoa majani yaliyoathirika na fanya mzunguko wa mazao.",
+    "en": "Leaf Blight: Long gray or brown cigar-shaped spots. Remove infected leaves and practice crop rotation.",
+    "img": "https://content.ces.ncsu.edu/media/images/Northern-Corn-Leaf-Blight-lesions-on-maize.jpg"
+  },
+
+  "Gray Leaf Spot": {
+    "sw": "Gray Leaf Spot: Madoa ya kijivu yenye umbo la mstatili kati ya mishipa ya jani. Punguza unyevu na hakikisha mzunguko wa hewa ni mzuri.",
+    "en": "Gray Leaf Spot: Gray rectangular lesions between leaf veins. Reduce humidity and ensure good air circulation.",
+    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Gray-Leaf-Spot.jpg"
+  },
+
+  "Spinach Healthy": {
+    "sw": "Spinach yako ina afya. Endelea kuitunza vizuri kwa kuongeza mbolea ya samadi au ya majani (foliar).",
+    "en": "Your spinach is healthy. Keep taking care of it by adding manure or foliar fertilizer.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Spinach_leaves.jpg/300px-Spinach_leaves.jpg"
+  },
+
+  "Anthracnose": {
+    "sw": "Anthracnose: Madoa meusi au ya kahawia yaliyozama kwenye majani. Tumia fungicide na usiguse mimea ikiwa na unyevu wa mvua.",
+    "en": "Anthracnose: Dark sunken spots. Apply fungicide and avoid handling plants when wet.",
+    "img": "https://extension.umd.edu/sites/extension.umd.edu/files/styles/optimized/public/2021-03/Anthracnose_Spinach.jpg"
+  },
+
+  "Bacterial Spot": {
+    "sw": "Bacterial Spot: Madoa madogo yenye muonekano wa majimaji (water-soaked). Tumia dawa za bakteria (bactericides) na epuka kumwagilia maji juu ya majani.",
+    "en": "Bacterial Spot: Small water-soaked spots. Use bactericide and avoid overhead irrigation.",
+    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/bacterial-leaf-spot-on-spinach.jpg"
+  },
+
+  "Downy Mildew Spinach": {
+    "sw": "Downy Mildew: Ukungu wa zambarau au kijivu chini ya majani na madoa ya njano juu. Punguza unyevu na hakikisha nafasi ya upandaji ni sahihi.",
+    "en": "Downy Mildew: Purple/gray fungal growth under leaves with yellow spots above. Reduce moisture and ensure proper spacing.",
+    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/downy-mildew-on-spinach.jpg"
+  },
+
+  "Pest Damage": {
+    "sw": "Uharibifu wa wadudu: Majani yamechimbwa matundu au kuliwa kingo. Tumia insecticide (mfano: Dudumeki) au dawa ya asili ya Neem oil.",
+    "en": "Pest damage: Holes or eaten edges on leaves. Use insecticide or organic Neem oil.",
+    "img": "https://gardenerspath.com/wp-content/uploads/2021/05/Cabbage-Looper-Damage-on-Leaves.jpg"
+  }
+};    const chatKnowledge = {
         "sw": [
             { key: ["jinsi", "tumia", "kufanya"], ans: "Ili kunitumia: 1. Bonyeza Kamera au Pakia Jani. 2. Subiri AI isome picha. 3. Angalia majibu na ushauri wa kitaalamu chini ya picha." },
             { key: ["mbolea", "mahindi"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (kukuzia - wiki 3-4), na CAN (wakati wa kutoa mbelewele)." },

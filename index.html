@@ -134,7 +134,24 @@
         Bonyeza zao hapo juu ili kusoma mwongozo wa kilimo bora.
     </div>
 </div>
- 
+ <div id="calc-area" class="card" style="margin-top:20px; background:#e3f2fd; border:1px solid #bbdefb;">
+    <h3 style="color:#1565c0;"><i class="fas fa-calculator"></i> Kikokotoo cha Shamba</h3>
+    <p style="font-size:13px;">Ingiza ukubwa wa shamba lako upate makadirio:</p>
+    
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <input type="number" id="farm-size" placeholder="Idadi ya Ekari" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ccc;">
+        <select id="crop-type" style="padding:10px; border-radius:5px;">
+            <option value="mahindi">Mahindi</option>
+            <option value="kabichi">Kabichi</option>
+            <option value="mchicha">Mchicha</option>
+        </select>
+    </div>
+    
+    <button onclick="calculateInputs()" class="btn" style="background:#1565c0; width:100%;">Piga Hesabu</button>
+    
+    <div id="calc-result" style="margin-top:15px; display:none; background:white; padding:10px; border-radius:5px; font-size:14px; color:#333;">
+        </div>
+</div>
 
 <script>
     let model, webcam, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
@@ -492,6 +509,45 @@ function showGuide(crop) {
         top: document.getElementById("library-area").offsetTop - 20,
         behavior: 'smooth'
     });
+}
+ function calculateInputs() {
+    const size = document.getElementById("farm-size").value;
+    const crop = document.getElementById("crop-type").value;
+    const resultDiv = document.getElementById("calc-result");
+    
+    if (size <= 0) {
+        alert("Tafadhali ingiza idadi ya ekari.");
+        return;
+    }
+
+    let mbegu, mboleaDAP, mboleaUREA, mimea;
+    let maelezo = "";
+
+    if (crop === "mahindi") {
+        mbegu = size * 10; // Kilo 10 kwa ekari
+        mboleaDAP = size * 50; // Mfuko 1 wa 50kg kwa ekari
+        mboleaUREA = size * 50;
+        mimea = size * 22000; // Makadirio ya mimea 22,000
+        maelezo = `<b>Makadirio kwa Ekari ${size} za Mahindi:</b><br>
+                   • Mbegu: Kilo ${mbegu}<br>
+                   • Mbolea ya Kupanda (DAP): Kilo ${mboleaDAP}<br>
+                   • Mbolea ya Kukuzia (UREA): Kilo ${mboleaUREA}<br>
+                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}`;
+    } else if (crop === "kabichi") {
+        mbegu = size * 200; // Gramu 200 kwa ekari
+        mimea = size * 11000;
+        maelezo = `<b>Makadirio kwa Ekari ${size} za Kabichi:</b><br>
+                   • Mbegu: Gramu ${mbegu}<br>
+                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}<br>
+                   • Mwagilia lita 15,000 - 20,000 kwa msimu.`;
+    } else {
+        maelezo = `<b>Makadirio kwa Ekari ${size} za Mchicha:</b><br>
+                   • Mbegu: Kilo 2 - 4 (Changanya na mchanga).<br>
+                   • Samadi: Tani 5 - 10 kwa matokeo bora.`;
+    }
+
+    resultDiv.innerHTML = maelezo;
+    resultDiv.style.display = "block";
 }
  
 </script>

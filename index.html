@@ -557,44 +557,53 @@ function showGuide(crop) {
     resultDiv.innerHTML = maelezo;
     resultDiv.style.display = "block";
 }
- function startListening() {
+function startListening() {
     const micBtn = document.getElementById("mic-btn");
-    const chatInput = document.getElementById("chatIn"); // Inatumia ID yako ya chatIn
+    const chatInput = document.getElementById("chatIn");
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-        alert("Browser yako haisapoti kutambua sauti. Tumia Chrome.");
+        alert("Browser yako haisapoti kutambua sauti. Tafadhali tumia Google Chrome.");
         return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'sw-TZ'; // Inatambua Kiswahili cha Tanzania
+    recognition.lang = 'sw-TZ'; 
     recognition.interimResults = false;
 
-    // Badilisha rangi kuonyesha inarekodi
-    micBtn.style.background = "#ff5722";
-    micBtn.innerText = "🛑";
-
-    recognition.start();
+    // Jaribu kuanza kusikiliza
+    try {
+        recognition.start();
+        micBtn.style.background = "#ff5722";
+        micBtn.innerText = "🛑";
+    } catch (e) {
+        alert("Maikrofoni tayari inatumika au kuna hitilafu. Jaribu tena.");
+    }
 
     recognition.onresult = function(event) {
         const transcript = event.results[0][0].transcript;
-        chatInput.value = transcript; // Inajaza maneno uliyosema kwenye chatIn
+        chatInput.value = transcript; 
         micBtn.style.background = "#4caf50";
         micBtn.innerText = "🎤";
-        
-        // Ukipenda itume swali moja kwa moja baada ya kuongea, ondoa "//" hapa chini:
-        // askAI(); 
+    };
+
+    // HAPA NDIPO TUNAPOKAMATA ERROR YA ACCESS
+    recognition.onerror = function(event) {
+        micBtn.style.background = "#4caf50";
+        micBtn.innerText = "🎤";
+
+        if (event.error === 'not-allowed') {
+            alert("⚠️ ILI KUONGEA: Tafadhali bonyeza alama ya kifuli (Lock) juu kwenye anuani ya tovuti (URL) na uruhusu 'Microphone'.");
+        } else if (event.error === 'no-speech') {
+            alert("Sijasikia chochote. Tafadhali jaribu kuongea tena.");
+        } else {
+            alert("Kuna hitilafu kwenye maikrofoni: " + event.error);
+        }
     };
 
     recognition.onspeechend = function() {
         recognition.stop();
-        micBtn.style.background = "#4caf50";
-        micBtn.innerText = "🎤";
-    };
-
-    recognition.onerror = function() {
         micBtn.style.background = "#4caf50";
         micBtn.innerText = "🎤";
     };

@@ -244,6 +244,7 @@
 
 <script>
     let model, webcam, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
+    let lastChatReply = "";
     const MODEL_URL = "./model/";
 
 const db = {
@@ -544,20 +545,22 @@ window.speechSynthesis.onvoiceschanged = () => {
         ongeaSauti("Samahani, bado haujascani jani lolote.");
     }
 } 
-// --- FUNCTION YA ASK-AI ILIYOKAMILIKA (SPEECH + STORAGE + SCROLL) ---
+// --- 1. VARIABLE YA DUNIA (WEKA JUU KABISA YA SCRIPT) ---
+
+
+// --- 2. FUNCTION YA ASK-AI ILIYOKAMILIKA ---
 function askAI() {
-    // 1. Pata maandishi kutoka kwenye input
+    // A. Pata maandishi kutoka kwenye input
     const inputField = document.getElementById("chatIn");
     const txt = inputField.value.trim().toLowerCase(); 
     
     // Kama hakuna kilichoandikwa, usifanye kitu
     if (!txt) return;
 
-    const l = document.getElementById("lang").value; // Pata lugha iliyochaguliwa (sw/en)
+    const l = document.getElementById("lang").value; // Lugha (sw/en)
     let reply = "";
     
-    // 2. Tafuta jibu kwenye database ya chatKnowledge
-    // Inatafuta kama neno lolote la 'key' lipo kwenye swali la mtumiaji
+    // B. Tafuta jibu kwenye database ya chatKnowledge
     for (let item of chatKnowledge[l]) {
         if (item.key.some(k => txt.includes(k))) { 
             reply = item.ans; 
@@ -565,9 +568,8 @@ function askAI() {
         }
     }
 
-    // 3. Kama swali halina jibu kwenye database (Default Reply)
+    // C. Kama swali halipo kwenye database (Default Reply)
     if (!reply) {
-        // Angalia kama anauliza kuhusu mazao mengine ambayo hayapo kwenye AI bado
         const mengine = ["nyanya", "tomato", "maharagwe", "beans", "pamba", "cotton", "mpunga", "rice"];
         const isExtra = mengine.some(m => txt.includes(m));
 
@@ -581,40 +583,56 @@ function askAI() {
                 : "I'm sorry, I didn't quite catch that. Try asking about fertilizers, maize diseases, or how to use me.";
         }
     }
+
+    // D. HIFADHI JIBU ILI KITUFE CHA SPIKA KILIPATE
+    lastChatReply = reply;
     
-    // 4. Onyesha swali na jibu kwenye Box la Chat
+    // E. Onyesha swali na jibu kwenye Box la Chat
     const box = document.getElementById("chat-content");
-    // Kama ni mara ya kwanza na kuna lile neno "Habari!", lifute kwanza
+    
+    // Futa ujumbe wa kwanza kama upo
     if (box.innerText.includes("Mimi ni msaidizi")) { box.innerHTML = ""; }
 
+    // Ongeza Chat Bubble (Pamoja na Kitufe cha Spika Ndani)
     box.innerHTML += `
-        <div style="margin-top: 12px; padding: 8px; border-radius: 8px; background: #f1f1f1;">
-            <b style="color: #555;">Wewe:</b> ${inputField.value}
+        <div style="margin-top: 12px; padding: 10px; border-radius: 12px; background: #f1f1f1; align-self: flex-end; max-width: 85%;">
+            <b style="color: #555; font-size: 12px;">Wewe:</b><br>${inputField.value}
         </div>
-        <div style="margin-top: 5px; padding: 8px; border-radius: 8px; background: #e8f5e9; border-left: 4px solid var(--p);">
-            <b style="color: var(--p);">AI:</b> ${reply}
+        <div style="margin-top: 8px; padding: 10px; border-radius: 12px; background: #e8f5e9; border-left: 5px solid var(--p); max-width: 85%; position: relative;">
+            <b style="color: var(--p); font-size: 12px;">Smart Kilimo AI:</b><br>${reply}
+            <button onclick="ongeaSauti(lastChatReply)" style="background:none; border:none; cursor:pointer; float:right; font-size:20px; margin-top:-5px;">🔊</button>
+            <div style="clear:both;"></div>
         </div>
     `;
     
-    // 5. TOA SAUTI YA JIBU (Hii ndiyo uliyoihitaji)
+    // F. TOA SAUTI YA JIBU MOJA KWA MOJA
     ongeaSauti(reply); 
 
-    // 6. Safisha kisanduku cha kuandikia na shuka chini (Scroll to bottom)
+    // G. Safisha input na shuka chini (Auto-scroll)
     inputField.value = "";
     box.scrollTop = box.scrollHeight;
 
-    // 7. HIFADHI KWENYE MEMORY (LocalStorage)
-    // Hii inahakikisha hata akizima simu, chat haipotei
+    // H. HIFADHI KWENYE MEMORY (LocalStorage)
     localStorage.setItem("chat_" + currentUser, box.innerHTML);
 }
 
-// --- FUNCTION YA KUSAIDIA (UTILITY) ---
-// Inaruhusu kubonyeza 'Enter' kutuma swali
+// --- 3. FUNCTION YA KUSAIDIA KUTUMA KWA 'ENTER' ---
 document.getElementById('chatIn').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         askAI();
     }
 });
+
+// --- 4. FUNCTION YA KITUFE CHA NJE CHA KUSIKILIZA ---
+function sikilizaChat() {
+    if (lastChatReply) {
+        ongeaSauti(lastChatReply);
+    } else {
+        const l = document.getElementById("lang").value;
+        const msg = (l === 'sw') ? "Bado haujauliza swali lolote." : "You haven't asked anything yet.";
+        ongeaSauti(msg);
+    }
+}
    
   function saveHistory(msg) {
     const hBox = document.getElementById("hist-content");

@@ -152,9 +152,8 @@
             </select>
 
             <div class="view-box"onclick="anzaScanUpya()" style="cursor: pointer; position: relative;">
-              <div id="pause-icon" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20; background:rgba(0,0,0,0.6); padding:15px; border-radius:50%; width:60px; height:60px; text-align:center;">
-        <span style="font-size:30px; line-height:30px;">▶️</span>
-    </div>
+              
+    
                 
                 <div id="laser-line" class="laser"></div>
                 <div id="webcam-container"></div>
@@ -463,6 +462,11 @@ async function predict(src, manual = false) {
         isScanning = false; // SIMAMISHA SCAN
         if(laser) laser.style.display = "none";
         if(pauseIcon) pauseIcon.style.display = "block";
+        // 2. Badilisha maandishi ya badge kumpa maelekezo mkulima
+        const acc = (h.probability * 100).toFixed(1);
+        const badge = document.getElementById("acc-badge");
+        badge.innerText = acc + "% Accuracy - (Gusa kioo kuscani tena)";
+        badge.style.background = "#d32f2f"; // Rangi nyekundu au machungwa kuonyesha imesimama
 
         document.getElementById("result-area").style.display = "block";
         document.getElementById("res-name").innerText = (l === 'sw') ? "Mmea Haujatambulika" : "Crop Not Recognized";
@@ -929,28 +933,22 @@ window.addEventListener('load', function() {
         });
     });
 });
-    function anzaScanUpya() {
+function anzaScanUpya() {
     if (!isScanning) {
-        isScanning = true; // 1. Washa swichi
+        isScanning = true; 
         
-        // 2. Rudisha muonekano
+        // 1. Rudisha laser line ionekane inacheza
         const laser = document.getElementById("laser-line");
-        const pauseIcon = document.getElementById("pause-icon");
-        if(laser) laser.style.display = "block";
-        if(pauseIcon) pauseIcon.style.display = "none";
+        if (laser) laser.style.display = "block";
         
-        // 3. Safisha kioo
+        // 2. Safisha kioo cha matokeo
         document.getElementById("result-area").style.display = "none";
         
-        // 4. Toa sauti
-        const l = document.getElementById("lang").value;
-        ongeaSauti(l === 'sw' ? "Naanza kuscani upya..." : "Rescanning...");
+        // 3. Toa mtikisiko kidogo (Vibration) kama ishara (Hii ni nzuri kuliko Play icon)
+        if (navigator.vibrate) navigator.vibrate(70); 
 
-        // 5. MUHIMU: Amsha loop ya AI tena
-        // Tunaita loop yako ya webcam hapa ili ianze kupiga picha na kutuma kwenye predict
+        // 4. Amsha loop
         window.requestAnimationFrame(loop); 
-        
-        console.log("Scan imewashwa na loop imeanza!");
     }
 }
  

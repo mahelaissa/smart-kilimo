@@ -65,7 +65,22 @@
     animation: spin 1s linear infinite;
     margin-top: 30px;
 }
+/* Inafanya maandishi yawe na rangi ya dhahabu kidogo kulingana na nembo ya shule */
+#type-school-name {
+    margin-top: 10px;
+    letter-spacing: 1px;
+}
 
+.app-name {
+    border-right: 2px solid white; /* Inaweka ile "cursor" inayocheza wakati wa kuandika */
+    white-space: nowrap;
+    overflow: hidden;
+    animation: blink 0.7s infinite;
+}
+
+@keyframes blink {
+    50% { border-color: transparent; }
+}
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -703,7 +718,38 @@ function createPDF(element, ugonjwa) {
 
     html2pdf().from(element).set(opt).save();
 }
+// --- KODI YA TYPING EFFECT ---
+function typeWriter(text, elementId, speed, callback) {
+    let i = 0;
+    const elem = document.getElementById(elementId);
+    elem.innerHTML = ""; // Anza kikiwa kitupu
+    
+    function type() {
+        if (i < text.length) {
+            elem.innerHTML += text.charAt(i);
+            i++;
+            setTimeout(type, speed);
+        } else if (callback) {
+            callback(); // Anza kuandika mstari unaofuata ukimaliza huu
+        }
+    }
+    type();
+}
 
+// Inza kuandika pindi tu Splash inapoonekana
+window.onload = function() {
+    // 1. Andika Jina la App
+    typeWriter("Smart Kilimo AI", "type-app-name", 100, function() {
+        // 2. Kisha andika majina yenu
+        typeWriter("Developed by: Mahela Issa & Erick Alfred", "type-dev-name", 50, function() {
+            // 3. Mwisho jina la shule
+            typeWriter("KIBAHA SECONDARY SCHOOL", "type-school-name", 50);
+        });
+    });
+
+    // Ongeza muda wa kukaa ili typing imalizike (Sekunde 6 hivi)
+    setTimeout(ondoaSplash, 7000); 
+};
 // --- 2. KODI YA SPLASH SCREEN (JAVASCRIPT) ---
 function ondoaSplash() {
     var splash = document.getElementById('splash-screen');
@@ -724,10 +770,10 @@ window.addEventListener('load', ondoaSplash);
 </script>
 
 <div id="splash-screen">
-    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAeAB4AAD/4QLQRXhpZgAATU0AKgAAAAgABAE7AAIAAAADSFAAAIdpAAQAAAABAAABSpydAAEAAAAGAAACwuocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWQAwACAAAAFAAAApiQBAACAAAAFAAAAqySkQACAAAAAzUwAACSkgACAAAAAzUwAADqHAAHAAABDAAAAYwAAAAAHOoAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADIwMjY6MDM6MjcgMTg6Mjg6MTAAMjAyNjowMzoyNyAxODoyODoxMAAAAEgAUAAAAP/hBBVodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDI2LTAzLTI3VDE4OjI4OjEwLjQ5NjwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5IUDwvcmRmOmxpPjwvcmRmOlNlcT4NCgkJCTwvZGM6Y3JlYXRvcj48L3JkZjpEZXNjcmlwdGlvbj48L3JkZjpSREY+PC94OnhtcG1ldGE+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPD94cGFja2V0IGVuZD0ndyc/Pv/bAEMABwUFBgUE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" alt="KSS Logo" class="school-logo">
-    <div class="app-name">Smart Kilimo AI</div>
-    <div class="developer-name">Developed by: Mahela Issa And Erick Alfred</div>
-    <div style="font-weight: bold; font-size: 1.1rem;">KIBAHA SECONDARY SCHOOL</div>
+    <img src="data:image/jpeg;base64,..." alt="KSS Logo" class="school-logo">
+    <div class="app-name" id="type-app-name"></div>
+    <div class="developer-name" id="type-dev-name"></div>
+    <div id="type-school-name" style="font-weight: bold; font-size: 1.1rem; color: #ffd700;"></div>
     <div class="loader"></div>
 </div>
 </body>

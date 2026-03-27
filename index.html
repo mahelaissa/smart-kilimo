@@ -200,10 +200,10 @@
     <button onclick="startListening()" id="mic-btn" style="width: 50px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
         🎤
     </button>
-    
-    <button onclick="askAI()" style="width: 60px; background:#2e7d32; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
-        📩
-    </button>
+    <button onclick="askAI()" id="send-btn" style="width: 60px; background:#2e7d32; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
+    📩
+</button>
+  
 </div>
         </div>
     </div>
@@ -492,6 +492,31 @@ const db = {
         document.getElementById("t-hist").classList.toggle("active", t === 'hist');
         document.getElementById("del-btn").innerText = (t === 'chat') ? "Futa Chats" : "Futa Historia";
     }
+    // --- 1. ENGINE YA SAUTI (FINAL VERSION) ---
+function ongeaSauti(maandishi) {
+    if ('speechSynthesis' in window) {
+        // MUHIMU: Zima sauti yoyote iliyokuwa inaongea kabla
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(maandishi);
+        
+        // Pata sauti zilizopo kwenye kifaa (Husaidia kuitambua sauti mapema)
+        let voices = window.speechSynthesis.getVoices();
+        utterance.lang = 'sw-TZ'; 
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+
+        // Anza kuongea
+        window.speechSynthesis.speak(utterance);
+
+        // Debugging: Angalia kama kuna tatizo kwenye console
+        utterance.onerror = (event) => {
+            console.error("SpeechSynthesis Error:", event.error);
+        };
+    } else {
+        alert("Browser yako haisupport kutoa sauti.");
+    }
+}
 // --- FUNCTION YA ASK-AI ILIYOKAMILIKA (SPEECH + STORAGE + SCROLL) ---
 function askAI() {
     // 1. Pata maandishi kutoka kwenye input

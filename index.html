@@ -376,6 +376,7 @@ const db = {
         const u = document.getElementById("username").value.trim();
         if(u) { localStorage.setItem("active_farmer", u); location.reload(); }
         else { alert("Tafadhali andika jina lako!"); }
+        ongeaSauti("Karibu kwenye Smart Kilimo");
     }
 
     function logout() { localStorage.removeItem("active_farmer"); location.reload(); }

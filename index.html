@@ -492,40 +492,78 @@ const db = {
         document.getElementById("t-hist").classList.toggle("active", t === 'hist');
         document.getElementById("del-btn").innerText = (t === 'chat') ? "Futa Chats" : "Futa Historia";
     }
+// --- FUNCTION YA ASK-AI ILIYOKAMILIKA (SPEECH + STORAGE + SCROLL) ---
+function askAI() {
+    // 1. Pata maandishi kutoka kwenye input
+    const inputField = document.getElementById("chatIn");
+    const txt = inputField.value.trim().toLowerCase(); 
+    
+    // Kama hakuna kilichoandikwa, usifanye kitu
+    if (!txt) return;
 
-    function askAI() {
-        const txt = document.getElementById("chatIn").value.trim().toLowerCase(); if(!txt) return;
-        const l = document.getElementById("lang").value;
-        let reply = "";
-        
-        for (let item of chatKnowledge[l]) {
-            if (item.key.some(k => txt.includes(k))) { reply = item.ans; break; }
+    const l = document.getElementById("lang").value; // Pata lugha iliyochaguliwa (sw/en)
+    let reply = "";
+    
+    // 2. Tafuta jibu kwenye database ya chatKnowledge
+    // Inatafuta kama neno lolote la 'key' lipo kwenye swali la mtumiaji
+    for (let item of chatKnowledge[l]) {
+        if (item.key.some(k => txt.includes(k))) { 
+            reply = item.ans; 
+            break; 
         }
-        // KAMA JIBU HALIJAPATIKANA (MASWALI YA MAZAO MENGINE)
+    }
+
+    // 3. Kama swali halina jibu kwenye database (Default Reply)
     if (!reply) {
-        // Mazao mengine yanayoweza kuulizwa
-        const extraCrops = ["nyanya", "tomato", "maharagwe", "beans", "pamba", "cotton", "mpunga", "rice", "viazi", "potato", "karoti", "onion", "kitunguu"];
-        
-        const isExtraCrop = extraCrops.some(c => txt.includes(c));
-        
-        if (isExtraCrop) {
+        // Angalia kama anauliza kuhusu mazao mengine ambayo hayapo kwenye AI bado
+        const mengine = ["nyanya", "tomato", "maharagwe", "beans", "pamba", "cotton", "mpunga", "rice"];
+        const isExtra = mengine.some(m => txt.includes(m));
+
+        if (isExtra) {
             reply = (l === 'sw') 
-                ? "Asante mkulima. Kwa sasa mfumo wetu umejikita kwenye Mahindi, Kabichi na Mchicha tu. Tunaendelea kuboresha AI yetu ili iweze kutambua mazao mengine hivi karibuni. Endelea nasi!" 
-                : "Thank you farmer. Currently, we focus on Maize, Cabbage, and Spinach. We are working to include other crops soon. Stay with us!";
+                ? "Asante mkulima. Kwa sasa Smart Kilimo AI inatambua Mahindi, Kabichi na Mchicha tu. Tunaendelea kuongeza mazao mengine hivi karibuni."
+                : "Thank you farmer. Currently, we focus on Maize, Cabbage, and Spinach. More crops coming soon!";
         } else {
             reply = (l === 'sw') 
-                ? "Samahani, sijaelewa swali lako vizuri. Jaribu kuuliza kuhusu mbolea, magonjwa ya mahindi, au jinsi ya kutumia mfumo huu." 
-                : "Sorry, I didn't quite catch that. Try asking about fertilizers, maize diseases, or how to use the system.";
+                ? "Samahani, sijaelewa swali lako. Jaribu kuuliza kuhusu mbolea, magonjwa ya mahindi, au jinsi ya kunitumia." 
+                : "I'm sorry, I didn't quite catch that. Try asking about fertilizers, maize diseases, or how to use me.";
         }
     }
-        
-        const box = document.getElementById("chat-content");
-        box.innerHTML += `<div style="margin-top:10px;"><b>Wewe:</b> ${txt}<br><b style="color:var(--p)">AI:</b> ${reply}</div><hr style="border:0; border-top:1px solid #eee;">`;
-        box.scrollTop = box.scrollHeight;
-        document.getElementById("chatIn").value = "";
-        localStorage.setItem("chat_" + currentUser, box.innerHTML);
-    }
+    
+    // 4. Onyesha swali na jibu kwenye Box la Chat
+    const box = document.getElementById("chat-content");
+    // Kama ni mara ya kwanza na kuna lile neno "Habari!", lifute kwanza
+    if (box.innerText.includes("Mimi ni msaidizi")) { box.innerHTML = ""; }
 
+    box.innerHTML += `
+        <div style="margin-top: 12px; padding: 8px; border-radius: 8px; background: #f1f1f1;">
+            <b style="color: #555;">Wewe:</b> ${inputField.value}
+        </div>
+        <div style="margin-top: 5px; padding: 8px; border-radius: 8px; background: #e8f5e9; border-left: 4px solid var(--p);">
+            <b style="color: var(--p);">AI:</b> ${reply}
+        </div>
+    `;
+    
+    // 5. TOA SAUTI YA JIBU (Hii ndiyo uliyoihitaji)
+    ongeaSauti(reply); 
+
+    // 6. Safisha kisanduku cha kuandikia na shuka chini (Scroll to bottom)
+    inputField.value = "";
+    box.scrollTop = box.scrollHeight;
+
+    // 7. HIFADHI KWENYE MEMORY (LocalStorage)
+    // Hii inahakikisha hata akizima simu, chat haipotei
+    localStorage.setItem("chat_" + currentUser, box.innerHTML);
+}
+
+// --- FUNCTION YA KUSAIDIA (UTILITY) ---
+// Inaruhusu kubonyeza 'Enter' kutuma swali
+document.getElementById('chatIn').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        askAI();
+    }
+});
+   
     function saveHistory(msg) {
         const h = document.getElementById("hist-content");
         if(h.innerText.includes("Bado")) h.innerHTML = "";

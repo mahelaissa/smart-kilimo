@@ -408,9 +408,14 @@ const db = {
         }
         requestAnimationFrame(loop);
     }
-
-    async function loop() { if(webcam){ webcam.update(); await predict(webcam.canvas); requestAnimationFrame(loop); } }
-
+async function loop() {
+    if (!isScanning) return; // Kama isScanning ni false, loop inakufa hapa (hii ni nzuri kwa battery)
+    
+    webcam.update(); // Sasisha picha ya kamera
+    await predict(webcam.canvas); // Tuma picha kwenye AI
+    window.requestAnimationFrame(loop); // Endelea na loop
+}
+   
     async function handleUpload(e) {
         const file = e.target.files[0]; if(!file) return;
         if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
@@ -916,29 +921,31 @@ window.addEventListener('load', function() {
         });
     });
 });
- function anzaScanUpya() {
+    function anzaScanUpya() {
     if (!isScanning) {
-        isScanning = true; // 1. Washa swichi ya scan
+        isScanning = true; // 1. Washa swichi
         
-        // 2. Rudisha muonekano wa kuscani
+        // 2. Rudisha muonekano
         const laser = document.getElementById("laser-line");
         const pauseIcon = document.getElementById("pause-icon");
         if(laser) laser.style.display = "block";
         if(pauseIcon) pauseIcon.style.display = "none";
         
-        // 3. Futa matokeo ya zamani ili kioo kiwe safi
+        // 3. Safisha kioo
         document.getElementById("result-area").style.display = "none";
         
-        // 4. Toa sauti fupi
+        // 4. Toa sauti
         const l = document.getElementById("lang").value;
-        ongeaSauti(l === 'sw' ? "Naanza kuscani upya..." : "Rescaning...");
+        ongeaSauti(l === 'sw' ? "Naanza kuscani upya..." : "Rescanning...");
 
-        // 5. MUHIMU: Amsha injini ya AI kuanza kuona tena (Webcam loop)
-        // Kama unatumia webcam.update(), iite hapa au iache loop ya kawaida iendelee
-        console.log("Scan imewashwa tena!");
+        // 5. MUHIMU: Amsha loop ya AI tena
+        // Tunaita loop yako ya webcam hapa ili ianze kupiga picha na kutuma kwenye predict
+        window.requestAnimationFrame(loop); 
+        
+        console.log("Scan imewashwa na loop imeanza!");
     }
-}   
-
+}
+ 
 </script>
 
 <div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2e7d32; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; transition: opacity 1s ease;">

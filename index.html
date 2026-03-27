@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Kilimo AI Ultimate PRO</title>
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <style>
@@ -89,6 +90,10 @@
                </div>
                 <p id="sol-text" style="font-size: 1rem; color: #333; margin-top: 8px;"></p>
                 <button class="btn-wa" onclick="sendWA()">💬 Ongea na Mtaalamu (WhatsApp)</button>
+
+            <button onclick="generatePDF()" style="background:#0288d1; color:white; border:none; padding:12px; border-radius:5px; width:100%; margin-top:10px; cursor:pointer; font-weight:bold;">
+              📥 Pakua Ripoti ya PDF
+            </button>
             </div>
 
             <div style="display: flex; justify-content: space-between; margin-top: 15px;">
@@ -608,7 +613,22 @@ function startListening() {
         micBtn.innerText = "🎤";
     };
 }
- 
+ function generatePDF() {
+    const element = document.getElementById('result-area');
+    const ugonjwa = document.getElementById('res-name').innerText;
+    
+    // Mipangilio ya PDF
+    const opt = {
+        margin:       10,
+        filename:     `Ripoti_Kilimo_${ugonjwa}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Tengeneza PDF kuanzia kwenye element ya matokeo
+    html2pdf().set(opt).from(element).save();
+}
 </script>
 </body>
 </html>

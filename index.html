@@ -160,6 +160,31 @@
             <div id="result-area">
                 <div id="acc-badge" class="acc-badge"></div>
                 <div id="res-name" style="font-size: 1.4rem; font-weight: 800; color: var(--p);"></div>
+                <div class="scanner-section">
+    
+    <div class="view-box" onclick="anzaScanUpya()" style="cursor: pointer; position: relative; z-index: 10;">
+        
+        <div id="laser-line" class="laser"></div>
+        
+        <div id="pause-icon" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20; background:rgba(0,0,0,0.5); padding:15px; border-radius:50%;">
+            <span style="font-size:40px; color:white;">▶️</span>
+        </div>
+
+        <div id="webcam-container"></div>
+
+        <div id="upload-preview-container" style="display:none;">
+            <img id="uploaded-img" src="" alt="Scanner Preview" style="width:100%; border-radius:10px;">
+        </div>
+    </div>
+
+    <div id="result-area" style="display:none; margin-top:20px;">
+        <div id="acc-badge" class="badge">0% Accuracy</div>
+        <h2 id="res-name">Tafuta Ugonjwa...</h2>
+        <p id="sol-text"></p>
+        <img id="ref-image" src="" style="display:none; width:100%; border-radius:10px;">
+    </div>
+
+</div>
                 <div id="ref-container" style="margin: 15px 0;">
                <p style="font-size:12px; color:#666; margin-bottom:5px;">Picha ya Mfano (Reference):</p>
                <img id="ref-image" src="" style="width:100%; max-width:280px; border-radius:10px; border:2px solid #2e7d32; display:none; margin: 0 auto;">

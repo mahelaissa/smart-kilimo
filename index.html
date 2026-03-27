@@ -245,6 +245,7 @@
 <script>
     let model, webcam, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
     let lastChatReply = "";
+    let isScanning = true; // Inaanza ikiwa imewashwa
     const MODEL_URL = "./model/";
 
 const db = {
@@ -432,42 +433,57 @@ const db = {
         reader.readAsDataURL(file);
     }
 async function predict(src, manual = false) {
+    // 0. KAMA SCAN IMEZIMWA, USIFANYE CHOCHOTE
+    if (!isScanning) return;
+
     const p = await model.predict(src);
     let h = p[0]; 
     for(let i=1; i<p.length; i++) if(p[i].probability > h.probability) h = p[i];
 
     const l = document.getElementById("lang").value;
+    const badge = document.getElementById("acc-badge");
+    const laser = document.getElementById("laser-line");
+    const pauseIcon = document.getElementById("pause-icon");
 
     // 1. Kama AI ina uhakika mdogo sana (chini ya 35%)
     if(h.probability < 0.35) {
+        isScanning = false; // SIMAMISHA SCAN
+        if(laser) laser.style.display = "none";
+        if(pauseIcon) pauseIcon.style.display = "block";
+
         document.getElementById("result-area").style.display = "block";
-        document.getElementById("acc-badge").innerText = "Ups! ⚠️";
-        document.getElementById("acc-badge").style.background = "#777";
         document.getElementById("res-name").innerText = (l === 'sw') ? "Mmea Haujatambulika" : "Crop Not Recognized";
         
+        badge.innerText = "Ups! ⚠️ - Gusa kamera kuscani tena";
+        badge.style.background = "#777";
+        
         const sorryMsg = (l === 'sw') 
-            ? "Samahani Mkulima, mfumo wetu kwa sasa unatambua Mahindi, Kabichi na Mchicha tu." 
-            : "Sorry Farmer, our system currently recognizes Maize, Cabbage, and Spinach only.";
+            ? "Samahani Mkulima, mfumo wetu kwa sasa unatambua Mahindi, Kabichi na Mchicha tu. Gusa kioo kuscani tena." 
+            : "Sorry Farmer, our system currently recognizes Maize, Cabbage, and Spinach only. Tap to scan again.";
         
         document.getElementById("sol-text").innerText = sorryMsg;
         
-        // --- ONGEZA SAUTI HAPA ---
-        if(manual) ongeaSauti(sorryMsg); 
+        // Toa sauti hata kama ni manual au auto ili mkulima ajue scan imekwisha
+        ongeaSauti(sorryMsg); 
         return; 
     }
 
-    // KAMA AI INA UHAKIKA (ZAIDI YA 35%)
+    // 2. KAMA AI INA UHAKIKA (ZAIDI YA 35%)
+    isScanning = false; // SIMAMISHA SCAN SASA HIVI
+    if(laser) laser.style.display = "none";
+    if(pauseIcon) pauseIcon.style.display = "block";
+
     document.getElementById("result-area").style.display = "block";
     currentD = h.className;
     const acc = (h.probability * 100).toFixed(1);
-    const badge = document.getElementById("acc-badge");
-    badge.innerText = acc + "% Accuracy";
+    
+    badge.innerText = acc + "% Accuracy - Gusa kuscani tena";
     badge.style.background = acc > 80 ? "#2e7d32" : (acc > 50 ? "#ff9800" : "#d32f2f");
 
     document.getElementById("res-name").innerText = currentD;
     const info = db[currentD] ? db[currentD][l] : "N/A";
 
-    // 4. ONYESHA PICHA YA MFANO
+    // 3. ONYESHA PICHA YA MFANO
     const refImg = document.getElementById("ref-image");
     if(db[currentD]) {
         document.getElementById("sol-text").innerText = db[currentD][l];
@@ -477,23 +493,37 @@ async function predict(src, manual = false) {
         }
     }
     
-    // --- SEHEMU MUHIMU YA SAUTI NA HISTORIA ---
+    // 4. SEHEMU YA SAUTI NA HISTORIA
     if(lastSol !== info || manual) {
         document.getElementById("sol-text").innerText = info;
         
-        // 1. Toa Sauti ya jibu la ugonjwa
+        // Toa Sauti ya jibu la ugonjwa
         ongeaSauti(info); 
         
         lastSol = info;
 
-        // 2. Hifadhi Historia (Hakikisha hii inaitwa)
-        if(manual) {
-            const historyMsg = currentD + " (" + acc + "%)";
-            saveHistory(historyMsg);
-        }
+        // Hifadhi Historia
+        const historyMsg = currentD + " (" + acc + "%)";
+        saveHistory(historyMsg);
     }
 }
-   
+ function anzaScanUpya() {
+    if (!isScanning) {
+        isScanning = true; // Washa scan tena
+        
+        // Rejesha laser line na ficha alama ya Play
+        document.getElementById("laser-line").style.display = "block";
+        document.getElementById("pause-icon").style.display = "none";
+        
+        // Toa sauti fupi ya mwongozo
+        const l = document.getElementById("lang").value;
+        const msg = (l === 'sw') ? "Naanza kuscani upya..." : "Starting new scan...";
+        ongeaSauti(msg);
+
+        // Ficha matokeo ya zamani ili mkulima ajue tunatafuta mapya
+        document.getElementById("result-area").style.display = "none";
+    }
+}   
 
     function switchTab(t) {
         currentTab = t;

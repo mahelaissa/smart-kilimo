@@ -589,12 +589,31 @@ document.getElementById('chatIn').addEventListener('keypress', function (e) {
     }
 });
    
-    function saveHistory(msg) {
-        const h = document.getElementById("hist-content");
-        if(h.innerText.includes("Bado")) h.innerHTML = "";
-        h.innerHTML = `<div style="padding:5px 0; border-bottom:1px solid #eee;">📅 ${new Date().toLocaleTimeString()} - <b>${msg}</b></div>` + h.innerHTML;
-        localStorage.setItem("hist_" + currentUser, h.innerHTML);
+  function saveHistory(msg) {
+    const hBox = document.getElementById("hist-content");
+    
+    // Kama bado haujascani jani lolote, futa ujumbe huo wa awali
+    if (hBox.innerText.includes("Bado haujascani")) {
+        hBox.innerHTML = "";
     }
+    
+    // Tengeneza muda na tarehe ya sasa
+    const sasa = new Date();
+    const muda = sasa.getHours() + ":" + (sasa.getMinutes() < 10 ? '0' : '') + sasa.getMinutes();
+    
+    // Ongeza historia mpya juu kabisa (prepend)
+    const kipengeleKipya = `
+        <div style="padding:10px; border-bottom:1px solid #eee; margin-bottom:5px; background:#fff; border-radius:8px;">
+            <span style="font-size:11px; color:#888;">⏰ ${muda}</span><br>
+            <b style="color:#2e7d32;">${msg}</b>
+        </div>
+    `;
+    
+    hBox.innerHTML = kipengeleKipya + hBox.innerHTML;
+    
+    // HIFADHI KWENYE MEMORY YA SIMU/LAPTOP
+    localStorage.setItem("hist_" + currentUser, hBox.innerHTML);
+}
 
     function loadData() {
         document.getElementById("chat-content").innerHTML = localStorage.getItem("chat_" + currentUser) || document.getElementById("chat-content").innerHTML;

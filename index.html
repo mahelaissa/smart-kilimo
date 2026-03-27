@@ -203,7 +203,7 @@
     <button onclick="askAI()" id="send-btn" style="width: 60px; background:#2e7d32; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
     📩
 </button>
-  
+  <button class="btn-alt" onclick="repeatVoice()">🔊 Sikiliza Sauti</button>
 </div>
         </div>
     </div>
@@ -537,6 +537,13 @@ window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
     console.log("Sauti zimepakiwa na zipo tayari!");
 };
+ function repeatVoice() {
+    if (lastSol) {
+        ongeaSauti(lastSol); // Itarudia maelezo ya ugonjwa uliopita
+    } else {
+        ongeaSauti("Samahani, bado haujascani jani lolote.");
+    }
+} 
 // --- FUNCTION YA ASK-AI ILIYOKAMILIKA (SPEECH + STORAGE + SCROLL) ---
 function askAI() {
     // 1. Pata maandishi kutoka kwenye input

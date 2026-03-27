@@ -429,8 +429,7 @@ const db = {
         };
         reader.readAsDataURL(file);
     }
-
-   async function predict(src, manual = false) {
+async function predict(src, manual = false) {
     const p = await model.predict(src);
     let h = p[0]; 
     for(let i=1; i<p.length; i++) if(p[i].probability > h.probability) h = p[i];
@@ -438,7 +437,6 @@ const db = {
     const l = document.getElementById("lang").value;
 
     // 1. Kama AI ina uhakika mdogo sana (chini ya 35%)
-    // 2. Au kama picha haifanani kabisa na database yetu
     if(h.probability < 0.35) {
         document.getElementById("result-area").style.display = "block";
         document.getElementById("acc-badge").innerText = "Ups! ⚠️";
@@ -446,12 +444,14 @@ const db = {
         document.getElementById("res-name").innerText = (l === 'sw') ? "Mmea Haujatambulika" : "Crop Not Recognized";
         
         const sorryMsg = (l === 'sw') 
-            ? "Samahani Mkulima, mfumo wetu kwa sasa unatambua Mahindi, Kabichi na Mchicha tu. Tunaendelea kuboresha mfumo huu ili utambue mazao mengine zaidi hivi karibuni. Endelea nasi!" 
-            : "Sorry Farmer, our system currently recognizes Maize, Cabbage, and Spinach only. We are working hard to include more crops soon. Stay tuned!";
+            ? "Samahani Mkulima, mfumo wetu kwa sasa unatambua Mahindi, Kabichi na Mchicha tu." 
+            : "Sorry Farmer, our system currently recognizes Maize, Cabbage, and Spinach only.";
         
         document.getElementById("sol-text").innerText = sorryMsg;
-        if(manual) speak(sorryMsg);
-        return; // Acha kuendelea na kodi nyingine
+        
+        // --- ONGEZA SAUTI HAPA ---
+        if(manual) ongeaSauti(sorryMsg); 
+        return; 
     }
 
     // KAMA AI INA UHAKIKA (ZAIDI YA 35%)
@@ -465,23 +465,33 @@ const db = {
     document.getElementById("res-name").innerText = currentD;
     const info = db[currentD] ? db[currentD][l] : "N/A";
 
-    // 4. ONYESHA PICHA YA MFANO KUTOKA KWENYE DB
+    // 4. ONYESHA PICHA YA MFANO
+    const refImg = document.getElementById("ref-image");
     if(db[currentD]) {
         document.getElementById("sol-text").innerText = db[currentD][l];
-        
         if(db[currentD].img && refImg) {
             refImg.src = db[currentD].img;
-            refImg.style.display = "block"; // Inawasha picha
+            refImg.style.display = "block";
         }
     }
     
+    // --- SEHEMU MUHIMU YA SAUTI NA HISTORIA ---
     if(lastSol !== info || manual) {
         document.getElementById("sol-text").innerText = info;
-        speak(info); 
+        
+        // 1. Toa Sauti ya jibu la ugonjwa
+        ongeaSauti(info); 
+        
         lastSol = info;
-        if(manual) saveHistory(currentD + " (" + acc + "%)");
+
+        // 2. Hifadhi Historia (Hakikisha hii inaitwa)
+        if(manual) {
+            const historyMsg = currentD + " (" + acc + "%)";
+            saveHistory(historyMsg);
+        }
     }
 }
+   
 
     function switchTab(t) {
         currentTab = t;

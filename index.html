@@ -718,63 +718,65 @@ function createPDF(element, ugonjwa) {
 
     html2pdf().from(element).set(opt).save();
 }
-// --- KODI YA TYPING EFFECT ---
+// 1. Function ya Typing Effect (Inayofanya kazi kwa mtiririko)
 function typeWriter(text, elementId, speed, callback) {
     let i = 0;
     const elem = document.getElementById(elementId);
-    elem.innerHTML = ""; // Anza kikiwa kitupu
+    if (!elem) return; // Usalama kama ID haipo
     
+    elem.innerHTML = ""; 
     function type() {
         if (i < text.length) {
             elem.innerHTML += text.charAt(i);
             i++;
             setTimeout(type, speed);
         } else if (callback) {
-            callback(); // Anza kuandika mstari unaofuata ukimaliza huu
+            // Subiri kidogo kabla ya kuanza mstari wa pili
+            setTimeout(callback, 500); 
         }
     }
     type();
 }
 
-// Inza kuandika pindi tu Splash inapoonekana
-window.onload = function() {
-    // 1. Andika Jina la App
-    typeWriter("Smart Kilimo AI", "type-app-name", 100, function() {
-        // 2. Kisha andika majina yenu
-        typeWriter("Developed by: Mahela Issa & Erick Alfred", "type-dev-name", 50, function() {
-            // 3. Mwisho jina la shule
-            typeWriter("KIBAHA SECONDARY SCHOOL", "type-school-name", 50);
-        });
-    });
-
-    // Ongeza muda wa kukaa ili typing imalizike (Sekunde 6 hivi)
-    setTimeout(ondoaSplash, 7000); 
-};
-// --- 2. KODI YA SPLASH SCREEN (JAVASCRIPT) ---
+// 2. Function ya kuondoa Splash
 function ondoaSplash() {
-    var splash = document.getElementById('splash-screen');
+    const splash = document.getElementById('splash-screen');
     if (splash) {
-        splash.style.opacity = '0'; // Inaifanya ififie kwanza
-        setTimeout(function() {
-            splash.style.display = 'none'; // Inaiondoa kabisa
-        }, 1000);
-        console.log("Splash Screen Imeondolewa!");
+        splash.style.opacity = '0';
+        setTimeout(() => {
+            splash.style.display = 'none';
+        }, 7000); // Muda wa fade-out
     }
 }
 
-// Iondoe baada ya sekunde 3 kwa usalama
-setTimeout(ondoaSplash, 10000);
+// 3. KUANZISHA KILA KITU (Hapa ndipo palikuwa na tatizo)
+window.addEventListener('load', function() {
+    // Anza Typing: App Name -> Dev Names -> School Name
+    typeWriter("Smart Kilimo AI", "type-app-name", 100, function() {
+        typeWriter("Developed by: Mahela Issa & Erick Alfred", "type-dev-name", 50, function() {
+            typeWriter("KIBAHA SECONDARY SCHOOL", "type-school-name", 50, function() {
+                // Hapa typing imeisha, sasa subiri sekunde 2 kisha ondoa Splash
+                setTimeout(ondoaSplash, 2000);
+            });
+        });
+    });
+});
 
-// Pia jaribu kuiondoa pindi ukurasa ukimaliza kupakiwa
-window.addEventListener('load', ondoaSplash);
 </script>
 
-<div id="splash-screen">
-    <img src="data:image/jpeg;base64,..." alt="KSS Logo" class="school-logo">
-    <div class="app-name" id="type-app-name"></div>
-    <div class="developer-name" id="type-dev-name"></div>
-    <div id="type-school-name" style="font-weight: bold; font-size: 1.1rem; color: #ffd700;"></div>
-    <div class="loader"></div>
+<div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2e7d32; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; transition: opacity 1s ease;">
+    
+    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAeAB4..." id="kss-logo" style="width: 120px; margin-bottom: 20px;">
+    
+    <h1 id="type-app-name" style="font-size: 2rem; margin-bottom: 10px; height: 40px;"></h1>
+    <p id="type-dev-name" style="font-size: 1.1rem; margin-bottom: 5px; height: 25px;"></p>
+    <h3 id="type-school-name" style="color: #ffd700; height: 30px;"></h3>
+    
+    <div class="loader" style="margin-top: 30px; border: 4px solid #f3f3f3; border-top: 4px solid #ffd700; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite;"></div>
 </div>
+
+<style>
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
 </body>
 </html>

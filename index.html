@@ -9,6 +9,65 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <style>
+        /* SPLASH SCREEN CSS */
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1b5e20; /* Rangi ya Kijani Kibichi (Kilimo) */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* Inahakikisha ipo juu ya kila kitu */
+    transition: opacity 1s ease-out; /* Mapambo ya kufifia */
+}
+
+/* Mapambo ya Nembo ya Shule */
+.school-logo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid white;
+    margin-bottom: 20px;
+    object-fit: cover;
+}
+
+/* Mapambo ya Jina la App */
+.app-name {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Mapambo ya Jina la Mtengenezaji */
+.developer-name {
+    font-size: 16px;
+    font-style: italic;
+    margin-top: 20px;
+    opacity: 0.9;
+}
+
+/* Mzunguko wa 'Loading' */
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #fff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin-top: 30px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
         :root { --p: #2e7d32; --s: #1b5e20; --a: #ff9800; --bg: #f4f7f4; --white: #ffffff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 30px; }
         header { background: var(--p); color: white; padding: 18px; text-align: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top:0; z-index: 1000; }
@@ -613,31 +672,74 @@ function startListening() {
         micBtn.innerText = "🎤";
     };
 }
-   function generatePDF() {
+  function generatePDF() {
     const element = document.getElementById('result-area');
+    const img = document.getElementById('ref-image');
+    const ugonjwa = document.getElementById('res-name').innerText;
     
-    // Hakikisha eneo linaonekana na lina rangi ya background (nyeupe)
-    element.style.backgroundColor = "white";
+    // Hakikisha eneo linaonekana
     element.style.display = "block";
 
+    // Mbinu ya Uhakika: Subiri picha imalize kupakiwa (load)
+    if (img.complete) {
+        // Picha tayari imepakiwa, tengeneza PDF sasa hivi
+        createPDF(element, ugonjwa);
+    } else {
+        // Picha bado haijapakiwa, subiri tukio la 'load'
+        img.addEventListener('load', function() {
+            createPDF(element, ugonjwa);
+        });
+    }
+}
+
+// Function ya usaidizi ya kutengeneza PDF
+function createPDF(element, ugonjwa) {
     const opt = {
         margin:       10,
-        filename:     'YST_Ripoti_Kilimo.pdf',
-        image:        { type: 'jpeg', quality: 1 },
+        filename:     `YST_Ripoti_${ugonjwa}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { 
             scale: 2, 
-            useCORS: true, 
-            allowTaint: true,
-            scrollY: 0 
+            useCORS: true, // Muhimu kwa picha za mtandaoni
+            allowTaint: true
         },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+
+    html2pdf().from(element).set(opt).save();
+};
 
     // Mbinu ya Uhakika: Inasubiri kila kitu kimalizike kabla ya ku-save
     html2pdf().from(element).set(opt).toPdf().get('pdf').then(function (pdf) {
         console.log("PDF imetengenezwa vizuri!");
     }).save();
 }
+    // ONDOA SPLASH SCREEN BAADA YA MUDA
+window.addEventListener('load', function() {
+    const splash = document.getElementById('splash-screen');
+    
+    // Subiri sekunde 3 (3000 milliseconds)
+    setTimeout(function() {
+        splash.style.opacity = '0'; // Ifanye ififie
+        
+        // Baada ya kufifia (sekunde 1), iondoe kabisa kwenye kioo
+        setTimeout(function() {
+            splash.style.display = 'none';
+        }, 1000);
+        
+    }, 3000); // Badilisha hii kuwa 2000 au 1000 kama unataka iondoke haraka
+});
 </script>
+    <div id="splash-screen">
+    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAeAB4AAD/4QLQRXhpZgAATU0AKgAAAAgABAE7AAIAAAADSFAAAIdpAAQAAAABAAABSpydAAEAAAAGAAACwuocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWQAwACAAAAFAAAApiQBAACAAAAFAAAAqySkQACAAAAAzA2AACSkgACAAAAAzA2AADqHAAHAAABDAAAAYwAAAAAHOoAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADIwMjY6MDM6MjcgMTc6NDY6MjUAMjAyNjowMzoyNyAxNzo0NjoyNQAAAEgAUAAAAP/hBBVodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDI2LTAzLTI3VDE3OjQ2OjI1LjA1NjwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5IUDwvcmRmOmxpPjwvcmRmOlNlcT4NCgkJCTwvZGM6Y3JlYXRvcj48L3JkZjpEZXNjcmlwdGlvbj48L3JkZjpSREY+PC94OnhtcG1ldGE+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPD94cGFja2V0IGVuZD0ndyc/Pv/bAEMABwUFBgUE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" alt="School Logo" class="school-logo">
+    
+    <div class="app-name">Smart Kilimo</div>
+    <div>Offline Disease Diagnostics</div>
+    
+    <div class="developer-name">Developed by: [Mahela Issa And Erick Alfred]</div>
+    <div>[Kibaha Secondary School]</div>
+    
+    <div class="loader"></div>
+</div>
 </body>
 </html>

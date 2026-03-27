@@ -505,33 +505,37 @@ async function predict(src, manual = false) {
     }
 function ongeaSauti(maandishi) {
     if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Zima sauti yoyote inayoongea sasa hivi
-        
+        window.speechSynthesis.cancel(); // Zima sauti inayoongea sasa hivi
+
         const utterance = new SpeechSynthesisUtterance(maandishi);
         
-        // Tafuta sauti zote zilizopo kwenye kifaa chako
+        // Pata sauti zote zilizopo kwenye kifaa
         let voices = window.speechSynthesis.getVoices();
         
-        // Jaribu kupata sauti ya Kiswahili (Tanzania au Kenya)
-        let swahiliVoice = voices.find(voice => 
-            voice.lang.includes('sw-TZ') || voice.lang.includes('sw-KE') || voice.lang.includes('sw')
+        // Mbinu ya Uhakika: Tafuta sauti yenye jina "Swahili" au kodi "sw"
+        let swahiliVoice = voices.find(v => 
+            v.lang.toLowerCase().includes('sw-tz') || 
+            v.lang.toLowerCase().includes('sw-ke') || 
+            v.name.toLowerCase().includes('swahili')
         );
 
         if (swahiliVoice) {
-            utterance.voice = swahiliVoice; // Tumia sauti ya Kiswahili iliyopatikana
+            utterance.voice = swahiliVoice; // Hapa ndipo rafudhi inabadilika kuwa ya nyumbani
         }
 
-        utterance.lang = 'sw-TZ'; 
-        utterance.rate = 0.85; // Punguza kasi kidogo ili mkulima aelewe vizuri
-        utterance.pitch = 1.0; 
+        // Mipangilio ya sauti iwe ya asili zaidi
+        utterance.lang = 'sw-TZ';
+        utterance.rate = 0.8;  // Kasi ya taratibu kidogo
+        utterance.pitch = 1.0; // Sauti ya wastani (sio ya kitoto wala nzito sana)
 
         window.speechSynthesis.speak(utterance);
     }
 }
 
-// MUHIMU: Hii inahakikisha sauti zinapakiwa mapema browser inapoanza
+// MUHIMU SANA: Hii inaziamsha sauti mara tu page inapofunguka
 window.speechSynthesis.onvoiceschanged = () => {
     window.speechSynthesis.getVoices();
+    console.log("Sauti zimepakiwa na zipo tayari!");
 };
 // --- FUNCTION YA ASK-AI ILIYOKAMILIKA (SPEECH + STORAGE + SCROLL) ---
 function askAI() {

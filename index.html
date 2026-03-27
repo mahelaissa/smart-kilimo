@@ -507,23 +507,7 @@ async function predict(src, manual = false) {
         saveHistory(historyMsg);
     }
 }
- function anzaScanUpya() {
-    if (!isScanning) {
-        isScanning = true; // Washa scan tena
-        
-        // Rejesha laser line na ficha alama ya Play
-        document.getElementById("laser-line").style.display = "block";
-        document.getElementById("pause-icon").style.display = "none";
-        
-        // Toa sauti fupi ya mwongozo
-        const l = document.getElementById("lang").value;
-        const msg = (l === 'sw') ? "Naanza kuscani upya..." : "Starting new scan...";
-        ongeaSauti(msg);
 
-        // Ficha matokeo ya zamani ili mkulima ajue tunatafuta mapya
-        document.getElementById("result-area").style.display = "none";
-    }
-}   
 
     function switchTab(t) {
         currentTab = t;
@@ -932,6 +916,28 @@ window.addEventListener('load', function() {
         });
     });
 });
+ function anzaScanUpya() {
+    if (!isScanning) {
+        isScanning = true; // 1. Washa swichi ya scan
+        
+        // 2. Rudisha muonekano wa kuscani
+        const laser = document.getElementById("laser-line");
+        const pauseIcon = document.getElementById("pause-icon");
+        if(laser) laser.style.display = "block";
+        if(pauseIcon) pauseIcon.style.display = "none";
+        
+        // 3. Futa matokeo ya zamani ili kioo kiwe safi
+        document.getElementById("result-area").style.display = "none";
+        
+        // 4. Toa sauti fupi
+        const l = document.getElementById("lang").value;
+        ongeaSauti(l === 'sw' ? "Naanza kuscani upya..." : "Rescaning...");
+
+        // 5. MUHIMU: Amsha injini ya AI kuanza kuona tena (Webcam loop)
+        // Kama unatumia webcam.update(), iite hapa au iache loop ya kawaida iendelee
+        console.log("Scan imewashwa tena!");
+    }
+}   
 
 </script>
 

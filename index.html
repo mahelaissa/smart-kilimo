@@ -613,22 +613,30 @@ function startListening() {
         micBtn.innerText = "🎤";
     };
 }
- function generatePDF() {
+    function generatePDF() {
     const element = document.getElementById('result-area');
     const ugonjwa = document.getElementById('res-name').innerText;
     
-    // Mipangilio ya PDF
+    // Hakikisha eneo linaonekana kwanza kabla ya kuanza
+    element.style.display = "block";
+
     const opt = {
         margin:       10,
-        filename:     `Ripoti_Kilimo_${ugonjwa}.pdf`,
+        filename:     `YST_Ripoti_${ugonjwa}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true, // Hii inaruhusu picha za mtandaoni kuonekana
+            letterRendering: true,
+            logging: true 
+        },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Tengeneza PDF kuanzia kwenye element ya matokeo
-    html2pdf().set(opt).from(element).save();
+    // Tunatumia .from().set().toPdf().get() ili kupa muda wa kurender
+    html2pdf().set(opt).from(element).toPdf().get('pdf').save();
 }
+
 </script>
 </body>
 </html>

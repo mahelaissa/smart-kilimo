@@ -151,7 +151,11 @@
                 <option value="en">🇺🇸 English (US)</option>
             </select>
 
-            <div class="view-box">
+            <div class="view-box"onclick="anzaScanUpya()" style="cursor: pointer; position: relative;">
+              <div id="pause-icon" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:20; background:rgba(0,0,0,0.6); padding:15px; border-radius:50%; width:60px; height:60px; text-align:center;">
+        <span style="font-size:30px; line-height:30px;">▶️</span>
+    </div>
+                
                 <div id="laser-line" class="laser"></div>
                 <div id="webcam-container"></div>
                 <div id="upload-preview-container" style="display:none;">

@@ -625,18 +625,38 @@ document.getElementById('chatIn').addEventListener('keypress', function (e) {
     localStorage.setItem("hist_" + currentUser, hBox.innerHTML);
 }
 
-    function loadData() {
-        document.getElementById("chat-content").innerHTML = localStorage.getItem("chat_" + currentUser) || document.getElementById("chat-content").innerHTML;
-        document.getElementById("hist-content").innerHTML = localStorage.getItem("hist_" + currentUser) || "Bado haujascani jani lolote.";
-    }
+  function loadData() {
+    // 1. Hakikisha tunapata jina la mtumiaji aliyelogin kwanza
+    const user = localStorage.getItem("active_farmer");
+    
+    if (user) {
+        currentUser = user; // Sasa currentUser ina jina (mfano: "Erick")
 
-    function clearData() {
-        if(confirm("Je, una uhakika unataka kufuta rekodi hizi?")) {
-            const key = (currentTab === 'chat') ? "chat_" + currentUser : "hist_" + currentUser;
-            localStorage.removeItem(key);
-            location.reload();
+        // 2. Pakia Chat (Kama ipo, itumie. Kama haipo, acha ile ya mwanzo)
+        const savedChat = localStorage.getItem("chat_" + currentUser);
+        if (savedChat) {
+            document.getElementById("chat-content").innerHTML = savedChat;
+        }
+
+        // 3. Pakia Historia (Kama ipo, itumie. Kama haipo, weka ujumbe wa awali)
+        const savedHist = localStorage.getItem("hist_" + currentUser);
+        if (savedHist) {
+            document.getElementById("hist-content").innerHTML = savedHist;
+        } else {
+            document.getElementById("hist-content").innerHTML = "Bado haujascani jani lolote.";
         }
     }
+}
+
+  function clearData() {
+    if (currentTab === 'chat') {
+        localStorage.removeItem("chat_" + currentUser);
+        document.getElementById("chat-content").innerHTML = "<b>AI:</b> Mazungumzo yamefutwa.";
+    } else {
+        localStorage.removeItem("hist_" + currentUser);
+        document.getElementById("hist-content").innerHTML = "Historia imefutwa.";
+    }
+}
 
     function sendWA() {
         const msg = `Habari, AI yangu imegundua ${currentD} kwenye jani langu. Ushauri: ${document.getElementById("sol-text").innerText}`;

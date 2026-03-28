@@ -1,5 +1,6 @@
-const cacheName = 'smart-kilimo-v7'; // Badili namba kila unapoweka mpya
+const cacheName = 'smart-kilimo-v8'; // Badili kila unapo-update
 const assets = [
+  './',
   'index.html',
   'tf.min.js',
   'teachablemachine-image.min.js',
@@ -13,18 +14,22 @@ const assets = [
 self.addEventListener('install', evt => {
   evt.waitUntil(
     caches.open(cacheName).then(cache => {
-      console.log('Inaanza kupakia mafaili...');
-      // Badala ya addAll, tunatumia ramani (map) ili kujua kila faili limefika au la
       return Promise.all(
         assets.map(asset => {
-          return cache.add(asset).catch(err => {
-            console.error("Faili hili halijapatikana GitHub: " + asset);
-          });
+          return cache.add(asset).catch(err => console.log("Faili halipo: " + asset));
         })
       );
     })
   );
-  self.skipWaiting(); // Inalazimisha toleo jipya kuanza mara moja
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', evt => {
+  evt.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(keys.filter(key => key !== cacheName).map(key => caches.delete(key)));
+    })
+  );
 });
 
 self.addEventListener('fetch', evt => {

@@ -6,7 +6,7 @@ const assets = [
   'teachablemachine-image.min.js',
   'html2pdf.bundle.min.js',
   'manifest.json',
-
+ 
 ];
 
 self.addEventListener('install', evt => {

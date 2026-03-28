@@ -445,7 +445,7 @@ async function loop() {
     
     if (webcam) {
         webcam.update(); 
-        await predict(webcam.canvas); 
+        predict(webcam.canvas); 
     }
     window.requestAnimationFrame(loop); 
 }
@@ -934,11 +934,13 @@ function createPDF(element, ugonjwa) {
 
     html2pdf().from(element).set(opt).save();
 }
-// 1. Function ya Typing Effect (Inayofanya kazi kwa mtiririko)
+// . Function ya Typing Effect (Inayofanya kazi kwa mtiririko)
+
+// 1. Function ya Typing Effect
 function typeWriter(text, elementId, speed, callback) {
     let i = 0;
     const elem = document.getElementById(elementId);
-    if (!elem) return; // Usalama kama ID haipo
+    if (!elem) return; 
     
     elem.innerHTML = ""; 
     function type() {
@@ -947,7 +949,6 @@ function typeWriter(text, elementId, speed, callback) {
             i++;
             setTimeout(type, speed);
         } else if (callback) {
-            // Subiri kidogo kabla ya kuanza mstari wa pili
             setTimeout(callback, 500); 
         }
     }
@@ -961,41 +962,54 @@ function ondoaSplash() {
         splash.style.opacity = '0';
         setTimeout(() => {
             splash.style.display = 'none';
-        }, 1000); // Muda wa fade-out
+        }, 1000); 
     }
 }
 
-// 3. KUANZISHA KILA KITU (Hapa ndipo palikuwa na tatizo)
+// 3. KUANZISHA TYPING NA KULINK MODEL
 window.addEventListener('load', function() {
     // Anza Typing: App Name -> Dev Names -> School Name
     typeWriter("Welcome Smart Kilimo ", "type-app-name", 100, function() {
         typeWriter("Developed by: Mahela Issa & Erick Alfred", "type-dev-name", 50, function() {
             typeWriter("KIBAHA SECONDARY SCHOOL", "type-school-name", 50, function() {
-                // Hapa typing imeisha, sasa subiri sekunde 2 kisha ondoa Splash
+                // Typing ikiisha, ondoa Splash screen
                 setTimeout(ondoaSplash, 1000);
             });
         });
     });
-});
-function anzaScanUpya() {
-    if (!isScanning) {
-        isScanning = true; 
-        
-        // 1. Rudisha laser line ionekane inacheza
-        const laser = document.getElementById("laser-line");
-        if (laser) laser.style.display = "block";
-        
-        // 2. Safisha kioo cha matokeo
-        document.getElementById("result-area").style.display = "none";
-        
-        // 3. Toa mtikisiko kidogo (Vibration) kama ishara (Hii ni nzuri kuliko Play icon)
-        if (navigator.vibrate) navigator.vibrate(70); 
 
-        // 4. Amsha loop
-        window.requestAnimationFrame(loop); 
+    // Pakia Model kimya kimya wakati typing inaendelea
+    initModel(); 
+});
+
+// Function ya kupakia Model (Hii ndiyo inayo-link na AI yako)
+let model;
+const MODEL_URL = "model/"; // Hakikisha folder la GitHub linaitwa 'model'
+
+async function initModel() {
+    try {
+        if (!model) {
+            model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+            console.log("Model imepakiwa tayari!");
+        }
+    } catch (e) {
+        console.error("Model imefeli kupakia:", e);
     }
 }
- 
+
+// Function ya Scan Upya
+function anzaScanUpya() {
+    isScanning = true; 
+    const laser = document.getElementById("laser-line");
+    if (laser) laser.style.display = "block";
+    
+    const resultArea = document.getElementById("result-area");
+    if (resultArea) resultArea.style.display = "none";
+    
+    if (navigator.vibrate) navigator.vibrate(70); 
+    window.requestAnimationFrame(loop); 
+}
+
 </script>
 
 <div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2e7d32; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; transition: opacity 1s ease;">

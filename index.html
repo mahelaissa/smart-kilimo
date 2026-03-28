@@ -548,11 +548,32 @@ function loadHistory() {
 window.onload = loadHistory;
 
 function switchTab(t) {
-    document.getElementById("chat-content").style.display = t==='chat'?'block':'none';
-    document.getElementById("chat-controls").style.display = t==='chat'?'flex':'none'; // Ionekane kwenye chat tu
-    document.getElementById("hist-content").style.display = t==='hist'?'block':'none';
-    document.getElementById("t-chat").className = t==='chat'?'tab-btn active':'tab-btn';
-    document.getElementById("t-hist").className = t==='hist'?'tab-btn active':'tab-btn';
+    // 1. Tafuta elements zote muhimu
+    const chatContent = document.getElementById("chat-content");
+    const chatControls = document.getElementById("chat-controls");
+    const histContent = document.getElementById("hist-content");
+    const tabChat = document.getElementById("t-chat");
+    const tabHist = document.getElementById("t-hist");
+
+    if (t === 'chat') {
+        // Onyesha Chat, Ficha History
+        chatContent.style.display = "block";
+        chatControls.style.display = "flex";
+        histContent.style.display = "none";
+        
+        // Badilisha muonekano wa Button (Active state)
+        tabChat.classList.add("active");
+        tabHist.classList.remove("active");
+    } else {
+        // Onyesha History, Ficha Chat
+        chatContent.style.display = "none";
+        chatControls.style.display = "none";
+        histContent.style.display = "block";
+        
+        // Badilisha muonekano wa Button (Active state)
+        tabHist.classList.add("active");
+        tabChat.classList.remove("active");
+    }
 }
     function loginUser() {
         const u = document.getElementById("username").value.trim();

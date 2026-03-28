@@ -427,23 +427,72 @@ function askAI() {
     ongeaSauti(jibuLaAI);
     inputField.value = "";
 }
-    function calculateInputs() {
-        const s = document.getElementById("farm-size").value;
-        const c = document.getElementById("crop-type").value;
-        if(s <= 0) return;
-        const res = document.getElementById("calc-result");
-        res.innerHTML = `<b>Ekari ${s} (${c}):</b><br>• Mbegu: ${s*10}kg<br>• Mbolea: ${s*50}kg DAP.`;
-        res.style.display = "block"; ongeaSauti("Mahesabu tayari.");
+ function calculateInputs() {
+    const size = document.getElementById("farm-size").value;
+    const crop = document.getElementById("crop-type").value;
+    const resultDiv = document.getElementById("calc-result");
+    
+    if (size <= 0) {
+        alert("Tafadhali ingiza idadi ya ekari.");
+        return;
     }
-    function showGuide(c) { document.getElementById("guide-content").innerHTML = cropGuides[c]; ongeaSauti("Mwongozo wa " + c); }
-    function clearChat() { document.getElementById("chat-content").innerHTML = "Chat imefutwa."; document.getElementById("hist-content").innerHTML = ""; }
-    function saveHistory(n) { document.getElementById("hist-content").innerHTML = `<div>✅ ${n} - ${new Date().toLocaleTimeString()}</div>` + document.getElementById("hist-content").innerHTML; }
-    function switchTab(t) {
-        document.getElementById("chat-content").style.display = t==='chat'?'block':'none';
-        document.getElementById("hist-content").style.display = t==='hist'?'block':'none';
-        document.getElementById("t-chat").className = t==='chat'?'tab-btn active':'tab-btn';
-        document.getElementById("t-hist").className = t==='hist'?'tab-btn active':'tab-btn';
+
+    let mbegu, mboleaDAP, mboleaUREA, mimea;
+    let maelezo = "";
+
+    if (crop === "mahindi") {
+        mbegu = size * 10; // Kilo 10 kwa ekari
+        mboleaDAP = size * 50; // Mfuko 1 wa 50kg kwa ekari
+        mboleaUREA = size * 50;
+        mimea = size * 22000; // Makadirio ya mimea 22,000
+        maelezo = `<b>Makadirio kwa Ekari ${size} za Mahindi:</b><br>
+                   • Mbegu: Kilo ${mbegu}<br>
+                   • Mbolea ya Kupanda (DAP): Kilo ${mboleaDAP}<br>
+                   • Mbolea ya Kukuzia (UREA): Kilo ${mboleaUREA}<br>
+                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}`;
+    } else if (crop === "kabichi") {
+        mbegu = size * 200; // Gramu 200 kwa ekari
+        mimea = size * 11000;
+        maelezo = `<b>Makadirio kwa Ekari ${size} za Kabichi:</b><br>
+                   • Mbegu: Gramu ${mbegu}<br>
+                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}<br>
+                   • Mwagilia lita 15,000 - 20,000 kwa msimu.`;
+    } else {
+        maelezo = `<b>Makadirio kwa Ekari ${size} za Mchicha:</b><br>
+                   • Mbegu: Kilo 2 - 4 (Changanya na mchanga).<br>
+                   • Samadi: Tani 5 - 10 kwa matokeo bora.`;
     }
+
+    resultDiv.innerHTML = maelezo;
+    resultDiv.style.display = "block";
+    ongeaSauti("Mahesabu ya " + crop + " kwa ekari " + size + " yako tayari.");
+}
+
+function showGuide(c) { 
+    document.getElementById("guide-content").innerHTML = cropGuides[c]; 
+    ongeaSauti("Mwongozo wa " + c); 
+}
+
+function clearChat() { 
+    document.getElementById("chat-content").innerHTML = "<b>AI:</b> Chat na historia zimesafishwa. Karibu tena!"; 
+    document.getElementById("hist-content").innerHTML = ""; 
+    localStorage.removeItem("kilimo_history");
+    ongeaSauti("Historia imefutwa.");
+}
+
+function saveHistory(n) { 
+    const histBox = document.getElementById("hist-content");
+    const entry = `<div style="padding:10px; border-bottom:1px solid #eee;">✅ ${n} - ${new Date().toLocaleTimeString()}</div>`;
+    histBox.innerHTML = entry + histBox.innerHTML; 
+}
+
+function switchTab(t) {
+    document.getElementById("chat-content").style.display = t==='chat'?'block':'none';
+    document.getElementById("chat-controls").style.display = t==='chat'?'flex':'none'; // Ionekane kwenye chat tu
+    document.getElementById("hist-content").style.display = t==='hist'?'block':'none';
+    document.getElementById("t-chat").className = t==='chat'?'tab-btn active':'tab-btn';
+    document.getElementById("t-hist").className = t==='hist'?'tab-btn active':'tab-btn';
+}
     function loginUser() {
         const u = document.getElementById("username").value.trim();
         if(!u) return; currentUser = u;

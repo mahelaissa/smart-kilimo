@@ -269,7 +269,7 @@
 </div>
 
 <script>
-    let model, webcam, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
+    let model, webcam,maxPredictions, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
     let lastChatReply = "";
     let isScanning = true; // Inaanza ikiwa imewashwa
     const MODEL_URL = "model/";
@@ -421,7 +421,15 @@ const db = {
         if('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(e => console.log(e)); }
     };
 // 1. Hakikisha MODEL_URL inatafuta folder la 
+async function init() {
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
 
+    // Hapa itatafuta kwanza kwenye Cache iliyowekwa na Service Worker
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
+    console.log("Model imepakiwa kikamilifu!");
+}
  // Hakikisha folder linaitwa 'model' GitHub
 
 async function initModel() {

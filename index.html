@@ -510,11 +510,42 @@ function clearChat() {
     ongeaSauti("Historia imefutwa.");
 }
 
+// 1. Function ya kuhifadhi na kuhamisha tab
 function saveHistory(n) { 
     const histBox = document.getElementById("hist-content");
-    const entry = `<div style="padding:10px; border-bottom:1px solid #eee;">✅ ${n} - ${new Date().toLocaleTimeString()}</div>`;
-    histBox.innerHTML = entry + histBox.innerHTML; 
+    const timestamp = new Date().toLocaleTimeString();
+    const entryText = `✅ ${n} - ${timestamp}`;
+
+    // Tengeneza HTML ya kuonyesha
+    const entryHTML = `<div style="padding:10px; border-bottom:1px solid #eee;">${entryText}</div>`;
+    histBox.innerHTML = entryHTML + histBox.innerHTML; 
+
+    // --- SEHEMU MPYA: Save kwenye LocalStorage ---
+    let history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
+    history.unshift(entryText); // Ongeza mpya mwanzo wa list
+    localStorage.setItem("smart_kilimo_history", JSON.stringify(history));
+
+    // --- SEHEMU MPYA: Shift Tab ---
+    // Hapa tunasema: ficha chat, onyesha history
+    document.getElementById("chat-section").style.display = "none";
+    document.getElementById("history-section").style.display = "block";
+    
+    // Kama unatumia CSS classes (mfano Tailwind), unaweza kutumia:
+    // document.getElementById("history-tab-button").click(); 
 }
+
+// 2. Function ya kupakia data ukifungua page (Iweke mwishoni mwa script yako)
+function loadHistory() {
+    const histBox = document.getElementById("hist-content");
+    const history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
+    
+    histBox.innerHTML = history.map(item => 
+        `<div style="padding:10px; border-bottom:1px solid #eee;">${item}</div>`
+    ).join('');
+}
+
+// Ite loadHistory page inapoanza
+window.onload = loadHistory;
 
 function switchTab(t) {
     document.getElementById("chat-content").style.display = t==='chat'?'block':'none';

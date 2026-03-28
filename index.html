@@ -133,17 +133,127 @@
     const MODEL_URL = "model/";
 
     const db = {
-        "Maize Healthy": "MAHINDI MAZIMA: Hongera! Mmea wako una afya nzuri. Endelea na mbolea ya UREA kwa wakati.",
-        "MLN": "MNYAUKO WA VIRUSI (MLN): Virusi hatari sana. Ng'oa na uchome moto mimea iliyoathirika mara moja.",
-        "MSV": "MICHIRIZI (MSV): Husababishwa na Leafhoppers. Tumia dawa ya Imidacloprid na panda mbegu bora.",
-        "Blight": "HOMA YA MAJANI (BLIGHT): Madoa ya kijivu. Tumia dawa ya Mancozeb na uongeze nafasi ya mimea."
-    };
+    "Cabbage Healthy": {
+    "sw": "Kabichi yako haina ugonjwa. Endelea kumwagilia, tumia mbolea na linda dhidi ya wadudu.",
+    "en": "Your cabbage is healthy. Continue watering, fertilizing, and pest control.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Cabbage_Field.jpg/300px-Cabbage_Field.jpg"
+  },
+
+  "Black Rot": {
+    "sw": "Black Rot: Majani yanakuwa ya njano yenye umbo la 'V' na mishipa myeusi. Tumia mbegu safi, badilisha mazao kila msimu na epuka maji kusimama shambani.",
+    "en": "Black Rot: Causes V-shaped yellow leaves and black veins. Use clean seeds, rotate crops, and avoid water stagnation.",
+    "img": "https://content.ces.ncsu.edu/media/images/black-rot-cabbage-v-shaped-lesion.JPG"
+  },
+
+  "Downy Mildew Cabbage": {
+    "sw": "Downy Mildew: Husababishwa na unyevu mwingi. Utaona ukungu wa kijivu chini ya jani. Tumia fungicide (mfano: Copper) na punguza msongamano wa mimea.",
+    "en": "Downy Mildew: Caused by high moisture. Look for grey mold under leaves. Use fungicide and reduce plant congestion.",
+    "img": "https://gardenerspath.com/wp-content/uploads/2021/04/Downy-Mildew-on-Cabbage-Leaves.jpg"
+  },
+
+  "Maize Healthy": {
+    "sw": "Mahindi yako yako salama na yana afya. Endelea na matunzo bora ya shamba kama palizi na mbolea ya kukuzia.",
+    "en": "Your maize is healthy. Maintain good farming practices like weeding and top-dressing.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Zea_mays_-_Kohl-5.jpg/300px-Zea_mays_-_Kohl-5.jpg"
+  },
+
+  "MLN": {
+    "sw": "MLN: Ugonjwa hatari sana wa virusi. Ukiona mmea unadumaa na majani yananyauka kuanzia juu, ng'oa na uchome moto mmea huo haraka sana.",
+    "en": "MLN: A very dangerous viral disease. If you see stunting and drying from the top, uproot and burn the plant immediately.",
+    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Lethal-Necrosis.jpg"
+  },
+
+  "MSV": {
+    "sw": "MSV (Maize Streak Virus): Husababisha mistari myembamba ya njano inayofuata mishipa ya jani. Dhibiti wadudu wa Leafhoppers (siyo whiteflies) na panda mbegu zinazovumilia.",
+    "en": "MSV: Causes thin yellow streaks along veins. Control Leafhoppers and plant resistant varieties.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Maize_streak_virus.jpg/300px-Maize_streak_virus.jpg"
+  },
+
+  "Common Rust": {
+    "sw": "Common Rust: Madoa madogo ya kahawia yaliyoinuka kama kutu pande zote za jani. Tumia fungicide mapema kabla ugonjwa haujaenea.",
+    "en": "Common Rust: Small raised brown pustules on both sides of the leaf. Apply fungicide early.",
+    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Common-Rust.jpg"
+  },
+
+  "Northern Leaf Blight": {
+    "sw": "Leaf Blight: Madoa marefu ya kijivu au kahawia yanayofanana na sigara. Ondoa majani yaliyoathirika na fanya mzunguko wa mazao.",
+    "en": "Leaf Blight: Long gray or brown cigar-shaped spots. Remove infected leaves and practice crop rotation.",
+    "img": "https://content.ces.ncsu.edu/media/images/Northern-Corn-Leaf-Blight-lesions-on-maize.jpg"
+  },
+
+  "Gray Leaf Spot": {
+    "sw": "Gray Leaf Spot: Madoa ya kijivu yenye umbo la mstatili kati ya mishipa ya jani. Punguza unyevu na hakikisha mzunguko wa hewa ni mzuri.",
+    "en": "Gray Leaf Spot: Gray rectangular lesions between leaf veins. Reduce humidity and ensure good air circulation.",
+    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Gray-Leaf-Spot.jpg"
+  },
+
+  "Spinach Healthy": {
+    "sw": "Spinach yako ina afya. Endelea kuitunza vizuri kwa kuongeza mbolea ya samadi au ya majani (foliar).",
+    "en": "Your spinach is healthy. Keep taking care of it by adding manure or foliar fertilizer.",
+    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Spinach_leaves.jpg/300px-Spinach_leaves.jpg"
+  },
+
+  "Anthracnose": {
+    "sw": "Anthracnose: Madoa meusi au ya kahawia yaliyozama kwenye majani. Tumia fungicide na usiguse mimea ikiwa na unyevu wa mvua.",
+    "en": "Anthracnose: Dark sunken spots. Apply fungicide and avoid handling plants when wet.",
+    "img": "https://extension.umd.edu/sites/extension.umd.edu/files/styles/optimized/public/2021-03/Anthracnose_Spinach.jpg"
+  },
+
+  "Bacterial Spot": {
+    "sw": "Bacterial Spot: Madoa madogo yenye muonekano wa majimaji (water-soaked). Tumia dawa za bakteria (bactericides) na epuka kumwagilia maji juu ya majani.",
+    "en": "Bacterial Spot: Small water-soaked spots. Use bactericide and avoid overhead irrigation.",
+    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/bacterial-leaf-spot-on-spinach.jpg"
+  },
+
+  "Downy Mildew Spinach": {
+    "sw": "Downy Mildew: Ukungu wa zambarau au kijivu chini ya majani na madoa ya njano juu. Punguza unyevu na hakikisha nafasi ya upandaji ni sahihi.",
+    "en": "Downy Mildew: Purple/gray fungal growth under leaves with yellow spots above. Reduce moisture and ensure proper spacing.",
+    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/downy-mildew-on-spinach.jpg"
+  },
+
+  "Pest Damage": {
+    "sw": "Uharibifu wa wadudu: Majani yamechimbwa matundu au kuliwa kingo. Tumia insecticide (mfano: Dudumeki) au dawa ya asili ya Neem oil.",
+    "en": "Pest damage: Holes or eaten edges on leaves. Use insecticide or organic Neem oil.",
+    "img": "https://gardenerspath.com/wp-content/uploads/2021/05/Cabbage-Looper-Damage-on-Leaves.jpg"
+  }    };
 
     const cropGuides = {
-        "mahindi": "<h4>Mahindi 🌽</h4><p>Panda 75cm x 25cm. Mbolea: DAP wakati wa kupanda na UREA wiki ya 4-6.</p>",
-        "kabichi": "<h4>Kabichi 🥬</h4><p>Panda 60cm x 60cm. Inahitaji maji mengi na mbolea ya kukuzia mapema.</p>",
-        "mchicha": "<h4>Mchicha 🌿</h4><p>Panda kwa mistari. Changanya mbegu na mchanga (1:3). Vuna baada ya wiki 3.</p>"
-    };
+       "mahindi": `
+        <h4 style="margin-top:0; color:#fbc02d; border-bottom:1px solid #ddd;">Kilimo cha Mahindi Bora 🌽</h4>
+        <p><b>1. Mbegu na Upandaji:</b> Tumia mbegu zilizoidhinishwa (Hybrid au OPV). Ekari moja inahitaji kilo 8-10. Nafasi ni sm 75 kati ya mistari na sm 25 kati ya shimo na shimo (shimo 1 mbegu 1).</p>
+        <p><b>2. Mbolea:</b> 
+            <br>• <i>Kupanda:</i> Tumia DAP au Minjingu (Kijiko 1 cha chai kwa shimo).
+            <br>• <i>Kukuzia:</i> Weka UREA au CAN mmea ukiwa na urefu wa goti (wiki 3-4).</p>
+        <p><b>3. Udhibiti wa Wadudu:</b> Kagua 'Viwavi Jeshi' (Fall Armyworm). Ukiona matundu kwenye majani, tumia dawa kama <i>Belt</i> au <i>Emamectin Benzoate</i> mapema.</p>
+        <p><b>4. Uvunaji:</b> Mahindi hukomaa baada ya siku 90-120 kulingana na aina ya mbegu. Vuna yakiwa yamekakaa (unyevu chini ya 13%).</p>
+    `,
+    "kabichi": `
+        <h4 style="margin-top:0; color:#81c784; border-bottom:1px solid #ddd;">Kilimo cha Kabichi 🥬</h4>
+        <p><b>1. Kitalu:</b> Panda mbegu kitaluni kwanza. Tumia sm 10-15 kati ya mistari kitaluni. Hamishia shambani mche ukiwa na majani 4-6 (wiki 4-6).</p>
+        <p><b>2. Nafasi na Upandaji:</b> Tumia sm 60x60 kwa aina kubwa, au sm 45x60 kwa aina ndogo. Hakikisha udongo una unyevu wakati wa kuhamisha miche.</p>
+        <p><b>3. Mahitaji ya Maji:</b> Kabichi inahitaji maji mengi sana. Mwagilia kila asubuhi na jioni, hasa wakati kichwa (head) kinaanza kutengenezwa.</p>
+        <p><b>4. Changamoto:</b> Kinga dhidi ya 'Diamondback Moth' na 'Black Rot'. Badilisha mazao (Crop Rotation) kila msimu; usipande kabichi sehemu moja mfululizo.</p>
+    `,
+    "mchicha": `
+        <h4 style="margin-top:0; color:#2e7d32; border-bottom:1px solid #ddd;">Kilimo cha Mchicha (Mboga za Majani) 🌿</h4>
+        <p><b>1. Maandalizi:</b> Lima ardhi iwe laini sana (Fine tilth). Mchicha una mbegu ndogo, hivyo unahitaji ardhi iliyopondwa vizuri.</p>
+        <p><b>2. Upandaji:</b> Changanya mbegu na mchanga (uwiano 1:3) ili usipande kwa msongamano. Panda kwenye mistari ya sm 20-30 au tawanya kwenye tuta.</p>
+        <p><b>3. Rutuba:</b> Mchicha unapenda samadi iliyooza vizuri sana. Ongeza mbolea ya majani (Foliar Booster) kila baada ya wiki 2 ili kupata maji mapana na ya kijani.</p>
+        <p><b>4. Uvunaji:</b> Unaweza kuanza kuvuna majani makubwa baada ya wiki 3. Ukikata na kuacha shina, mchicha utachipua tena kwa ajili ya mavuno ya pili na ya tatu.</p>
+    `
+};
+
+function showGuide(crop) {
+    const content = document.getElementById("guide-content");
+    content.style.display = "block"; // Hakikisha inaonekana
+    content.innerHTML = cropGuides[crop];
+    
+    // Inasogeza kioo ili mkulima aone maelezo vizuri
+    window.scrollTo({
+        top: document.getElementById("library-area").offsetTop - 20,
+        behavior: 'smooth'
+    });
+}
 
     // SPEECH
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

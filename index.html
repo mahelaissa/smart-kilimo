@@ -3,1038 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Kilimo</title>
-    <link rel="manifest" href="manifest.json">
-    <script src="tf.min.js"></script>
-
-    <script src="teachablemachine-image.min.js"></script>
-
-    <script src="html2pdf.bundle.min.js"></script>
+    <title>Smart Kilimo AI - KSS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
     <style>
-        /* SPLASH SCREEN CSS */
-
-   #update-notice {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: #ff9800;
-    color: white;
-    text-align: center;
-    padding: 10px;
-    z-index: 10002;
-    font-weight: bold;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    cursor: pointer;
-}
- 
-   /* ... kodi zako za mwanzo ... */
-#splash-screen {  
-    pointer-events: none; /* Hii inaruhusu kubonyeza vitu vilivyo chini yake ikianza kufifia */
-   position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #1b5e20; /* Rangi ya Kijani Kibichi (Kilimo) */
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000; /* Inahakikisha ipo juu ya kila kitu */
-    transition: opacity 1s ease-out; /* Mapambo ya kufifia */
-}
-
-/* Mapambo ya Nembo ya Shule */
-.school-logo {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 4px solid white;
-    margin-bottom: 20px;
-    object-fit: cover;
-}
-
-/* Mapambo ya Jina la App */
-.app-name {
-    font-size: 32px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-/* Mapambo ya Jina la Mtengenezaji */
-.developer-name {
-    font-size: 16px;
-    font-style: italic;
-    margin-top: 20px;
-    opacity: 0.9;
-}
-
-/* Mzunguko wa 'Loading' */
-.loader {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #fff;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
-    margin-top: 30px;
-}
- /*Inafanya maandishi yawe na rangi ya dhahabu kidogo kulingana na nembo ya shule */
-#type-school-name {
-    margin-top: 10px;
-    letter-spacing: 1px;
-}
-
-.app-name {
-    border-right: 2px solid white; /* Inaweka ile "cursor" inayocheza wakati wa kuandika */
-    white-space: nowrap;
-    overflow: hidden;
-    animation: blink 0.7s infinite;
-}
-
-@keyframes blink {
-    50% { border-color: transparent; }
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-        :root { --p: #2e7d32; --s: #1b5e20; --a: #ff9800; --bg: #f4f7f4; --white: #ffffff; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 30px; }
-        header { background: var(--p); color: white; padding: 18px; text-align: center; font-weight: bold; font-size: 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top:0; z-index: 1000; }
+        :root { --p: #2e7d32; --s: #1b5e20; --a: #ff9800; --bg: #f4f7f4; --white: #ffffff; --school-p: #0000FF; --school-s: #FFD700; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); color: #333; overflow-x: hidden; }
         
+        header { background: var(--p); color: white; padding: 18px; text-align: center; font-weight: bold; position: sticky; top:0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 500px; margin: auto; }
-        .card { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); text-align: center; border: 1px solid rgba(0,0,0,0.03); }
+        
+        /* TRANSITIONS */
+        .card { 
+            background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06); animation: slideUp 0.6s ease-out forwards; opacity: 0;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* Scanner Area */
-        .view-box { position: relative; width: 100%; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 4px solid var(--p); background: #000; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-        #webcam-container, #upload-preview-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        #uploaded-img { width: 100%; height: 100%; object-fit: contain; }
-
-        .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 15px #00ff00; z-index: 20; animation: moveLaser 2.5s infinite linear; }
-        @keyframes moveLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-
-        /* UI Elements */
-        .acc-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85rem; margin-bottom: 10px; }
-        button { background: var(--p); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 48%; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        button { 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            cursor: pointer; border: none; outline: none; border-radius: 12px;
+        }
+        button:hover { transform: translateY(-2px); filter: brightness(1.1); }
         button:active { transform: scale(0.92); }
-        .btn-full { width: 100%; margin-top: 10px; background: #f0f0f0; color: #333; border: 1.5px dashed #aaa; }
-        .btn-alt { background: var(--a); }
-        .btn-wa { background: #25d366; width: 100%; margin-top: 12px; font-size: 0.9rem; }
 
-        #result-area { display: none; padding: 18px; border-radius: 15px; background: #f9fdf9; border-left: 6px solid var(--p); text-align: left; animation: slideIn 0.4s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view-box { position: relative; width: 100%; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 4px solid var(--p); background: #000; margin-bottom: 15px; }
+        #webcam-container, #image-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
+        .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: #00ff00; box-shadow: 0 0 20px #00ff00; z-index: 100; animation: moveLaser 2s infinite ease-in-out; }
+        @keyframes moveLaser { 0% { top: 0%; } 50% { top: 95%; } 100% { top: 0%; } }
 
-        /* Tabs & Content */
-        .tabs { display: flex; gap: 8px; margin-top: 10px; }
-        .tab-btn { flex: 1; padding: 12px; background: #e0e0e0; border-radius: 12px; font-size: 0.85rem; color: #666; cursor: pointer; border: none; font-weight: 600; }
+        .content-box { height: 180px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 14px; }
+        .tab-btn { flex: 1; padding: 12px; background: #eee; font-weight: bold; }
         .tab-btn.active { background: var(--p); color: white; }
         
-        .content-wrapper { position: relative; margin-top: 10px; }
-        .content-box { height: 250px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 12px; font-size: 0.9rem; text-align: left; line-height: 1.4; }
-        .btn-delete { position: absolute; top: 8px; right: 8px; background: rgba(255, 68, 68, 0.8); color: white; border: none; padding: 5px 10px; border-radius: 8px; font-size: 0.7rem; cursor: pointer; z-index: 10; }
+        .recording { animation: micPulse 1s infinite; background: #ff5252 !important; color: white !important; }
+        @keyframes micPulse { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,0.7); } 70% { box-shadow: 0 0 0 15px rgba(211,47,47,0); } 100% { box-shadow: 0 0 0 0 rgba(211,47,47,0); } }
         
-        #chat-input-area { display: flex; gap: 8px; margin-top: 12px; }
-        #chatIn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ccc; outline: none; }
-   
-
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1b5e20, #0000FF); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20000; text-align: center; }
+        input, select { padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; width: -webkit-fill-available; }
     </style>
 </head>
 <body>
 
-<header>🌽 Smart Kilimo</header>
+<div id="splash-screen">
+    <img src="kibah.png" alt="KSS Logo" style="width:120px; border-radius:50%; background:white; padding:5px; margin-bottom:20px;">
+    <div id="type-app" style="font-size: 24px; font-weight: bold; color: var(--school-s);"></div>
+    <div id="type-dev" style="font-size: 14px; margin-top: 10px;"></div>
+    <div id="type-sch" style="font-weight: bold; margin-top: 5px;"></div>
+</div>
+
+<header>🌽 Smart Kilimo AI</header>
 
 <div class="container">
-    <div id="login-section" class="card">
-        <img src="https://cdn-icons-png.flaticon.com/512/1995/1995471.png" width="90" alt="Farmer">
-        <h2 style="color: var(--p);">Karibu Mkulima</h2>
-        <p style="font-size: 0.9rem; color: #666;">Ingia ili kuanza kuscani na kutunza kumbukumbu zako.</p>
-        <input type="text" id="username" placeholder="Andika jina lako hapa..." style="width: 85%; padding: 15px; border-radius: 12px; border: 1.5px solid #ddd; margin-bottom: 20px; font-size: 1rem;">
-        <button onclick="loginUser()" style="width: 90%; font-size: 1.1rem;">INGIA KWENYE MFUMO</button>
+    <div id="login-section" class="card" style="text-align: center;">
+        <h2>Karibu Mkulima</h2>
+        <input type="text" id="username" placeholder="Jina lako..." style="margin-bottom:15px;">
+        <button onclick="loginUser()" style="width:100%; background: var(--p); color:white; padding:15px; font-weight:bold;">INGIA</button>
     </div>
 
-    <div id="main-app" style="display: none;">
+    <div id="main-app" style="display:none;">
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <span id="display-user" style="font-weight: 800; color: var(--p); font-size: 0.9rem;"></span>
-                <button onclick="logout()" style="width: auto; padding: 6px 12px; font-size: 0.75rem; background: #666;">Badili Akaunti</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <b id="display-user" style="color: var(--p);"></b>
+                <button onclick="logout()" style="background:#666; color:white; padding:5px 10px; font-size:11px;">Toka</button>
             </div>
             
-            <select id="lang" onchange="updateLang()" style="width: 100%; padding: 12px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; border: 1px solid #ccc;">
-                <option value="sw">🇹🇿 Kiswahili (Tanzania)</option>
-                <option value="en">🇺🇸 English (US)</option>
-            </select>
-
-            <div class="view-box"onclick="anzaScanUpya()" style="cursor: pointer; position: relative;">
-              
-    
-                
+            <div class="view-box">
                 <div id="laser-line" class="laser"></div>
                 <div id="webcam-container"></div>
-                <div id="upload-preview-container" style="display:none;">
-                    <img id="uploaded-img" src="" alt="Scanner Preview">
-                </div>
+                <img id="image-preview" src="" style="display:none;">
             </div>
 
-            <div id="result-area">
-                <div id="acc-badge" class="acc-badge"></div>
-                <div id="res-name" style="font-size: 1.4rem; font-weight: 800; color: var(--p);"></div>
-
-</div>
-<div id="ref-container" style="margin: 15px 0;">
-               <p style="font-size:12px; color:#666; margin-bottom:5px;">Picha ya Mfano (Reference):</p>
-               <img id="ref-image" src="" style="width:100%; max-width:280px; border-radius:10px; border:2px solid #2e7d32; display:none; margin: 0 auto;">
-               </div>
-                <p id="sol-text" style="font-size: 1rem; color: #333; margin-top: 8px;"></p>
-                <button class="btn-wa" onclick="sendWA()">💬 Ongea na Mtaalamu (WhatsApp)</button>
-
-            <button onclick="generatePDF()" style="background:#0288d1; color:white; border:none; padding:12px; border-radius:5px; width:100%; margin-top:10px; cursor:pointer; font-weight:bold;">
-              📥 Pakua Ripoti ya PDF
-            </button>
+            <div id="result-area" style="display: none; background: #e8f5e9; padding:15px; border-radius:12px; margin-bottom:15px; border-left: 6px solid var(--p);">
+                <div id="res-name" style="font-weight:bold; color:var(--p); text-transform:uppercase;"></div>
+                <p id="sol-text" style="font-size:14px; margin-top:8px;"></p>
             </div>
 
-            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-                <button onclick="startCam()">📷 Kamera Live</button>
-                <button class="btn-alt" onclick="repeatVoice()">🔊 Sikiliza Sauti</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button onclick="startCam()" style="background:var(--p); color:white; padding:15px; font-weight:bold;">📷 Kamera</button>
+                <button onclick="document.getElementById('file-input').click()" style="background:#0288d1; color:white; padding:15px; font-weight:bold;">📁 Picha</button>
+                <button onclick="repeatVoice()" style="background:var(--a); color:white; padding:15px; font-weight:bold; grid-column: span 2;">🔊 Sikiliza Tiba kwa Sauti</button>
             </div>
-            
-            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleUpload(event)">
-            <button class="btn-full" onclick="document.getElementById('fileInput').click()">📁 Pakia Picha kutoka Gallery</button>
+            <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleUpload(event)">
         </div>
 
         <div class="card">
-            <div class="tabs">
-                <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat AI</button>
-                <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia Yangu</button>
+            <div class="tabs" style="display:flex; gap:5px; margin-bottom:10px;">
+                <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
+                <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
             </div>
-            
-            <div class="content-wrapper">
-                <button class="btn-delete" id="del-btn" onclick="clearData()">Futa Zote</button>
-                
-                <div id="chat-content" class="content-box"><b>AI:</b> Habari! Mimi ni msaidizi wako wa Smart Kilimo. Unaweza kuniuliza kuhusu mbolea, magonjwa ya mazao, au jinsi ya kutumia mfumo huu.</div>
-                <div id="hist-content" class="content-box" style="display:none;">Bado haujascani jani lolote leo.</div>
+            <div id="chat-content" class="content-box"><b>AI:</b> Karibu! Uliza chochote.</div>
+            <div id="hist-content" class="content-box" style="display:none;"></div>
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <input type="text" id="chatIn" placeholder="Andika..." style="flex:1;">
+                <button id="voice-btn" onclick="startMic()" style="background:#d32f2f; color:white; width:45px;">🎤</button>
+                <button onclick="askAI()" style="background:var(--p); color:white; padding:0 15px;">Tuma</button>
             </div>
+            <button onclick="clearChat()" style="width:100%; background:#f44336; color:white; padding:8px; font-size:12px;">🗑️ Safisha Chat</button>
+        </div>
 
-         <div id="chat-input-area" style="display:flex; gap:5px; margin-top:10px;">
-    <input type="text" id="chatIn" placeholder="Uliza au ongea swali..." onkeypress="if(event.key==='Enter') askAI()" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ccc;">
-    
-    <button onclick="startListening()" id="mic-btn" style="width: 50px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
-        🎤
-    </button>
-    <button onclick="askAI()" id="send-btn" style="width: 60px; background:#2e7d32; color:white; border:none; border-radius:5px; cursor:pointer; font-size: 20px;">
-    📩
-</button>
-  
-</div>
+        <div class="card">
+            <h3 style="color:var(--p); margin-top:0;">📚 Maktaba Kitaalamu</h3>
+            <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:10px;">
+                <button onclick="showGuide('mahindi')" style="background:#fbc02d; color:white; padding:10px 18px; border-radius:20px; font-weight:bold; white-space:nowrap;">🌽 Mahindi</button>
+                <button onclick="showGuide('kabichi')" style="background:#81c784; color:white; padding:10px 18px; border-radius:20px; font-weight:bold; white-space:nowrap;">🥬 Kabichi</button>
+                <button onclick="showGuide('mchicha')" style="background:#2e7d32; color:white; padding:10px 18px; border-radius:20px; font-weight:bold; white-space:nowrap;">🌿 Mchicha</button>
+            </div>
+            <div id="guide-content" style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; border:1px dashed #ccc;">Bonyeza zao kusoma miongozo.</div>
+        </div>
+
+        <div class="card" style="background:#e3f2fd;">
+            <h3 style="color:#1565c0; margin-top:0;">🧮 Kikokotoo</h3>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <input type="number" id="farm-size" placeholder="Ekari" style="flex:1;">
+                <select id="crop-type" style="background:white; width: 120px;">
+                    <option value="mahindi">Mahindi</option>
+                    <option value="kabichi">Kabichi</option>
+                    <option value="mchicha">Mchicha</option>
+                </select>
+            </div>
+            <button onclick="calculateInputs()" style="background:#1565c0; width:100%; color:white; padding:15px; font-weight:bold;">PIGA HESABU</button>
+            <div id="calc-result" style="margin-top:15px; display:none; background:white; padding:15px; border-radius:10px;"></div>
         </div>
     </div>
-</div>
- 
-<div id="library-area" style="background:white; padding:15px; border-radius:10px; margin-top:20px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-    <h3 style="color:#2e7d32; border-bottom:2px solid #eee; padding-bottom:10px; margin-top:0;">
-        📚 Maktaba ya Elimu ya Kilimo
-    </h3>
-    <div style="display:flex; gap:8px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
-        <button onclick="showGuide('mahindi')" style="background:#fbc02d; color:white; border:none; padding:10px 15px; border-radius:20px; cursor:pointer; font-weight:bold; white-space:nowrap;">🌽 Mahindi</button>
-        <button onclick="showGuide('kabichi')" style="background:#81c784; color:white; border:none; padding:10px 15px; border-radius:20px; cursor:pointer; font-weight:bold; white-space:nowrap;">🥬 Kabichi</button>
-        <button onclick="showGuide('mchicha')" style="background:#2e7d32; color:white; border:none; padding:10px 15px; border-radius:20px; cursor:pointer; font-weight:bold; white-space:nowrap;">🌿 Mchicha</button>
-    </div>
-    <div id="guide-content" style="background:#f9f9f9; padding:15px; border-radius:8px; line-height:1.6; font-size:14px; color:#333; border:1px dashed #ccc;">
-        Bonyeza zao hapo juu ili kusoma mwongozo wa kilimo bora.
-    </div>
-</div>
- 
- <div id="calc-area" class="card" style="margin-top:20px; background:#e3f2fd; border:1px solid #bbdefb;">
-    <h3 style="color:#1565c0;"><i class="fas fa-calculator"></i> Kikokotoo cha Shamba</h3>
-    <p style="font-size:13px;">Ingiza ukubwa wa shamba lako upate makadirio:</p>
-    
-    <div style="display:flex; gap:10px; margin-bottom:15px;">
-        <input type="number" id="farm-size" placeholder="Idadi ya Ekari" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ccc;">
-        <select id="crop-type" style="padding:10px; border-radius:5px;">
-            <option value="mahindi">Mahindi</option>
-            <option value="kabichi">Kabichi</option>
-            <option value="mchicha">Mchicha</option>
-        </select>
-    </div>
-    
-    <button onclick="calculateInputs()" class="btn" style="background:#1565c0; width:100%;">Piga Hesabu</button>
-    
-    <div id="calc-result" style="margin-top:15px; display:none; background:white; padding:10px; border-radius:5px; font-size:14px; color:#333;">
-        </div>
 </div>
 
 <script>
-    let model, webcam,maxPredictions, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
-    let lastChatReply = "";
-    let isScanning = true; // Inaanza ikiwa imewashwa
-    const MODEL_URL = "./model/";
+    let model, webcam, isScanning = false, currentUser = "";
+    const MODEL_URL = "model/";
 
-const db = {
-  "Cabbage Healthy": {
-    "sw": "Kabichi yako haina ugonjwa. Endelea kumwagilia, tumia mbolea na linda dhidi ya wadudu.",
-    "en": "Your cabbage is healthy. Continue watering, fertilizing, and pest control.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Cabbage_Field.jpg/300px-Cabbage_Field.jpg"
-  },
-
-  "Black Rot": {
-    "sw": "Black Rot: Majani yanakuwa ya njano yenye umbo la 'V' na mishipa myeusi. Tumia mbegu safi, badilisha mazao kila msimu na epuka maji kusimama shambani.",
-    "en": "Black Rot: Causes V-shaped yellow leaves and black veins. Use clean seeds, rotate crops, and avoid water stagnation.",
-    "img": "https://content.ces.ncsu.edu/media/images/black-rot-cabbage-v-shaped-lesion.JPG"
-  },
-
-  "Downy Mildew Cabbage": {
-    "sw": "Downy Mildew: Husababishwa na unyevu mwingi. Utaona ukungu wa kijivu chini ya jani. Tumia fungicide (mfano: Copper) na punguza msongamano wa mimea.",
-    "en": "Downy Mildew: Caused by high moisture. Look for grey mold under leaves. Use fungicide and reduce plant congestion.",
-    "img": "https://gardenerspath.com/wp-content/uploads/2021/04/Downy-Mildew-on-Cabbage-Leaves.jpg"
-  },
-
-  "Maize Healthy": {
-    "sw": "Mahindi yako yako salama na yana afya. Endelea na matunzo bora ya shamba kama palizi na mbolea ya kukuzia.",
-    "en": "Your maize is healthy. Maintain good farming practices like weeding and top-dressing.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Zea_mays_-_Kohl-5.jpg/300px-Zea_mays_-_Kohl-5.jpg"
-  },
-
-  "MLN": {
-    "sw": "MLN: Ugonjwa hatari sana wa virusi. Ukiona mmea unadumaa na majani yananyauka kuanzia juu, ng'oa na uchome moto mmea huo haraka sana.",
-    "en": "MLN: A very dangerous viral disease. If you see stunting and drying from the top, uproot and burn the plant immediately.",
-    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Lethal-Necrosis.jpg"
-  },
-
-  "MSV": {
-    "sw": "MSV (Maize Streak Virus): Husababisha mistari myembamba ya njano inayofuata mishipa ya jani. Dhibiti wadudu wa Leafhoppers (siyo whiteflies) na panda mbegu zinazovumilia.",
-    "en": "MSV: Causes thin yellow streaks along veins. Control Leafhoppers and plant resistant varieties.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Maize_streak_virus.jpg/300px-Maize_streak_virus.jpg"
-  },
-
-  "Common Rust": {
-    "sw": "Common Rust: Madoa madogo ya kahawia yaliyoinuka kama kutu pande zote za jani. Tumia fungicide mapema kabla ugonjwa haujaenea.",
-    "en": "Common Rust: Small raised brown pustules on both sides of the leaf. Apply fungicide early.",
-    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Common-Rust.jpg"
-  },
-
-  "Northern Leaf Blight": {
-    "sw": "Leaf Blight: Madoa marefu ya kijivu au kahawia yanayofanana na sigara. Ondoa majani yaliyoathirika na fanya mzunguko wa mazao.",
-    "en": "Leaf Blight: Long gray or brown cigar-shaped spots. Remove infected leaves and practice crop rotation.",
-    "img": "https://content.ces.ncsu.edu/media/images/Northern-Corn-Leaf-Blight-lesions-on-maize.jpg"
-  },
-
-  "Gray Leaf Spot": {
-    "sw": "Gray Leaf Spot: Madoa ya kijivu yenye umbo la mstatili kati ya mishipa ya jani. Punguza unyevu na hakikisha mzunguko wa hewa ni mzuri.",
-    "en": "Gray Leaf Spot: Gray rectangular lesions between leaf veins. Reduce humidity and ensure good air circulation.",
-    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Gray-Leaf-Spot.jpg"
-  },
-
-  "Spinach Healthy": {
-    "sw": "Spinach yako ina afya. Endelea kuitunza vizuri kwa kuongeza mbolea ya samadi au ya majani (foliar).",
-    "en": "Your spinach is healthy. Keep taking care of it by adding manure or foliar fertilizer.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Spinach_leaves.jpg/300px-Spinach_leaves.jpg"
-  },
-
-  "Anthracnose": {
-    "sw": "Anthracnose: Madoa meusi au ya kahawia yaliyozama kwenye majani. Tumia fungicide na usiguse mimea ikiwa na unyevu wa mvua.",
-    "en": "Anthracnose: Dark sunken spots. Apply fungicide and avoid handling plants when wet.",
-    "img": "https://extension.umd.edu/sites/extension.umd.edu/files/styles/optimized/public/2021-03/Anthracnose_Spinach.jpg"
-  },
-
-  "Bacterial Spot": {
-    "sw": "Bacterial Spot: Madoa madogo yenye muonekano wa majimaji (water-soaked). Tumia dawa za bakteria (bactericides) na epuka kumwagilia maji juu ya majani.",
-    "en": "Bacterial Spot: Small water-soaked spots. Use bactericide and avoid overhead irrigation.",
-    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/bacterial-leaf-spot-on-spinach.jpg"
-  },
-
-  "Downy Mildew Spinach": {
-    "sw": "Downy Mildew: Ukungu wa zambarau au kijivu chini ya majani na madoa ya njano juu. Punguza unyevu na hakikisha nafasi ya upandaji ni sahihi.",
-    "en": "Downy Mildew: Purple/gray fungal growth under leaves with yellow spots above. Reduce moisture and ensure proper spacing.",
-    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/downy-mildew-on-spinach.jpg"
-  },
-
-  "Pest Damage": {
-    "sw": "Uharibifu wa wadudu: Majani yamechimbwa matundu au kuliwa kingo. Tumia insecticide (mfano: Dudumeki) au dawa ya asili ya Neem oil.",
-    "en": "Pest damage: Holes or eaten edges on leaves. Use insecticide or organic Neem oil.",
-    "img": "https://gardenerspath.com/wp-content/uploads/2021/05/Cabbage-Looper-Damage-on-Leaves.jpg"
-  }
-};    const chatKnowledge = {
-        "sw": [
-            { key: ["jinsi", "tumia", "kufanya"], ans: "Ili kunitumia: 1. Bonyeza Kamera au Pakia Jani. 2. Subiri AI isome picha. 3. Angalia majibu na ushauri wa kitaalamu chini ya picha." },
-            { key: ["mbolea", "mahindi"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (kukuzia - wiki 3-4), na CAN (wakati wa kutoa mbelewele)." },
-            { key: ["mbolea", "kabichi"], ans: "Kabichi inapenda mbolea ya samadi (bolea) iliyooza vizuri na NPK 10-10-10 kwa ajili ya vichwa vikubwa." },
-            { key: ["mbolea", "mchicha"], ans: "Mchicha unahitaji Nitrojeni nyingi. Tumia samadi au mbolea ya majani (Foliar) kila baada ya kuvuna." },
-            { key: ["mln", "virusi", "hatari"], ans: "MLN haina dawa. Ukiona mmea una madoa ya njano na unanyauka kuanzia juu, ung'oe na uuchome mara moja kuzuia kuenea." },
-            { key: ["wadudu", "funza", "kiwavi"], ans: "Kwa funza wa mahindi (Fall Armyworm), tumia dawa kama 'Belt' au 'Emamectin Benzoate' mapema asubuhi au jioni." },
-            { key: ["offline", "internet"], ans: "App hii inafanya kazi hata kama huna bando (Offline) kwa sababu model ya AI ipo ndani ya simu yako!" },
-            { key: ["history", "kumbukumbu"], ans: "Kila matokeo unayopata yanahifadhiwa kwenye tab ya 'Historia Yangu' ili uweze kuyaona baadae." },
-            { key: ["nani", "tengeneza"], ans: "Smart Kilimo AI imetengenezwa kusaidia wakulima wadogo na wa kati kupata utambuzi wa magonjwa kwa haraka." },
-            { key: ["bei", "soko"], ans: "Kwa sasa najihusisha na afya ya mimea zaidi. Kwa bei za soko, tafadhali wasiliana na viongozi wa soko la karibu nawe." },
-            { key: ["habari", "mambo"], ans: "Safi sana mkulima! Karibu. Una swali gani kuhusu mazao yako leo?" },
-            { key: ["jinsi", "tumia", "fanya", "shamba"], ans: "Ili kunitumia: 1. Bonyeza 'Kamera' au 'Pakia' picha ya jani. 2. Subiri AI isome picha. 3. Angalia majibu na ushauri chini ya picha." },
-            { key: ["offline", "internet", "bando"], ans: "App hii inafanya kazi hata bila internet (Offline) mara baada ya kuinstall kwenye simu yako." },
-            { key: ["futa", "history", "kumbukumbu"], ans: "Unaweza kufuta kumbukumbu zako kwa kubonyeza kitufe chekundu cha 'Futa Historia' au 'Futa Chats' hapo juu." },
-            { key: ["mahindi", "maize"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (wiki 3-4), na CAN (wakati wa kutoa mbelewele). Hakikisha unapalilia mapema." },
-            { key: ["kabichi", "cabbage"], ans: "Kabichi inahitaji mbolea ya samadi iliyooza vizuri na NPK kwa ajili ya vichwa vikubwa na vyenye afya." },
-            { key: ["mchicha", "spinach"], ans: "Mchicha unahitaji Nitrojeni nyingi. Tumia samadi au mbolea ya majani (Foliar) kila baada ya kuvuna ili yachipue tena haraka." },
-            { key: ["mln", "maize lethal"], ans: "MLN ni virusi hatari. Ukiona madoa ya njano na mmea unanyauka juu, ng'oa na uchome moto shamba zima haraka." },
-            { key: ["msv", "streak"], ans: "MSV husababisha mistari ya njano. Inazuiliwa kwa kupanda mbegu bora na kudhibiti wadudu wa leafhoppers." },
-            { key: ["rust", "kutu"], ans: "Common Rust huleta madoa ya kahawia kama kutu. Tumia dawa za kuzuia kuvu (fungicides) kama Mancozeb." },
-            { key: ["blight", "northern"], ans: "Leaf Blight huleta madoa marefu ya kijivu. Punguza unyevu na ondoa majani ya chini yaliyoathirika." },
-            { key: ["gray leaf"], ans: "Gray Leaf Spot huleta madoa yenye pembe. Inatokea sana kukiwa na unyevu mwingi na hewa isiyopita vizuri." },
-            { key: ["black rot", "oza"], ans: "Black Rot husababishwa na bakteria. Epuka kumwagilia maji juu ya majani, mwagilia kwenye mizizi tu." },
-            { key: ["mildew", "downy"], ans: "Downy Mildew huleta ukungu mweupe chini ya jani. Tumia dawa za kuzuia kuvu (Copper fungicides)." },
-            { key: ["anthracnose"], ans: "Anthracnose huleta madoa meusi yaliyozama. Usiguse mimea ikiwa na unyevu wa mvua kuzuia kuenea." },
-            { key: ["bacterial spot"], ans: "Bacterial Spot huleta madoa madogo ya maji. Tumia mbegu zilizoidhinishwa na TOSCI pekee." },
-            { key: ["wadudu", "funza", "kiwavi"], ans: "Kwa wadudu kama funza, tumia dawa ya asili ya Neem au insecticide kama Dudumeki mapema asubuhi." }
-        ],
-        "en": [
-            { key: ["how", "use", "work"], ans: "1. Click Camera or Upload a leaf image. 2. Wait for AI to scan. 3. Read the diagnosis and advice provided below the image." },
-            { key: ["fertilizer", "maize"], ans: "For maize: Use DAP for planting, UREA for top dressing (3-4 weeks), and CAN during tasseling." },
-            { key: ["fertilizer", "cabbage"], ans: "Cabbage loves well-decomposed manure and NPK 10-10-10 for firm, large heads." },
-            { key: ["mln", "lethal"], ans: "MLN has no cure. If you see yellowing and stunted growth, uproot and burn the plant immediately to save your farm." },
-            { key: ["pest", "insect", "worm"], ans: "For Fall Armyworm in maize, use insecticides like 'Belt' or 'Emamectin' during early morning or evening hours." },
-            { key: ["offline"], ans: "This app works offline! Once installed, you can scan crops without an active internet connection." 
-            }
-        ]
+    const db = {
+        "Maize Healthy": "MAHINDI MAZIMA: Hongera! Mmea wako una afya nzuri. Endelea na mbolea ya UREA kwa wakati.",
+        "MLN": "MNYAUKO WA VIRUSI (MLN): Virusi hatari sana. Ng'oa na uchome moto mimea iliyoathirika mara moja.",
+        "MSV": "MICHIRIZI (MSV): Husababishwa na Leafhoppers. Tumia dawa ya Imidacloprid na panda mbegu bora.",
+        "Blight": "HOMA YA MAJANI (BLIGHT): Madoa ya kijivu. Tumia dawa ya Mancozeb na uongeze nafasi ya mimea."
     };
-   
- function loginUser() {
-        const u = document.getElementById("username").value.trim();
-        if(u) { localStorage.setItem("active_farmer", u); location.reload(); }
-        else { alert("Tafadhali andika jina lako!"); }
+
+    const cropGuides = {
+        "mahindi": "<h4>Mahindi 🌽</h4><p>Panda 75cm x 25cm. Mbolea: DAP wakati wa kupanda na UREA wiki ya 4-6.</p>",
+        "kabichi": "<h4>Kabichi 🥬</h4><p>Panda 60cm x 60cm. Inahitaji maji mengi na mbolea ya kukuzia mapema.</p>",
+        "mchicha": "<h4>Mchicha 🌿</h4><p>Panda kwa mistari. Changanya mbegu na mchanga (1:3). Vuna baada ya wiki 3.</p>"
+    };
+
+    // SPEECH
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'sw-TZ';
+        recognition.onresult = (e) => { 
+            document.getElementById("chatIn").value = e.results[0][0].transcript; 
+            document.getElementById("voice-btn").classList.remove("recording");
+            askAI(); 
+        };
     }
+    function startMic() { recognition ? (recognition.start(), document.getElementById("voice-btn").classList.add("recording")) : alert("Mic error."); }
+    function ongeaSauti(t) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang = 'sw-TZ'; window.speechSynthesis.speak(m); }
+    function repeatVoice() { const txt = document.getElementById("sol-text").innerText; if(txt) ongeaSauti(txt); }
 
-    function logout() { localStorage.removeItem("active_farmer"); location.reload(); }
-
-    window.onload = () => {
-        const user = localStorage.getItem("active_farmer");
-        if(user) {
-            currentUser = user;
-            document.getElementById("login-section").style.display = "none";
-            document.getElementById("main-app").style.display = "block";
-            document.getElementById("display-user").innerText = "Mkulima: " + currentUser;
-            loadData();
-        }
-        if('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(e => console.log(e)); }
-    };
-
-
-
-
-async function startCam() {
-    try {
-        await initModel(); // Wait for model to be ready
-
-        document.getElementById("upload-preview-container").style.display = "none";
-        document.getElementById("webcam-container").style.display = "block";
+    // MODEL
+    async function initModel() { if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json"); }
+    async function startCam() {
+        await initModel();
+        webcam = new tmImage.Webcam(400, 400, true);
+        await webcam.setup({ facingMode: "environment" });
+        webcam.play();
+        document.getElementById("webcam-container").innerHTML = "";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        document.getElementById("image-preview").style.display = "none";
         document.getElementById("laser-line").style.display = "block";
-
-        if (!webcam) {
-            webcam = new tmImage.Webcam(400, 400, true);
-            await webcam.setup({ facingMode: "environment" });
-            await webcam.play();
-            const container = document.getElementById("webcam-container");
-            container.innerHTML = ""; 
-            container.appendChild(webcam.canvas);
-        }
-        isScanning = true; 
-        requestAnimationFrame(loop);
-    } catch (e) {
-        alert("Shida ya Kamera: Hakikisha umetoa ruhusa ya kamera.");
+        isScanning = true; loop();
     }
-}
-
-async function handleUpload(e) {
-    const file = e.target.files[0]; 
-    if(!file) return;
-
-    try {
-        await initModel(); // Hakikisha model ipo
-
+    async function loop() { if(isScanning) { webcam.update(); await predict(webcam.canvas); requestAnimationFrame(loop); } }
+    async function handleUpload(e) {
+        const file = e.target.files[0]; if(!file) return;
+        const img = document.getElementById("image-preview");
+        isScanning = false; if(webcam) webcam.stop();
+        document.getElementById("laser-line").style.display = "block";
         const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = document.getElementById("uploaded-img");
-            img.src = event.target.result;
-            
-            document.getElementById("webcam-container").style.display = "none";
-            document.getElementById("upload-preview-container").style.display = "block";
-            document.getElementById("laser-line").style.display = "block";
-
-            img.onload = async () => {
-                setTimeout(async () => {
-                    const c = document.createElement("canvas"); 
-                    c.width = 400; c.height = 400;
-                    c.getContext("2d").drawImage(img, 0, 0, 400, 400);
-                    document.getElementById("laser-line").style.display = "none";
-                    isScanning = true; 
-                    await predict(c, true);
-                }, 1000);
-            };
+        reader.onload = (f) => {
+            img.src = f.target.result; img.style.display = "block";
+            img.onload = async () => { await initModel(); await predict(img); };
         };
         reader.readAsDataURL(file);
-    } catch (err) {
-        alert("Error loading image/model.");
     }
-}
-
-async function predict(src, manual = false) {
-    // 0. KAMA SCAN IMEZIMWA, USIFANYE CHOCHOTE
-    if (!isScanning) return;
-
-    const p = await model.predict(src);
-    let h = p[0]; 
-    for(let i=1; i<p.length; i++) if(p[i].probability > h.probability) h = p[i];
-
-    const l = document.getElementById("lang").value;
-    const badge = document.getElementById("acc-badge");
-    const laser = document.getElementById("laser-line");
-    const pauseIcon = document.getElementById("pause-icon");
-
-    // 1. Kama AI ina uhakika mdogo sana (chini ya 35%)
-    if(h.probability < 0.35) {
-        isScanning = false; // SIMAMISHA SCAN
-        if(laser) laser.style.display = "none";
-        if(pauseIcon) pauseIcon.style.display = "block";
-        // 2. Badilisha maandishi ya badge kumpa maelekezo mkulima
-        const acc = (h.probability * 100).toFixed(1);
-        const badge = document.getElementById("acc-badge");
-        badge.innerText = acc + "% Accuracy - (Gusa kioo kuscani tena)";
-        badge.style.background = "#d32f2f"; // Rangi nyekundu au machungwa kuonyesha imesimama
-
-        document.getElementById("result-area").style.display = "block";
-        document.getElementById("res-name").innerText = (l === 'sw') ? "Mmea Haujatambulika" : "Crop Not Recognized";
-        
-        badge.innerText = "Ups! ⚠️ - Gusa kamera kuscani tena";
-        badge.style.background = "#777";
-        
-        const sorryMsg = (l === 'sw') 
-            ? "Samahani Mkulima, mfumo wetu kwa sasa unatambua Mahindi, Kabichi na Mchicha tu. Gusa kioo kuscani tena." 
-            : "Sorry Farmer, our system currently recognizes Maize, Cabbage, and Spinach only. Tap to scan again.";
-        
-        document.getElementById("sol-text").innerText = sorryMsg;
-        
-        // Toa sauti hata kama ni manual au auto ili mkulima ajue scan imekwisha
-        ongeaSauti(sorryMsg); 
-        return; 
-    }
-
-    // 2. KAMA AI INA UHAKIKA (ZAIDI YA 35%)
-    isScanning = false; // SIMAMISHA SCAN SASA HIVI
-    if(laser) laser.style.display = "none";
-    if(pauseIcon) pauseIcon.style.display = "block";
-
-    document.getElementById("result-area").style.display = "block";
-    currentD = h.className;
-    const acc = (h.probability * 100).toFixed(1);
-    
-    badge.innerText = acc + "% Accuracy - Gusa kuscani tena";
-    badge.style.background = acc > 80 ? "#2e7d32" : (acc > 50 ? "#ff9800" : "#d32f2f");
-
-    document.getElementById("res-name").innerText = currentD;
-    const info = db[currentD] ? db[currentD][l] : "N/A";
-
-    // 3. ONYESHA PICHA YA MFANO
-    const refImg = document.getElementById("ref-image");
-    if(db[currentD]) {
-        document.getElementById("sol-text").innerText = db[currentD][l];
-        if(db[currentD].img && refImg) {
-            refImg.src = db[currentD].img;
-            refImg.style.display = "block";
+    async function predict(el) {
+        const p = await model.predict(el);
+        let high = p[0];
+        for(let i=1; i<p.length; i++) if(p[i].probability > high.probability) high = p[i];
+        if(high.probability > 0.85) {
+            isScanning = false;
+            document.getElementById("laser-line").style.display = "none";
+            document.getElementById("result-area").style.display = "block";
+            document.getElementById("res-name").innerText = high.className;
+            const jibu = db[high.className] || "Ugonjwa umetambuliwa.";
+            document.getElementById("sol-text").innerText = jibu;
+            ongeaSauti(jibu);
+            saveHistory(high.className);
         }
     }
-    
-    // 4. SEHEMU YA SAUTI NA HISTORIA
-    if(lastSol !== info || manual) {
-        document.getElementById("sol-text").innerText = info;
-        
-        // Toa Sauti ya jibu la ugonjwa
-        ongeaSauti(info); 
-        
-        lastSol = info;
 
-        // Hifadhi Historia
-        const historyMsg = currentD + " (" + acc + "%)";
-        saveHistory(historyMsg);
+    // LOGIC
+    function askAI() {
+        const i = document.getElementById("chatIn"); if(!i.value) return;
+        const chat = document.getElementById("chat-content");
+        const aMsg = `Mkulima ${currentUser}, kuhusu ${i.value}, fika Kibaha Secondary kwa msaada zaidi au tumia Maktaba.`;
+        chat.innerHTML += `<p><b>Wewe:</b> ${i.value}</p><p style="color:var(--p)"><b>AI:</b> ${aMsg}</p>`;
+        chat.scrollTop = chat.scrollHeight; i.value = ""; ongeaSauti(aMsg);
     }
-}
-
-
+    function calculateInputs() {
+        const s = document.getElementById("farm-size").value;
+        const c = document.getElementById("crop-type").value;
+        if(s <= 0) return;
+        const res = document.getElementById("calc-result");
+        res.innerHTML = `<b>Ekari ${s} (${c}):</b><br>• Mbegu: ${s*10}kg<br>• Mbolea: ${s*50}kg DAP.`;
+        res.style.display = "block"; ongeaSauti("Mahesabu tayari.");
+    }
+    function showGuide(c) { document.getElementById("guide-content").innerHTML = cropGuides[c]; ongeaSauti("Mwongozo wa " + c); }
+    function clearChat() { document.getElementById("chat-content").innerHTML = "Chat imefutwa."; document.getElementById("hist-content").innerHTML = ""; }
+    function saveHistory(n) { document.getElementById("hist-content").innerHTML = `<div>✅ ${n} - ${new Date().toLocaleTimeString()}</div>` + document.getElementById("hist-content").innerHTML; }
     function switchTab(t) {
-        currentTab = t;
-        document.getElementById("chat-content").style.display = (t === 'chat') ? 'block' : 'none';
-        document.getElementById("chat-input-area").style.display = (t === 'chat') ? 'flex' : 'none';
-        document.getElementById("hist-content").style.display = (t === 'hist') ? 'block' : 'none';
-        document.getElementById("t-chat").classList.toggle("active", t === 'chat');
-        document.getElementById("t-hist").classList.toggle("active", t === 'hist');
-        document.getElementById("del-btn").innerText = (t === 'chat') ? "Futa Chats" : "Futa Historia";
+        document.getElementById("chat-content").style.display = t==='chat'?'block':'none';
+        document.getElementById("hist-content").style.display = t==='hist'?'block':'none';
+        document.getElementById("t-chat").className = t==='chat'?'tab-btn active':'tab-btn';
+        document.getElementById("t-hist").className = t==='hist'?'tab-btn active':'tab-btn';
     }
-function ongeaSauti(maandishi) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Zima sauti inayoongea sasa hivi
-
-        const utterance = new SpeechSynthesisUtterance(maandishi);
-        
-        // Pata sauti zote zilizopo kwenye kifaa
-        let voices = window.speechSynthesis.getVoices();
-        
-        // Mbinu ya Uhakika: Tafuta sauti yenye jina "Swahili" au kodi "sw"
-        let swahiliVoice = voices.find(v => 
-            v.lang.toLowerCase().includes('sw-tz') || 
-            v.lang.toLowerCase().includes('sw-ke') || 
-            v.name.toLowerCase().includes('swahili')
-        );
-
-        if (swahiliVoice) {
-            utterance.voice = swahiliVoice; // Hapa ndipo rafudhi inabadilika kuwa ya nyumbani
-        }
-
-        // Mipangilio ya sauti iwe ya asili zaidi
-        utterance.lang = 'sw-TZ';
-        utterance.rate = 0.8;  // Kasi ya taratibu kidogo
-        utterance.pitch = 1.0; // Sauti ya wastani (sio ya kitoto wala nzito sana)
-
-        window.speechSynthesis.speak(utterance);
+    function loginUser() {
+        const u = document.getElementById("username").value.trim();
+        if(!u) return; currentUser = u;
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("main-app").style.display = "block";
+        document.getElementById("display-user").innerText = "👨‍🌾 " + u;
     }
-}
+    function logout() { location.reload(); }
 
-// MUHIMU SANA: Hii inaziamsha sauti mara tu page inapofunguka
-window.speechSynthesis.onvoiceschanged = () => {
-    window.speechSynthesis.getVoices();
-    console.log("Sauti zimepakiwa na zipo tayari!");
-};
-
-
-
-
-// --- 2. FUNCTION YA ASK-AI ILIYOKAMILIKA ---
-function askAI() {
-    // A. Pata maandishi kutoka kwenye input
-    const inputField = document.getElementById("chatIn");
-    const txt = inputField.value.trim().toLowerCase(); 
-    
-    // Kama hakuna kilichoandikwa, usifanye kitu
-    if (!txt) return;
-
-    const l = document.getElementById("lang").value; // Lugha (sw/en)
-    let reply = "";
-    
-    // B. Tafuta jibu kwenye database ya chatKnowledge
-    for (let item of chatKnowledge[l]) {
-        if (item.key.some(k => txt.includes(k))) { 
-            reply = item.ans; 
-            break; 
-        }
+    // SPLASH
+    function typeWriter(text, id, speed, callback) {
+        let i = 0; const el = document.getElementById(id);
+        function type() { if(i < text.length) { el.innerHTML += text.charAt(i); i++; setTimeout(type, speed); } else if(callback) callback(); }
+        type();
     }
-
-    // C. Kama swali halipo kwenye database (Default Reply)
-    if (!reply) {
-        const mengine = ["nyanya", "tomato", "maharagwe", "beans", "pamba", "cotton", "mpunga", "rice"];
-        const isExtra = mengine.some(m => txt.includes(m));
-
-        if (isExtra) {
-            reply = (l === 'sw') 
-                ? "Asante mkulima. Kwa sasa Smart Kilimo AI inatambua Mahindi, Kabichi na Mchicha tu. Tunaendelea kuongeza mazao mengine hivi karibuni."
-                : "Thank you farmer. Currently, we focus on Maize, Cabbage, and Spinach. More crops coming soon!";
-        } else {
-            reply = (l === 'sw') 
-                ? "Samahani, sijaelewa swali lako. Jaribu kuuliza kuhusu mbolea, magonjwa ya mahindi, au jinsi ya kunitumia." 
-                : "I'm sorry, I didn't quite catch that. Try asking about fertilizers, maize diseases, or how to use me.";
-        }
-    }
-
-    // D. HIFADHI JIBU ILI KITUFE CHA SPIKA KILIPATE
-    lastChatReply = reply;
-    
-    // E. Onyesha swali na jibu kwenye Box la Chat
-    const box = document.getElementById("chat-content");
-    
-    // Futa ujumbe wa kwanza kama upo
-    if (box.innerText.includes("Mimi ni msaidizi")) { box.innerHTML = ""; }
-
-    // Ongeza Chat Bubble (Pamoja na Kitufe cha Spika Ndani)
-    box.innerHTML += `
-        <div style="margin-top: 12px; padding: 10px; border-radius: 12px; background: #f1f1f1; align-self: flex-end; max-width: 85%;">
-            <b style="color: #555; font-size: 12px;">Wewe:</b><br>${inputField.value}
-        </div>
-        <div style="margin-top: 8px; padding: 10px; border-radius: 12px; background: #e8f5e9; border-left: 5px solid var(--p); max-width: 85%; position: relative;">
-            <b style="color: var(--p); font-size: 12px;">Smart Kilimo AI:</b><br>${reply}
-            <button onclick="ongeaSauti(lastChatReply)" style="background:none; border:none; cursor:pointer; float:right; font-size:20px; margin-top:-5px;">🔊</button>
-            <div style="clear:both;"></div>
-        </div>
-    `;
-    
-    // F. TOA SAUTI YA JIBU MOJA KWA MOJA
-    ongeaSauti(reply); 
-
-    // G. Safisha input na shuka chini (Auto-scroll)
-    inputField.value = "";
-    box.scrollTop = box.scrollHeight;
-
-    // H. HIFADHI KWENYE MEMORY (LocalStorage)
-    localStorage.setItem("chat_" + currentUser, box.innerHTML);
-}
-
-// --- 3. FUNCTION YA KUSAIDIA KUTUMA KWA 'ENTER' ---
-document.getElementById('chatIn').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        askAI();
-    }
-});
-
-// --- 4. FUNCTION YA KITUFE CHA NJE CHA KUSIKILIZA ---
-function sikilizaChat() {
-    if (lastChatReply) {
-        ongeaSauti(lastChatReply);
-    } else {
-        const l = document.getElementById("lang").value;
-        const msg = (l === 'sw') ? "Bado haujauliza swali lolote." : "You haven't asked anything yet.";
-        ongeaSauti(msg);
-    }
-}
-   
-  function saveHistory(msg) {
-    const hBox = document.getElementById("hist-content");
-    
-    // Kama bado haujascani jani lolote, futa ujumbe huo wa awali
-    if (hBox.innerText.includes("Bado haujascani")) {
-        hBox.innerHTML = "";
-    }
-    
-    // Tengeneza muda na tarehe ya sasa
-    const sasa = new Date();
-    const muda = sasa.getHours() + ":" + (sasa.getMinutes() < 10 ? '0' : '') + sasa.getMinutes();
-    
-    // Ongeza historia mpya juu kabisa (prepend)
-    const kipengeleKipya = `
-        <div style="padding:10px; border-bottom:1px solid #eee; margin-bottom:5px; background:#fff; border-radius:8px;">
-            <span style="font-size:11px; color:#888;">⏰ ${muda}</span><br>
-            <b style="color:#2e7d32;">${msg}</b>
-        </div>
-    `;
-    
-    hBox.innerHTML = kipengeleKipya + hBox.innerHTML;
-    
-    // HIFADHI KWENYE MEMORY YA SIMU/LAPTOP
-    localStorage.setItem("hist_" + currentUser, hBox.innerHTML);
-}
-
-  function loadData() {
-    // 1. Hakikisha tunapata jina la mtumiaji aliyelogin kwanza
-    const user = localStorage.getItem("active_farmer");
-    
-    if (user) {
-        currentUser = user; // Sasa currentUser ina jina (mfano: "Erick")
-
-        // 2. Pakia Chat (Kama ipo, itumie. Kama haipo, acha ile ya mwanzo)
-        const savedChat = localStorage.getItem("chat_" + currentUser);
-        if (savedChat) {
-            document.getElementById("chat-content").innerHTML = savedChat;
-        }
-
-        // 3. Pakia Historia (Kama ipo, itumie. Kama haipo, weka ujumbe wa awali)
-        const savedHist = localStorage.getItem("hist_" + currentUser);
-        if (savedHist) {
-            document.getElementById("hist-content").innerHTML = savedHist;
-        } else {
-            document.getElementById("hist-content").innerHTML = "Bado haujascani jani lolote.";
-        }
-    }
-}
-
-  function clearData() {
-    if (currentTab === 'chat') {
-        localStorage.removeItem("chat_" + currentUser);
-        document.getElementById("chat-content").innerHTML = "<b>AI:</b> Mazungumzo yamefutwa.";
-    } else {
-        localStorage.removeItem("hist_" + currentUser);
-        document.getElementById("hist-content").innerHTML = "Historia imefutwa.";
-    }
-}
-
-    function sendWA() {
-        const msg = `Habari, AI yangu imegundua ${currentD} kwenye jani langu. Ushauri: ${document.getElementById("sol-text").innerText}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-    }
-
-    function speak(t) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(t);
-        u.lang = document.getElementById("lang").value === 'sw' ? 'sw-TZ' : 'en-US';
-        window.speechSynthesis.speak(u);
-    }
-
-    function repeatVoice() { speak(document.getElementById("sol-text").innerText); }
-    function updateLang() { lastSol = ""; }
- 
-// MAELEZO YA KINA YA MAKTABA YA KILIMO BORA
-const cropGuides = {
-    "mahindi": `
-        <h4 style="margin-top:0; color:#fbc02d; border-bottom:1px solid #ddd;">Kilimo cha Mahindi Bora 🌽</h4>
-        <p><b>1. Mbegu na Upandaji:</b> Tumia mbegu zilizoidhinishwa (Hybrid au OPV). Ekari moja inahitaji kilo 8-10. Nafasi ni sm 75 kati ya mistari na sm 25 kati ya shimo na shimo (shimo 1 mbegu 1).</p>
-        <p><b>2. Mbolea:</b> 
-            <br>• <i>Kupanda:</i> Tumia DAP au Minjingu (Kijiko 1 cha chai kwa shimo).
-            <br>• <i>Kukuzia:</i> Weka UREA au CAN mmea ukiwa na urefu wa goti (wiki 3-4).</p>
-        <p><b>3. Udhibiti wa Wadudu:</b> Kagua 'Viwavi Jeshi' (Fall Armyworm). Ukiona matundu kwenye majani, tumia dawa kama <i>Belt</i> au <i>Emamectin Benzoate</i> mapema.</p>
-        <p><b>4. Uvunaji:</b> Mahindi hukomaa baada ya siku 90-120 kulingana na aina ya mbegu. Vuna yakiwa yamekakaa (unyevu chini ya 13%).</p>
-    `,
-    "kabichi": `
-        <h4 style="margin-top:0; color:#81c784; border-bottom:1px solid #ddd;">Kilimo cha Kabichi 🥬</h4>
-        <p><b>1. Kitalu:</b> Panda mbegu kitaluni kwanza. Tumia sm 10-15 kati ya mistari kitaluni. Hamishia shambani mche ukiwa na majani 4-6 (wiki 4-6).</p>
-        <p><b>2. Nafasi na Upandaji:</b> Tumia sm 60x60 kwa aina kubwa, au sm 45x60 kwa aina ndogo. Hakikisha udongo una unyevu wakati wa kuhamisha miche.</p>
-        <p><b>3. Mahitaji ya Maji:</b> Kabichi inahitaji maji mengi sana. Mwagilia kila asubuhi na jioni, hasa wakati kichwa (head) kinaanza kutengenezwa.</p>
-        <p><b>4. Changamoto:</b> Kinga dhidi ya 'Diamondback Moth' na 'Black Rot'. Badilisha mazao (Crop Rotation) kila msimu; usipande kabichi sehemu moja mfululizo.</p>
-    `,
-    "mchicha": `
-        <h4 style="margin-top:0; color:#2e7d32; border-bottom:1px solid #ddd;">Kilimo cha Mchicha (Mboga za Majani) 🌿</h4>
-        <p><b>1. Maandalizi:</b> Lima ardhi iwe laini sana (Fine tilth). Mchicha una mbegu ndogo, hivyo unahitaji ardhi iliyopondwa vizuri.</p>
-        <p><b>2. Upandaji:</b> Changanya mbegu na mchanga (uwiano 1:3) ili usipande kwa msongamano. Panda kwenye mistari ya sm 20-30 au tawanya kwenye tuta.</p>
-        <p><b>3. Rutuba:</b> Mchicha unapenda samadi iliyooza vizuri sana. Ongeza mbolea ya majani (Foliar Booster) kila baada ya wiki 2 ili kupata maji mapana na ya kijani.</p>
-        <p><b>4. Uvunaji:</b> Unaweza kuanza kuvuna majani makubwa baada ya wiki 3. Ukikata na kuacha shina, mchicha utachipua tena kwa ajili ya mavuno ya pili na ya tatu.</p>
-    `
-};
-
-function showGuide(crop) {
-    const content = document.getElementById("guide-content");
-    content.style.display = "block"; // Hakikisha inaonekana
-    content.innerHTML = cropGuides[crop];
-    
-    // Inasogeza kioo ili mkulima aone maelezo vizuri
-    window.scrollTo({
-        top: document.getElementById("library-area").offsetTop - 20,
-        behavior: 'smooth'
-    });
-}
- function calculateInputs() {
-    const size = document.getElementById("farm-size").value;
-    const crop = document.getElementById("crop-type").value;
-    const resultDiv = document.getElementById("calc-result");
-    
-    if (size <= 0) {
-        alert("Tafadhali ingiza idadi ya ekari.");
-        return;
-    }
-
-    let mbegu, mboleaDAP, mboleaUREA, mimea;
-    let maelezo = "";
-
-    if (crop === "mahindi") {
-        mbegu = size * 10; // Kilo 10 kwa ekari
-        mboleaDAP = size * 50; // Mfuko 1 wa 50kg kwa ekari
-        mboleaUREA = size * 50;
-        mimea = size * 22000; // Makadirio ya mimea 22,000
-        maelezo = `<b>Makadirio kwa Ekari ${size} za Mahindi:</b><br>
-                   • Mbegu: Kilo ${mbegu}<br>
-                   • Mbolea ya Kupanda (DAP): Kilo ${mboleaDAP}<br>
-                   • Mbolea ya Kukuzia (UREA): Kilo ${mboleaUREA}<br>
-                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}`;
-    } else if (crop === "kabichi") {
-        mbegu = size * 200; // Gramu 200 kwa ekari
-        mimea = size * 11000;
-        maelezo = `<b>Makadirio kwa Ekari ${size} za Kabichi:</b><br>
-                   • Mbegu: Gramu ${mbegu}<br>
-                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}<br>
-                   • Mwagilia lita 15,000 - 20,000 kwa msimu.`;
-    } else {
-        maelezo = `<b>Makadirio kwa Ekari ${size} za Mchicha:</b><br>
-                   • Mbegu: Kilo 2 - 4 (Changanya na mchanga).<br>
-                   • Samadi: Tani 5 - 10 kwa matokeo bora.`;
-    }
-
-    resultDiv.innerHTML = maelezo;
-    resultDiv.style.display = "block";
-}
-function startListening() {
-    const micBtn = document.getElementById("mic-btn");
-    const chatInput = document.getElementById("chatIn");
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-        alert("Browser yako haisapoti kutambua sauti. Tafadhali tumia Google Chrome.");
-        return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'sw-TZ'; 
-    recognition.interimResults = false;
-
-    // Jaribu kuanza kusikiliza
-    try {
-        recognition.start();
-        micBtn.style.background = "#ff5722";
-        micBtn.innerText = "🛑";
-    } catch (e) {
-        alert("Maikrofoni tayari inatumika au kuna hitilafu. Jaribu tena.");
-    }
-
-    recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        chatInput.value = transcript; 
-        micBtn.style.background = "#4caf50";
-        micBtn.innerText = "🎤";
-    };
-
-    // HAPA NDIPO TUNAPOKAMATA ERROR YA ACCESS
-    recognition.onerror = function(event) {
-        micBtn.style.background = "#4caf50";
-        micBtn.innerText = "🎤";
-
-        if (event.error === 'not-allowed') {
-            alert("⚠️ ILI KUONGEA: Tafadhali bonyeza alama ya kifuli (Lock) juu kwenye anuani ya tovuti (URL) na uruhusu 'Microphone'.");
-        } else if (event.error === 'no-speech') {
-            alert("Sijasikia chochote. Tafadhali jaribu kuongea tena.");
-        } else {
-            alert("Kuna hitilafu kwenye maikrofoni: " + event.error);
-        }
-    };
-
-    recognition.onspeechend = function() {
-        recognition.stop();
-        micBtn.style.background = "#4caf50";
-        micBtn.innerText = "🎤";
-    };
-}
- // --- 1. KODI YA PDF ILIYOBORESHWA ---
-function generatePDF() {
-    const element = document.getElementById('result-area');
-    const img = document.getElementById('ref-image');
-    const ugonjwa = document.getElementById('res-name').innerText;
-    
-    element.style.display = "block";
-
-    // Angalia kama picha imekamilika kupakiwa
-    if (img.complete) {
-        createPDF(element, ugonjwa);
-    } else {
-        img.addEventListener('load', function() {
-            createPDF(element, ugonjwa);
-        });
-    }
-}
-
-function createPDF(element, ugonjwa) {
-    const opt = {
-        margin:       10,
-        filename:     `YST_Ripoti_${ugonjwa}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, allowTaint: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().from(element).set(opt).save();
-}
-// . Function ya Typing Effect (Inayofanya kazi kwa mtiririko)
-// Function ya Scan Upya
-function anzaScanUpya() {
-    isScanning = true; 
-    const laser = document.getElementById("laser-line");
-    if (laser) laser.style.display = "block";
-    
-    const resultArea = document.getElementById("result-area");
-    if (resultArea) resultArea.style.display = "none";
-    
-    if (navigator.vibrate) navigator.vibrate(70); 
-    window.requestAnimationFrame(loop); 
-}
-// 1. Function ya Typing Effect
-/*function typeWriter(text, elementId, speed, callback) {
-    let i = 0;
-    const elem = document.getElementById(elementId);
-    if (!elem) return; 
-    
-    elem.innerHTML = ""; 
-    function type() {
-        if (i < text.length) {
-            elem.innerHTML += text.charAt(i);
-            i++;
-            setTimeout(type, speed);
-        } else if (callback) {
-            setTimeout(callback, 500); 
-        }
-    }
-    type();
-}
-
-// 2. Function ya kuondoa Splash
-function ondoaSplash() {
-    const splash = document.getElementById('splash-screen');
-    if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => {
-            splash.style.display = 'none';
-        }, 1000); 
-    }
-}
-
-// 3. KUANZISHA TYPING NA KULINK MODEL
-window.addEventListener('load', function() {
-    // Anza Typing: App Name -> Dev Names -> School Name
-    typeWriter("Welcome Smart Kilimo ", "type-app-name", 100, function() {
-        typeWriter("Developed by: Mahela Issa & Erick Alfred", "type-dev-name", 50, function() {
-            typeWriter("KIBAHA SECONDARY SCHOOL", "type-school-name", 50, function() {
-                // Typing ikiisha, ondoa Splash screen
-                setTimeout(ondoaSplash, 1000);
+    window.onload = () => {
+        typeWriter("Smart Kilimo AI", "type-app", 80, () => {
+            typeWriter("Mahela Issa & Erick Alfred", "type-dev", 50, () => {
+                typeWriter("KIBAHA SECONDARY SCHOOL", "type-sch", 50, () => {
+                    setTimeout(() => { document.getElementById("splash-screen").style.display="none"; }, 1000);
+                });
             });
         });
-    });
-
-    // Pakia Model kimya kimya wakati typing inaendelea
-    initModel(); 
-});
-
-// Function ya kupakia Model (Hii ndiyo inayo-link na AI yako)
-let model;
-const MODEL_URL = "model/"; // Hakikisha folder la GitHub linaitwa 'model'
-
-async function initModel() {
-    try {
-        if (!model) {
-            model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
-            console.log("Model imepakiwa tayari!");
-        }
-    } catch (e) {
-        console.error("Model imefeli kupakia:", e);
-    }
-}
-
-
-setTimeout(() => {
-        const btn = document.getElementById('emergency-exit');
-        const splash = document.getElementById('splash-screen');
-        
-        // Kama baada ya sekunde 10 splash bado ipo (haijaondolewa na typing)
-        if (splash && (splash.style.display !== 'none' && splash.style.opacity !== '0')) {
-            btn.style.display = "block"; 
-            console.log("Model imegoma au internet ni nzito. Button imetokea.");
-        }
-    }, 10000);
-// 2. Kazi ya Button ikibonyezwa
-document.getElementById('emergency-exit').addEventListener('click', function() {
-    console.log("Mtumiaji ameingia kwa dharura.");
-    ondoaSplash(); // Huu ni ule function wako wa kuondoa splash
-    
-    // Jaribu kupakia model tena mara moja ukiwa ndani
-    if (!model) {
-        initModel();  
-    }
-});
-   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(reg => {
-        // Angalia kama kuna update kila App ikifunguka
-        reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // Toleo jipya limeingia, onyesha notisi
-                    document.getElementById('update-notice').style.display = 'block';
-                }
-            });
-        });
-    });
-}
- 
+    };
 </script>
-
 </body>
 </html>

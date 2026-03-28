@@ -1018,7 +1018,28 @@ function anzaScanUpya() {
     if (navigator.vibrate) navigator.vibrate(70); 
     window.requestAnimationFrame(loop); 
 }
+// 1. Timer ya Emergency Button
+setTimeout(() => {
+    const emergencyBtn = document.getElementById('emergency-exit');
+    const splash = document.getElementById('splash-screen');
+    
+    // Kama splash bado inaonekana baada ya sekunde 7
+    if (splash && splash.style.display !== 'none') {
+        emergencyBtn.style.display = "block";
+        console.warn("Model inachukua muda mrefu... Kitufe cha dharura kimeonekana.");
+    }
+}, 7000); // Sekunde 7 (Unaweza kuongeza iwe 10000 kama unataka)
 
+// 2. Kazi ya Button ikibonyezwa
+document.getElementById('emergency-exit').addEventListener('click', function() {
+    console.log("Mtumiaji ameingia kwa dharura.");
+    ondoaSplash(); // Huu ni ule function wako wa kuondoa splash
+    
+    // Jaribu kupakia model tena mara moja ukiwa ndani
+    if (!model) {
+        initModel(); 
+    }
+});
 </script>
 
 <div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2e7d32; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; transition: opacity 1s ease;">
@@ -1030,6 +1051,9 @@ function anzaScanUpya() {
     <h3 id="type-school-name" style="color: #ffd700; height: 30px;"></h3>
     
     <div class="loader" style="margin-top: 30px; border: 4px solid #f3f3f3; border-top: 4px solid #ffd700; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite;"></div>
+    <button id="emergency-exit" style="display: none; margin-top: 20px; padding: 10px 20px; background: #ffd700; color: #2e7d32; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    Ingia Ndani (Ikishindikana)
+</button>
 </div>
 
 <style>

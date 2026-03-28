@@ -130,7 +130,7 @@
 
 <script>
     let model, webcam, isScanning = false, currentUser = "";
-    const MODEL_URL = "model/";
+    const MODEL_URL = "./model/";
 
     const db = {
     "Cabbage Healthy": {
@@ -297,21 +297,48 @@ function showGuide(crop) {
         };
         reader.readAsDataURL(file);
     }
-    async function predict(el) {
-        const p = await model.predict(el);
-        let high = p[0];
-        for(let i=1; i<p.length; i++) if(p[i].probability > high.probability) high = p[i];
-        if(high.probability > 0.85) {
-            isScanning = false;
-            document.getElementById("laser-line").style.display = "none";
-            document.getElementById("result-area").style.display = "block";
+async function predict(el) {
+    const p = await model.predict(el);
+    let high = p[0];
+    
+    // Tafuta ugonjwa wenye uwezekano mkubwa (Probability)
+    for(let i=1; i<p.length; i++) {
+        if(p[i].probability > high.probability) high = p[i];
+    }
+
+    // AI iwe na uhakika wa zaidi ya 85%
+    if(high.probability > 0.85) {
+        isScanning = false;
+        document.getElementById("laser-line").style.display = "none";
+        document.getElementById("result-area").style.display = "block";
+        
+        // Tunachukua data kutoka kwenye DB yako mpya
+        const data = db[high.className];
+
+        if(data) {
+            // 1. Onyesha jina la ugonjwa (Kichwa cha habari)
             document.getElementById("res-name").innerText = high.className;
-            const jibu = db[high.className] || "Ugonjwa umetambuliwa.";
-            document.getElementById("sol-text").innerText = jibu;
-            ongeaSauti(jibu);
+
+            // 2. Onyesha maelezo ya Kiswahili
+            const maelezo = data.sw;
+            document.getElementById("sol-text").innerText = maelezo;
+
+            // 3. Sauti: Itataja jina la ugonjwa kwanza, kisha tiba
+            const sautiYaKusoma = "Ugonjwa umetambuliwa kama: " + high.className + ". " + maelezo;
+            ongeaSauti(sautiYaKusoma);
+
+            // 4. (Bonus) Kama unataka picha ionekane pia, unaweza kuongeza hapa:
+            // document.getElementById("picha-ya-gonjwa").src = data.img;
+
             saveHistory(high.className);
+        } else {
+            // Kama jina la Class halipo kwenye DB yako
+            document.getElementById("res-name").innerText = high.className;
+            document.getElementById("sol-text").innerText = "Ugonjwa umetambuliwa lakini maelezo ya tiba hayajapatikana.";
+            ongeaSauti("Ugonjwa ni " + high.className);
         }
     }
+}
 
     // LOGIC
     function askAI() {

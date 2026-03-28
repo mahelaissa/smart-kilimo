@@ -13,6 +13,22 @@
     <style>
         /* SPLASH SCREEN CSS */
 #splash-screen {
+   #update-notice {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #ff9800;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    z-index: 10002;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+ 
     /* ... kodi zako za mwanzo ... */
     pointer-events: none; /* Hii inaruhusu kubonyeza vitu vilivyo chini yake ikianza kufifia */
     position: fixed;
@@ -1022,7 +1038,25 @@ document.getElementById('emergency-exit').addEventListener('click', function() {
         initModel();  
     }
 });
+   if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        // Angalia kama kuna update kila App ikifunguka
+        reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // Toleo jipya limeingia, onyesha notisi
+                    document.getElementById('update-notice').style.display = 'block';
+                }
+            });
+        });
+    });
+}
+ 
 </script>
+<div id="update-notice" onclick="location.reload(true)">
+    🚀 Toleo jipya limepatikana! Bofya hapa ili ku-update App.
+</div>
 
 <div id="splash-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2e7d32; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; transition: opacity 1s ease;">
     

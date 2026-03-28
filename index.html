@@ -403,49 +403,91 @@ const db = {
         }
         if('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(e => console.log(e)); }
     };
+// 1. Hakikisha MODEL_URL inatafuta folder la ndani
+const MODEL_URL = "./model/"; 
 
-    async function startCam() {
-        if (!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+async function startCam() {
+    try {
+        // Hapa ndipo kodi inapo-link na model yako kule GitHub
+        if (!model) {
+            console.log("Inapakia Model kutoka folder la ndani...");
+            // Tunapakia model.json na metadata.json
+            model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+            console.log("Model imepakiwa!");
+        }
+
         document.getElementById("upload-preview-container").style.display = "none";
         document.getElementById("webcam-container").style.display = "block";
         document.getElementById("laser-line").style.display = "block";
+
         if (!webcam) {
             webcam = new tmImage.Webcam(400, 400, true);
             await webcam.setup({ facingMode: "environment" });
             await webcam.play();
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            // Hakikisha hapa tunasafisha container kabla ya kuweka kamera mpya
+            const container = document.getElementById("webcam-container");
+            container.innerHTML = ""; 
+            container.appendChild(webcam.canvas);
         }
+        
+        // MUHIMU: Amsha scan kila unapowasha kamera
+        isScanning = true; 
         requestAnimationFrame(loop);
+        
+    } catch (e) {
+        console.error("Hitilafu ya kupakia model:", e);
+        alert("Shida: Hakikisha folder la 'model' lipo GitHub na lina faili zako 3.");
     }
-async function loop() {
-    if (!isScanning) return; // Kama isScanning ni false, loop inakufa hapa (hii ni nzuri kwa battery)
-    
-    webcam.update(); // Sasisha picha ya kamera
-    await predict(webcam.canvas); // Tuma picha kwenye AI
-    window.requestAnimationFrame(loop); // Endelea na loop
 }
-   
-    async function handleUpload(e) {
-        const file = e.target.files[0]; if(!file) return;
+
+async function loop() {
+    if (!isScanning) return; 
+    
+    if (webcam) {
+        webcam.update(); 
+        await predict(webcam.canvas); 
+    }
+    window.requestAnimationFrame(loop); 
+}
+
+async function handleUpload(e) {
+    const file = e.target.files[0]; 
+    if(!file) return;
+
+    // Link model hapa pia kama haijapakiwa
+    try {
         if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+
         const reader = new FileReader();
         reader.onload = (event) => {
             const img = document.getElementById("uploaded-img");
             img.src = event.target.result;
+            
             document.getElementById("webcam-container").style.display = "none";
             document.getElementById("upload-preview-container").style.display = "block";
             document.getElementById("laser-line").style.display = "block";
-            img.onload = () => {
+
+            img.onload = async () => {
                 setTimeout(async () => {
-                    const c = document.createElement("canvas"); c.width=400; c.height=400;
-                    c.getContext("2d").drawImage(img, 0,0,400,400);
+                    const c = document.createElement("canvas"); 
+                    c.width = 400; 
+                    c.height = 400;
+                    c.getContext("2d").drawImage(img, 0, 0, 400, 400);
+                    
                     document.getElementById("laser-line").style.display = "none";
+                    
+                    // Amsha isScanning ili predict() ifanye kazi
+                    isScanning = true; 
                     await predict(c, true);
                 }, 1500);
             };
         };
         reader.readAsDataURL(file);
+    } catch (err) {
+        alert("Imeshindwa kupakia picha au model.");
     }
+}
+
 async function predict(src, manual = false) {
     // 0. KAMA SCAN IMEZIMWA, USIFANYE CHOCHOTE
     if (!isScanning) return;

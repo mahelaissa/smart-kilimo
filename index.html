@@ -38,6 +38,20 @@
         
         .recording { animation: micPulse 1s infinite; background: #ff5252 !important; color: white !important; }
         @keyframes micPulse { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,0.7); } 70% { box-shadow: 0 0 0 15px rgba(211,47,47,0); } 100% { box-shadow: 0 0 0 0 rgba(211,47,47,0); } }
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tab-btn.active {
+    color: #2e7d32; /* Kijani cha kilimo */
+    border-bottom: 3px solid #2e7d32;
+    font-weight: bold;
+}
         
 #splash-screen { 
     position: fixed; 
@@ -510,28 +524,17 @@ function clearChat() {
     ongeaSauti("Historia imefutwa.");
 }
 
-// 1. Function ya kuhifadhi na kuhamisha tab
 function saveHistory(n) { 
     const histBox = document.getElementById("hist-content");
-    const timestamp = new Date().toLocaleTimeString();
-    const entryText = `✅ ${n} - ${timestamp}`;
-
-    // Tengeneza HTML ya kuonyesha
-    const entryHTML = `<div style="padding:10px; border-bottom:1px solid #eee;">${entryText}</div>`;
-    histBox.innerHTML = entryHTML + histBox.innerHTML; 
-
-    // --- SEHEMU MPYA: Save kwenye LocalStorage ---
-    let history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
-    history.unshift(entryText); // Ongeza mpya mwanzo wa list
-    localStorage.setItem("smart_kilimo_history", JSON.stringify(history));
-
-    // --- SEHEMU MPYA: Shift Tab ---
-    // Hapa tunasema: ficha chat, onyesha history
-    document.getElementById("chat-section").style.display = "none";
-    document.getElementById("history-section").style.display = "block";
+    const entry = `<div style="padding:15px; border-bottom:1px solid #ddd; background:#fff; border-radius:8px; margin-bottom:5px;">
+                    ✅ <b>${n}</b> <br> 
+                    <small style="color:gray;">${new Date().toLocaleTimeString()}</small>
+                   </div>`;
     
-    // Kama unatumia CSS classes (mfano Tailwind), unaweza kutumia:
-    // document.getElementById("history-tab-button").click(); 
+    histBox.innerHTML = entry + histBox.innerHTML; 
+
+    // MUHIMU: Hama kwenda tab ya Historia mara moja
+    switchTab('hist');
 }
 
 // 2. Function ya kupakia data ukifungua page (Iweke mwishoni mwa script yako)
@@ -548,31 +551,20 @@ function loadHistory() {
 window.onload = loadHistory;
 
 function switchTab(t) {
-    // 1. Tafuta elements zote muhimu
-    const chatContent = document.getElementById("chat-content");
-    const chatControls = document.getElementById("chat-controls");
-    const histContent = document.getElementById("hist-content");
-    const tabChat = document.getElementById("t-chat");
-    const tabHist = document.getElementById("t-hist");
+    // 1. Dhibiti Content (Onyesha/Ficha)
+    const isChat = (t === 'chat');
+    
+    document.getElementById("chat-content").style.display = isChat ? 'block' : 'none';
+    document.getElementById("chat-controls").style.display = isChat ? 'flex' : 'none';
+    document.getElementById("hist-content").style.display = isChat ? 'none' : 'block';
 
-    if (t === 'chat') {
-        // Onyesha Chat, Ficha History
-        chatContent.style.display = "block";
-        chatControls.style.display = "flex";
-        histContent.style.display = "none";
-        
-        // Badilisha muonekano wa Button (Active state)
-        tabChat.classList.add("active");
-        tabHist.classList.remove("active");
+    // 2. Dhibiti Muonekano wa Button (Active State)
+    if (isChat) {
+        document.getElementById("t-chat").classList.add("active");
+        document.getElementById("t-hist").classList.remove("active");
     } else {
-        // Onyesha History, Ficha Chat
-        chatContent.style.display = "none";
-        chatControls.style.display = "none";
-        histContent.style.display = "block";
-        
-        // Badilisha muonekano wa Button (Active state)
-        tabHist.classList.add("active");
-        tabChat.classList.remove("active");
+        document.getElementById("t-hist").classList.add("active");
+        document.getElementById("t-chat").classList.remove("active");
     }
 }
     function loginUser() {

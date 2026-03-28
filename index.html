@@ -399,53 +399,78 @@ const db = {
         ]
     };
    
+// 1. Variable za Global
+let model, webcam, maxPredictions, currentUser = "";
 
-    function loginUser() {
-        const u = document.getElementById("username").value.trim();
-        if(u) { localStorage.setItem("active_farmer", u); location.reload(); }
-        else { alert("Tafadhali andika jina lako!"); }
-        ongeaSauti("Karibu kwenye Smart Kilimo");
+// 2. Login Function
+function loginUser() {
+    const u = document.getElementById("username").value.trim();
+    if (u) {
+        localStorage.setItem("active_farmer", u);
+        // Tunatoa sauti kabla ya kureload kwa sababu reload inafuta memory ya muda huo
+        ongeaSauti("Karibu kwenye Smart Kilimo " + u);
+        
+        // Tunampa muda kidogo aseme "Karibu" kabla ya page kurefresh
+        setTimeout(() => {
+            location.reload();
+        }, 1200);
+    } else {
+        alert("Tafadhali andika jina lako!");
+    }
+}
+
+// 3. Logout Function
+function logout() {
+    localStorage.removeItem("active_farmer");
+    location.reload(); // Hii itarudisha kila kitu mwanzo (Login Section)
+}
+
+// 4. Page Load (The Brain of the App)
+window.onload = () => {
+    const user = localStorage.getItem("active_farmer");
+    
+    if (user) {
+        currentUser = user;
+        
+        // Onyesha App na Ficha Login
+        document.getElementById("login-section")?.style.setProperty("display", "none");
+        document.getElementById("main-app")?.style.setProperty("display", "block");
+        
+        const displayUser = document.getElementById("display-user");
+        if (displayUser) displayUser.innerText = "Mkulima: " + currentUser;
+
+        // Pakia data za zamani na AI Model
+        loadData();
+        initModel(); 
     }
 
-    function logout() { localStorage.removeItem("active_farmer"); location.reload(); }
+    // Sajili Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(e => console.log("SW Error:", e));
+    }
+};
 
-    window.onload = () => {
-        const user = localStorage.getItem("active_farmer");
-        if(user) {
-            currentUser = user;
-            document.getElementById("login-section").style.display = "none";
-            document.getElementById("main-app").style.display = "block";
-            document.getElementById("display-user").innerText = "Mkulima: " + currentUser;
-            loadData();
-        }
-        if('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(e => console.log(e)); }
-    };
-// 1. Hakikisha MODEL_URL inatafuta folder la 
-async function init() {
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
-
-    // Hapa itatafuta kwanza kwenye Cache iliyowekwa na Service Worker
-    model = await tmImage.load(modelURL, metadataURL);
-    maxPredictions = model.getTotalClasses();
-    console.log("Model imepakiwa kikamilifu!");
-}
- // Hakikisha folder linaitwa 'model' GitHub
+// 5. AI Init Function (Inaitwa tu kama user amesha-login)
+const MODEL_URL = "./model/"; 
 
 async function initModel() {
     if (!model) {
         try {
-            console.log("Inapakia model...");
-            // Tunapakia faili zote 3 kwa mpigo
+            console.log("Inapakia AI...");
             model = await tmImage.load(
                 MODEL_URL + "model.json",
                 MODEL_URL + "metadata.json"
             );
+            maxPredictions = model.getTotalClasses();
             console.log("Model imekamilika!");
-            ondoaSplash(); // Ondoa loading screen
+            
+            // Hakikisha unayo function ya ondoaSplash() kwenye kodi yako
+            if (typeof ondoaSplash === "function") ondoaSplash(); 
+            
         } catch (e) {
             console.error("Model Error:", e);
-            // Ikishindikana kabisa, ondoa splash ili button ya dharura ionekane
+            // Ikishindikana, bado ondoa splash ili mkulima asikwame kwenye loading screen
+            if (typeof ondoaSplash === "function") ondoaSplash();
         }
     }
 }

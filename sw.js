@@ -1,4 +1,4 @@
-const cacheName = 'smart-kilimo-v8'; // Badili kila unapo-update
+const cacheName = 'smart-kilimo-v9'; // Badili kila unapo-update
 const assets = [
   './',
   'index.html',

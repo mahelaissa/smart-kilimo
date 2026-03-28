@@ -1,11 +1,11 @@
-const cacheName = 'smart-kilimo-v4'; // Badili namba hapa iwe v4 ili simu ijue kuna mabadiliko
+const cacheName = 'smart-kilimo-v5'; // Badili iwe v5
 const assets = [
-  '',
+  './',
   'index.html',
-  'manifest.json',
   'tf.min.js',
   'teachablemachine-image.min.js',
   'html2pdf.bundle.min.js',
+  'manifest.json',
   'model/model.json',
   'model/metadata.json',
   'model/weights.bin'
@@ -14,9 +14,11 @@ const assets = [
 self.addEventListener('install', evt => {
   evt.waitUntil(
     caches.open(cacheName).then(cache => {
-      console.log('Inapakia mafaili...');
-      // addAll itafeli kama faili moja halipo. Hakikisha majina yapo sawa!
-      return cache.addAll(assets).catch(err => console.log("Faili limekosekana:", err));
+      console.log('Inajaribu kuhifadhi mafaili...');
+      return cache.addAll(assets).catch(err => {
+        // Hii itatuambia kwenye Console faili gani lina shida
+        console.error("Kuna faili limekosekana kwenye GitHub:", err);
+      });
     })
   );
 });

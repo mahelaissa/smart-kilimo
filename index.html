@@ -401,73 +401,82 @@ async function loop() {
 }
   function startMic() { recognition ? (recognition.start(), document.getElementById("voice-btn").classList.add("recording")) : alert("Mic error."); }
 
-// 1. Variables za Global
+    // --- 1. Variables za Global (Hakikisha zipo juu kabisa) ---
 let lughaSasa = 'sw'; 
 let ugonjwaWaMwisho = ""; 
 let akibaYaJibu = ""; 
-let isScanning = false;
-let webcam;
 
-// 2. Function ya Kutambua Ugonjwa (Predict)
+// --- 2. Function ya Predict (Iliyoboreshwa kuzuia ku-stack) ---
 async function predict(el) {
-    if (!isScanning) return; // Kama scanning imesimama, usifanye kitu
+    if (!isScanning) return; 
 
     const p = await model.predict(el);
     let high = p[0];
-    
     for(let i=1; i<p.length; i++) {
         if(p[i].probability > high.probability) high = p[i];
     }
 
-    // Uhakika wa 90% na kuzuia Background
+    // Kinga dhidi ya Giza/Background (Uhakika > 90%)
     if (high.probability > 0.90 && high.className !== "Background") {
         isScanning = false; 
         if(webcam) webcam.pause(); 
         
-        // Update UI
-        document.getElementById("laser-line").style.display = "none"; 
-        document.getElementById("result-area").style.display = "block"; 
+        // Onyesha UI ya matokeo
+        const resArea = document.getElementById("result-area");
+        const laser = document.getElementById("laser-line");
+        if(resArea) resArea.style.display = "block";
+        if(laser) laser.style.display = "none";
 
         const data = db[high.className];
         if (data) {
             ugonjwaWaMwisho = high.className;
-            
-            // Jaza maandishi
+
+            // Jaza maandishi kwenye screen
             document.getElementById("res-name").innerText = high.className;
             const maelezo = data[lughaSasa]; 
             document.getElementById("sol-text").innerText = maelezo;
 
-            // Tayarisha sauti
+            // Tayarisha sentensi ya sauti
             const mwanzo = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ");
             const kati = (lughaSasa === 'sw' ? ". Tiba yake ni " : ". The treatment is ");
             akibaYaJibu = mwanzo + high.className + kati + maelezo;
             
-            // Toa Sauti
+            // Toa Sauti Automatic
             ongeaSauti(akibaYaJibu, lughaSasa);
             
-            // Mambo mengine
+            // Link ya WhatsApp na History
             if (typeof wekaLinkWhatsApp === "function") wekaLinkWhatsApp(high.className);
             if (typeof saveHistory === "function") saveHistory(high.className);
         }
     }
 }
 
-// 3. Function za Sauti
+// --- 3. Function za Sauti (Zimeboreshwa) ---
+
 function ongeaSauti(t, lang = 'sw') {
     window.speechSynthesis.cancel(); 
     if (!t) return;
 
+    // Delay kidogo inasaidia browser kujiandaa
     setTimeout(() => {
         const m = new SpeechSynthesisUtterance(t);
         m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
         m.pitch = 1;
         m.rate = 0.85; 
         window.speechSynthesis.speak(m);
-    }, 100);
+    }, 150);
 }
 
 function repeatVoice() {
-    if (akibaYaJibu) {
+    const jina = document.getElementById("res-name").innerText;
+    const tiba = document.getElementById("sol-text").innerText;
+
+    if (jina && tiba) {
+        const mwanzo = (lughaSasa === 'sw') ? "Ugonjwa ni " : "The disease is ";
+        const kati = (lughaSasa === 'sw') ? ". Tiba yake ni " : ". The treatment is ";
+        akibaYaJibu = mwanzo + jina + kati + tiba;
+        ongeaSauti(akibaYaJibu, lughaSasa);
+    } else if (akibaYaJibu) {
         ongeaSauti(akibaYaJibu, lughaSasa);
     } else {
         const msg = (lughaSasa === 'sw') ? "Bado sijaona ugonjwa." : "No disease detected yet.";
@@ -475,28 +484,25 @@ function repeatVoice() {
     }
 }
 
-// 4. Function ya Lugha
+// --- 4. Function ya Lugha (Badili bila kurefresh) ---
+
 function badiliLugha(mpya) {
     lughaSasa = mpya;
     
-    // Update Button UI kama zipo
-    const bSw = document.getElementById("btn-sw");
-    const bEn = document.getElementById("btn-en");
-    if(bSw) bSw.style.background = (mpya === 'sw' ? 'green' : '#ccc');
-    if(bEn) bEn.style.background = (mpya === 'en' ? 'green' : '#ccc');
-
+    // Kama kuna jibu tayari, badili maandishi na sauti papo hapo
     if (ugonjwaWaMwisho) {
         const data = db[ugonjwaWaMwisho];
         const maelezo = data[lughaSasa];
         document.getElementById("sol-text").innerText = maelezo;
         
         const mwanzo = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ");
-        akibaYaJibu = mwanzo + ugonjwaWaMwisho + ". " + maelezo;
+        const kati = (lughaSasa === 'sw' ? ". Tiba yake ni " : ". The treatment is ");
+        akibaYaJibu = mwanzo + ugonjwaWaMwisho + kati + maelezo;
+        
         ongeaSauti(akibaYaJibu, lughaSasa);
     }
 }
-
-    // LOGIC
+   // LOGIC
 function askAI() {
     const inputField = document.getElementById("chatIn");
     const swali = inputField.value.trim().toLowerCase();

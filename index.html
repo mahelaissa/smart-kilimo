@@ -988,7 +988,7 @@ function clearAllHistory() {
 function loginUser() {
         const u = document.getElementById("username").value.trim();
         if(!u) return; currentUser = u;
-        document.getElementById("login-section").style.display = "none";
+        document.getElementById("login-overlay").style.display = "none";
         document.getElementById("main-app").style.display = "block";
         document.getElementById("display-user").innerText = "👨‍🌾Mkulima: " + u;
     }

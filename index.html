@@ -748,6 +748,9 @@ function clearAllHistory() {
             typeWriter("Developers:Mahela Issa & Erick Alfred", "type-dev", 50, () => {
                 typeWriter("KIBAHA SECONDARY SCHOOL", "type-sch", 50, () => {
                     setTimeout(() => { document.getElementById("splash-screen").style.display="none"; }, 1000);
+
+                        loadHistory();  // Inasoma LocalStorage
+                          switchTab('chat'); // Inafungulia kwenye Chat
                 });
             });
         });
@@ -767,11 +770,7 @@ function clearAllHistory() {
     waContainer.style.display = "block"; // Onyesha button ya WhatsApp
 }
 
-// Pakia kila kitu App inapoanza
-window.onload = () => {
-    loadHistory();  // Inasoma LocalStorage
-    switchTab('chat'); // Inafungulia kwenye Chat
-};
+
     
 </script>
 </body>

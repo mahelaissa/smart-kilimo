@@ -228,10 +228,7 @@ input, select {
 
     <div class="container" id="main-app" style="display:none;">
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-               <b id="display-user" style="color: var(--p); display: block; margin-bottom: 10px;"></b>
-                <button onclick="logout()" style="background:#666; color:white; padding:5px 10px; font-size:11px;">Toka</button>
-            </div>
+           <b id="display-user" style="color: var(--p); display: block; margin-bottom: 10px;"></b>  
             
     <div class="view-box">
     <div id="laser-line" class="laser"></div>
@@ -995,7 +992,10 @@ function loginUser() {
         document.getElementById("main-app").style.display = "block";
         document.getElementById("display-user").innerText = "👨‍🌾Mkulima: " + u;
     }
-    function logout() { location.reload(); }
+    function logout() {
+        
+        location.reload();
+    }
 
     // SPLASH
     function typeWriter(text, id, speed, callback) {

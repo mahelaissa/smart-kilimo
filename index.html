@@ -94,9 +94,8 @@ content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.ne
 
         .view-box { position: relative; width: 100%; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 4px solid var(--p); background: #000; margin-bottom: 15px; }
         #webcam-container, #image-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
-        .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 15px #00ff00; z-index: 100; animation: moveLaser 2.5s infinite ease-in-out; }
+         .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 15px #00ff00; z-index: 20; animation: moveLaser 2.5s infinite linear; }
         @keyframes moveLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-
         .content-box { height: 180px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 14px; }
         .tab-btn { flex: 1; padding: 12px; background: #eee; font-weight: bold; }
         .tab-btn.active { background: var(--p); color: white; }

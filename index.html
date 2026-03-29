@@ -309,6 +309,9 @@ input, select {
     "en": "Pest damage: Holes or eaten edges on leaves. Use insecticide or organic Neem oil.",
     "img": "https://gardenerspath.com/wp-content/uploads/2021/05/Cabbage-Looper-Damage-on-Leaves.jpg"
   }    };
+if (typeof lughaSasa === 'undefined') window.lughaSasa = 'sw';
+if (typeof isScanning === 'undefined') window.isScanning = false;
+if (typeof webcam === 'undefined') window.webcam = null;
 
  const chatKnowledge = {
         "sw": [
@@ -567,73 +570,51 @@ function showGuide(c) {
     ongeaSauti("Mwongozo wa " + c); 
 }
 
-// --- 0. VARIABLES ZA MSINGI (Zitangaze mara moja tu hapa juu) ---
-// Ikiwa tayari unazo hizi sehemu nyingine, hakikisha hazijirudii
-if (typeof lughaSasa === 'undefined') window.lughaSasa = 'sw';
-if (typeof isScanning === 'undefined') window.isScanning = false;
-if (typeof webcam === 'undefined') window.webcam = null;
 
-const chatKnowledge = {
-    "sw": [
-        { key: ["mbolea", "rutuba"], ans: "Mbolea ya DAP inafaa wakati wa kupanda mahindi." },
-        { key: ["wadudu", "dudu"], ans: "Tumia dawa ya kibaolojia kama Neem oil kupambana na wadudu." }
-    ],
-    "en": [
-        { key: ["fertilizer", "manure"], ans: "Use DAP fertilizer during planting for better results." }
-    ]
-};
 
 // --- 1. SPEECH RECOGNITION (Logic Moja Pekee) ---
-const Recognition = window.SpeechRecognition || window.webkitRecognition || window.webkitSpeechRecognition;
-// Tunatumia 'var' au check kama ipo kuzuia 'already declared' error
-if (typeof recognition === 'undefined') {
-    var recognition = null;
-    if (Recognition) {
-        recognition = new Recognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+var recognitionInstance; // Tunatumia jina tofauti kidogo kuzuia conflict
 
-        recognition.onstart = () => {
-            const micIcon = document.getElementById("mic-btn");
-            if (micIcon) micIcon.style.color = "red";
-        };
+if (Recognition && !recognitionInstance) {
+    recognitionInstance = new Recognition();
+    recognitionInstance.continuous = false;
+    recognitionInstance.interimResults = false;
 
-        recognition.onresult = (event) => {
-            const maneno = event.results[0][0].transcript;
-            const input = document.getElementById("chat-input");
-            if (input) {
-                input.value = maneno;
-                sendMessage(); // Tuma moja kwa moja
-            }
-        };
+    recognitionInstance.onstart = () => {
+        const mic = document.getElementById("mic-btn");
+        if (mic) mic.style.color = "red";
+    };
 
-        recognition.onend = () => {
-            const micIcon = document.getElementById("mic-btn");
-            if (micIcon) micIcon.style.color = "black";
-        };
+    recognitionInstance.onresult = (event) => {
+        const maneno = event.results[0][0].transcript;
+        const input = document.getElementById("chat-input");
+        if (input) {
+            input.value = maneno;
+            sendMessage(); 
+        }
+    };
 
-        recognition.onerror = () => {
-            const micIcon = document.getElementById("mic-btn");
-            if (micIcon) micIcon.style.color = "black";
-        };
-    }
+    recognitionInstance.onend = () => {
+        const mic = document.getElementById("mic-btn");
+        if (mic) mic.style.color = "black";
+    };
 }
 
-// Function moja ya kuwasha mic (Inayotumika na button yako)
 function anzaKusikiliza() {
-    if (recognition) {
-        recognition.lang = (window.lughaSasa === 'sw') ? 'sw-TZ' : 'en-US';
+    if (recognitionInstance) {
+        recognitionInstance.lang = (window.lughaSasa === 'sw') ? 'sw-TZ' : 'en-US';
         try {
-            recognition.start();
+            recognitionInstance.start();
         } catch (e) {
-            console.log("Mic tayari inarekodi...");
+            console.log("Mic tayari inafanya kazi.");
         }
     } else {
-        alert("Browser yako hairuhusu matumizi ya sauti.");
+        alert("Browser yako hairuhusu sauti.");
     }
 }
 
-// --- 2. CHAT LOGIC (Kutuma na Kupata Jibu) ---
+// --- 2. CHAT LOGIC (Kutuma Meseji) ---
 async function sendMessage() {
     const input = document.getElementById("chat-input");
     const chatBox = document.getElementById("chat-box");
@@ -643,7 +624,7 @@ async function sendMessage() {
     const swali = input.value.trim();
     const swaliLower = swali.toLowerCase();
     
-    // Onyesha meseji ya Mkulima
+    // 1. Message ya Mkulima
     chatBox.innerHTML += `
         <div style="margin-bottom:10px; text-align:right;">
             <div style="background:#e1ffc7; padding:10px; border-radius:15px; display:inline-block; max-width:80%; text-align:left;">${swali}</div>
@@ -652,9 +633,9 @@ async function sendMessage() {
     input.value = ""; 
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Tafuta Jibu
+    // 2. Tafuta Jibu
     let jibuAI = "";
-    const maarifa = (chatKnowledge && chatKnowledge[window.lughaSasa]) ? chatKnowledge[window.lughaSasa] : chatKnowledge["sw"]; 
+    const maarifa = chatKnowledge[window.lughaSasa] || chatKnowledge["sw"]; 
     let limepatikana = false;
 
     for (let item of maarifa) {
@@ -667,22 +648,24 @@ async function sendMessage() {
 
     if (!limepatikana) {
         jibuAI = (window.lughaSasa === 'sw') 
-            ? `Asante kwa swali kuhusu "${swali}". Kwa sasa nabobea kwenye Mahindi na Mchicha.` 
-            : `Thanks for asking about "${swali}". I specialize in Maize and Spinach currently.`;
+            ? `Asante kwa swali kuhusu "${swali}". Kwa sasa nimebobea kwenye Mahindi na Mchicha, nitaongeza maarifa zaidi hivi karibuni!` 
+            : `Thanks for your question about "${swali}". I'm currently specializing in Maize and Spinach.`;
     }
 
-    // Onyesha Jibu la AI
+    // 3. Jibu la AI
     setTimeout(() => {
         chatBox.innerHTML += `
             <div style="margin-bottom:10px; text-align:left;">
                 <div style="background:#eee; padding:10px; border-radius:15px; display:inline-block; max-width:80%;">${jibuAI}</div>
             </div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
+        
+        // Ikiwa unayo function ya Text-to-Speech
         if (typeof ongeaSauti === "function") ongeaSauti(jibuAI, window.lughaSasa);
     }, 800);
 }
 
-// --- 3. TAB SWITCH & DYNAMIC BUTTONS ---
+// --- 3. SWITCH TAB & DYNAMIC BUTTONS ---
 function switchTab(tabId) {
     const tabs = ['chat', 'hist', 'scan'];
     const deleteBtn = document.getElementById("dynamic-delete-btn");
@@ -691,20 +674,17 @@ function switchTab(tabId) {
         const area = document.getElementById(t + '-area');
         const btn = document.getElementById('t-' + t);
         if (area) area.style.display = (t === tabId) ? 'block' : 'none';
-        if (btn) {
-            if (t === tabId) btn.classList.add('active');
-            else btn.classList.remove('active');
-        }
+        if (btn) (t === tabId) ? btn.classList.add('active') : btn.classList.remove('active');
     });
 
     if (deleteBtn) {
         if (tabId === 'chat') {
             deleteBtn.innerText = "🗑️ Safisha Chat";
-            deleteBtn.onclick = () => { if(confirm("Safisha chat?")) document.getElementById("chat-box").innerHTML = ""; };
+            deleteBtn.onclick = () => { if(confirm("Futa maongezi yote?")) document.getElementById("chat-box").innerHTML = ""; };
             deleteBtn.style.display = "block";
         } else if (tabId === 'hist') {
             deleteBtn.innerText = "🗑️ Futa Historia";
-            deleteBtn.onclick = () => { 
+            deleteBtn.onclick = () => {
                 if(confirm("Futa historia yote?")) {
                     document.getElementById("hist-content").innerHTML = "";
                     localStorage.removeItem("smart_kilimo_history");
@@ -717,12 +697,12 @@ function switchTab(tabId) {
     }
 
     if (window.speechSynthesis) window.speechSynthesis.cancel();
-    
-    if (tabId !== 'scan' && window.webcam && typeof window.webcam.pause === "function") { 
-        window.webcam.pause(); 
+    if (tabId !== 'scan' && window.webcam) { 
+        try { window.webcam.stop(); } catch(e) {} // Stop badala ya pause ili isigande
         window.isScanning = false; 
     }
 }
+
     function loginUser() {
         const u = document.getElementById("username").value.trim();
         if(!u) return; currentUser = u;

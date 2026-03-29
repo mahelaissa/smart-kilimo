@@ -546,6 +546,27 @@ function askAI() {
     ongeaSauti(jibuLaAI);
     inputField.value = "";
 }
+    // Mfano wa function ya kutuma meseji
+async function sendMessage() {
+    const input = document.getElementById("chat-input");
+    const ujumbe = input.value;
+    if(!ujumbe) return;
+
+    // 1. Onyesha meseji ya mtumiaji
+    displayMessage(ujumbe, 'user');
+
+    // 2. Pata jibu kutoka kwa AI (Smart Kilimo AI)
+    const jibuLaAI = await getAIResponse(ujumbe); // Hapa ndipo jibu linatoka
+
+    // 3. Onyesha jibu kwenye screen
+    displayMessage(jibuLaAI, 'ai');
+
+    // --- REKEBISHA HAPA: Amuru iongee ---
+    // Tunatumia lughaSasa ili iongee kulingana na lugha iliyochaguliwa
+    ongeaSauti(jibuLaAI, lughaSasa); 
+    
+    input.value = "";
+}
  function calculateInputs() {
     const size = document.getElementById("farm-size").value;
     const crop = document.getElementById("crop-type").value;

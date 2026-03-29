@@ -1,7 +1,8 @@
 <!DOCTYPE html>  
 <html lang="sw">    
 <head> 
-    <meta charset="UTF-8"> 
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Kilimo</title>
     <script src="tf.min.js"></script>
@@ -566,12 +567,12 @@ function showGuide(c) {
     ongeaSauti("Mwongozo wa " + c); 
 }
 
-    // --- 0. VARIABLES ZA MSINGI (Lazima ziwepo kwanza) ---
-let lughaSasa = 'sw'; 
-let isScanning = false;
-let webcam = null; // Tunaiweka null ili isilete error ikikosekana
+// --- 0. VARIABLES ZA MSINGI (Zitangaze mara moja tu hapa juu) ---
+// Ikiwa tayari unazo hizi sehemu nyingine, hakikisha hazijirudii
+if (typeof lughaSasa === 'undefined') window.lughaSasa = 'sw';
+if (typeof isScanning === 'undefined') window.isScanning = false;
+if (typeof webcam === 'undefined') window.webcam = null;
 
-// Mfano wa database (Hakikisha hii ipo au imepakiwa)
 const chatKnowledge = {
     "sw": [
         { key: ["mbolea", "rutuba"], ans: "Mbolea ya DAP inafaa wakati wa kupanda mahindi." },
@@ -582,38 +583,57 @@ const chatKnowledge = {
     ]
 };
 
-// --- 1. SPEECH RECOGNITION ---
-const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition;
+// --- 1. SPEECH RECOGNITION (Logic Moja Pekee) ---
+const Recognition = window.SpeechRecognition || window.webkitRecognition || window.webkitSpeechRecognition;
+// Tunatumia 'var' au check kama ipo kuzuia 'already declared' error
+if (typeof recognition === 'undefined') {
+    var recognition = null;
+    if (Recognition) {
+        recognition = new Recognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
 
-if (Recognition) {
-    recognition = new Recognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+        recognition.onstart = () => {
+            const micIcon = document.getElementById("mic-btn");
+            if (micIcon) micIcon.style.color = "red";
+        };
 
-    recognition.onstart = () => {
-        const mic = document.getElementById("mic-btn");
-        if(mic) mic.style.color = "red";
-    };
+        recognition.onresult = (event) => {
+            const maneno = event.results[0][0].transcript;
+            const input = document.getElementById("chat-input");
+            if (input) {
+                input.value = maneno;
+                sendMessage(); // Tuma moja kwa moja
+            }
+        };
 
-    recognition.onresult = (event) => {
-        const maneno = event.results[0][0].transcript;
-        const input = document.getElementById("chat-input");
-        if (input) {
-            input.value = maneno;
-            sendMessage(); 
-        }
-    };
+        recognition.onend = () => {
+            const micIcon = document.getElementById("mic-btn");
+            if (micIcon) micIcon.style.color = "black";
+        };
 
-    recognition.onend = () => {
-        const mic = document.getElementById("mic-btn");
-        if(mic) mic.style.color = "black";
-    };
+        recognition.onerror = () => {
+            const micIcon = document.getElementById("mic-btn");
+            if (micIcon) micIcon.style.color = "black";
+        };
+    }
 }
-  function startMic() { recognition ? (recognition.start(), document.getElementById("voice-btn").classList.add("recording")) : alert("Mic error."); }
 
-    // --- 1. Variables za Global (Hakikisha zipo juu kabisa) ---
-// --- 2. CHAT LOGIC ---
+// Function moja ya kuwasha mic (Inayotumika na button yako)
+function anzaKusikiliza() {
+    if (recognition) {
+        recognition.lang = (window.lughaSasa === 'sw') ? 'sw-TZ' : 'en-US';
+        try {
+            recognition.start();
+        } catch (e) {
+            console.log("Mic tayari inarekodi...");
+        }
+    } else {
+        alert("Browser yako hairuhusu matumizi ya sauti.");
+    }
+}
+
+// --- 2. CHAT LOGIC (Kutuma na Kupata Jibu) ---
 async function sendMessage() {
     const input = document.getElementById("chat-input");
     const chatBox = document.getElementById("chat-box");
@@ -623,17 +643,18 @@ async function sendMessage() {
     const swali = input.value.trim();
     const swaliLower = swali.toLowerCase();
     
+    // Onyesha meseji ya Mkulima
     chatBox.innerHTML += `
         <div style="margin-bottom:10px; text-align:right;">
-            <div style="background:#e1ffc7; padding:10px; border-radius:15px; display:inline-block; max-width:80%;">${swali}</div>
+            <div style="background:#e1ffc7; padding:10px; border-radius:15px; display:inline-block; max-width:80%; text-align:left;">${swali}</div>
         </div>`;
     
     input.value = ""; 
     chatBox.scrollTop = chatBox.scrollHeight;
 
+    // Tafuta Jibu
     let jibuAI = "";
-    // USALAMA: Tunakagua kama chatKnowledge ipo
-    const maarifa = (chatKnowledge && chatKnowledge[lughaSasa]) ? chatKnowledge[lughaSasa] : []; 
+    const maarifa = (chatKnowledge && chatKnowledge[window.lughaSasa]) ? chatKnowledge[window.lughaSasa] : chatKnowledge["sw"]; 
     let limepatikana = false;
 
     for (let item of maarifa) {
@@ -645,22 +666,23 @@ async function sendMessage() {
     }
 
     if (!limepatikana) {
-        jibuAI = (lughaSasa === 'sw') 
+        jibuAI = (window.lughaSasa === 'sw') 
             ? `Asante kwa swali kuhusu "${swali}". Kwa sasa nabobea kwenye Mahindi na Mchicha.` 
             : `Thanks for asking about "${swali}". I specialize in Maize and Spinach currently.`;
     }
 
+    // Onyesha Jibu la AI
     setTimeout(() => {
         chatBox.innerHTML += `
             <div style="margin-bottom:10px; text-align:left;">
                 <div style="background:#eee; padding:10px; border-radius:15px; display:inline-block; max-width:80%;">${jibuAI}</div>
             </div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
-        if(typeof ongeaSauti === "function") ongeaSauti(jibuAI, lughaSasa);
+        if (typeof ongeaSauti === "function") ongeaSauti(jibuAI, window.lughaSasa);
     }, 800);
 }
 
-// --- 3. TAB SWITCH (Iliyorekebishwa isigande) ---
+// --- 3. TAB SWITCH & DYNAMIC BUTTONS ---
 function switchTab(tabId) {
     const tabs = ['chat', 'hist', 'scan'];
     const deleteBtn = document.getElementById("dynamic-delete-btn");
@@ -669,30 +691,36 @@ function switchTab(tabId) {
         const area = document.getElementById(t + '-area');
         const btn = document.getElementById('t-' + t);
         if (area) area.style.display = (t === tabId) ? 'block' : 'none';
-        if (btn) (t === tabId) ? btn.classList.add('active') : btn.classList.remove('active');
+        if (btn) {
+            if (t === tabId) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
     });
 
     if (deleteBtn) {
         if (tabId === 'chat') {
             deleteBtn.innerText = "🗑️ Safisha Chat";
-            deleteBtn.onclick = clearChat;
+            deleteBtn.onclick = () => { if(confirm("Safisha chat?")) document.getElementById("chat-box").innerHTML = ""; };
             deleteBtn.style.display = "block";
         } else if (tabId === 'hist') {
             deleteBtn.innerText = "🗑️ Futa Historia";
-            deleteBtn.onclick = clearAllHistory;
+            deleteBtn.onclick = () => { 
+                if(confirm("Futa historia yote?")) {
+                    document.getElementById("hist-content").innerHTML = "";
+                    localStorage.removeItem("smart_kilimo_history");
+                }
+            };
             deleteBtn.style.display = "block";
         } else {
             deleteBtn.style.display = "none";
         }
     }
 
-    // USALAMA: Zima sauti na kamera bila kuleta error
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     
-    // Angalia kama webcam ipo na inafanya kazi kabla ya ku-pause
-    if (tabId !== 'scan' && webcam && typeof webcam.pause === "function") { 
-        webcam.pause(); 
-        isScanning = false; 
+    if (tabId !== 'scan' && window.webcam && typeof window.webcam.pause === "function") { 
+        window.webcam.pause(); 
+        window.isScanning = false; 
     }
 }
     function loginUser() {

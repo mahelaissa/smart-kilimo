@@ -623,80 +623,104 @@ function showGuide(c) {
 }
 
 // --- 1. Kufuta Chat na Historia (Clear All) ---
-function clearChat() {
-    // 1. Safisha Chat Box
+// --- 1. Variables za Global za Speech Recognition ---
+const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+
+if (Recognition) {
+    recognition = new Recognition();
+    recognition.continuous = false; // Acha kusikiliza akitulia kidogo
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+        const micBtn = document.getElementById("mic-btn");
+        if (micBtn) micBtn.style.color = "red"; // Inaonyesha inarekodi
+    };
+
+    recognition.onresult = (event) => {
+        const maneno = event.results[0][0].transcript;
+        const input = document.getElementById("chat-input");
+        if (input) {
+            input.value = maneno;
+            sendMessage(); // Tuma ujumbe automatic baada ya kuongea
+        }
+    };
+
+    recognition.onend = () => {
+        const micBtn = document.getElementById("mic-btn");
+        if (micBtn) micBtn.style.color = "black";
+    };
+}
+
+// Function ya kuwasha mic
+function anzaKusikiliza() {
+    if (recognition) {
+        recognition.lang = (lughaSasa === 'sw') ? 'sw-TZ' : 'en-US';
+        recognition.start();
+    } else {
+        alert("Browser yako hairuhusu kurekodi sauti.");
+    }
+}
+
+// --- 2. Function ya Kutuma Chat (Iliyorekebishwa) ---
+async function sendMessage() {
+    const input = document.getElementById("chat-input");
     const chatBox = document.getElementById("chat-box");
-    if (chatBox) {
-        const msg = (lughaSasa === 'sw') ? "Chat na historia zimesafishwa. Karibu tena!" : "Chat and history cleared. Welcome back!";
-        chatBox.innerHTML = `<div class="message ai"><b>AI:</b> ${msg}</div>`;
+    
+    if (!input || !chatBox || input.value.trim() === "") return;
+
+    const ujumbe = input.value.trim();
+    
+    // 1. Onyesha meseji ya mtumiaji
+    const userDiv = document.createElement("div");
+    userDiv.className = "message user";
+    userDiv.innerHTML = `<b>Wewe:</b> ${ujumbe}`;
+    chatBox.appendChild(userDiv);
+    
+    input.value = ""; // Safisha input
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // 2. Pata jibu kutoka kwa AI 
+    // Hapa nimeiweka iweze kuitumia function yako ya 'getAIResponse' kama unayo, 
+    // la sivyo inatumia jibu la mfano hapa chini.
+    let jibuAI;
+    if (typeof getAIResponse === "function") {
+        jibuAI = await getAIResponse(ujumbe);
+    } else {
+        jibuAI = (lughaSasa === 'sw') ? "Ninachakata taarifa zako za kilimo..." : "I am processing your agricultural data...";
+    }
+    
+    // 3. Onyesha jibu la AI baada ya sekunde 1
+    setTimeout(() => {
+        const aiDiv = document.createElement("div");
+        aiDiv.className = "message ai";
+        aiDiv.innerHTML = `<b>AI:</b> ${jibuAI}`;
+        chatBox.appendChild(aiDiv);
+        
+        // --- MUHIMU: Toa sauti ya jibu la AI ---
+        ongeaSauti(jibuAI, lughaSasa);
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }, 1000);
+}
+
+// --- 3. Function ya Kufuta Historia ---
+function clearAllHistory() {
+    const swali = (lughaSasa === 'sw') ? "Je, una uhakika unataka kufuta historia yote?" : "Are you sure you want to clear all history?";
+    
+    if (confirm(swali)) {
+        const histBox = document.getElementById("hist-content");
+        if (histBox) {
+            histBox.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${(lughaSasa === 'sw' ? 'Historia imefutwa.' : 'History cleared.')}</p>`;
+        }
+        localStorage.removeItem("smart_kilimo_history");
+        
+        const msg = (lughaSasa === 'sw') ? "Historia imefutwa kikamilifu." : "History has been permanently deleted.";
         ongeaSauti(msg, lughaSasa);
     }
-
-    // 2. Safisha Historia kwenye Screen
-    const histBox = document.getElementById("hist-content");
-    if (histBox) histBox.innerHTML = "";
-
-    // 3. Futa kwenye Memory (LocalStorage)
-    localStorage.removeItem("smart_kilimo_history");
 }
 
-// --- 2. Kusave Historia ya Scan ---
-function saveHistory(n) {
-    const histBox = document.getElementById("hist-content");
-    const data = db[n]; 
-    const maelezo = data ? data[lughaSasa] : (lughaSasa === 'sw' ? "Maelezo hayapo" : "No details available");
-    
-    const wakati = new Date().toLocaleTimeString();
-    const sautiYaHapa = (lughaSasa === 'sw' ? `Ugonjwa: ${n}. Tiba: ${maelezo}` : `Disease: ${n}. Treatment: ${maelezo}`);
-
-    // Kutengeneza muonekano wa entry mpya
-    const entryHTML = `
-        <div class="hist-item" style="padding:12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; margin-bottom:5px; border-radius:8px;">
-            <div>
-                <b style="color:#2e7d32;">✅ ${n}</b><br>
-                <small>${wakati}</small>
-            </div>
-            <button onclick="ongeaSauti('${sautiYaHapa}', lughaSasa)" style="background:none; border:none; font-size:20px; cursor:pointer;">
-                🔊
-            </button>
-        </div>`;
-    
-    // Ongeza juu ya list kwenye screen
-    if (histBox) histBox.innerHTML = entryHTML + histBox.innerHTML;
-
-    // --- Hifadhi kwenye LocalStorage ---
-    let history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
-    history.unshift({ jina: n, muda: wakati, tiba: maelezo });
-    if (history.length > 20) history.pop(); // Tunza records 20 tu
-    localStorage.setItem("smart_kilimo_history", JSON.stringify(history));
-}
-
-// --- 3. Kupakia Data Ukifungua Page (Load History) ---
-function loadHistory() {
-    const histBox = document.getElementById("hist-content");
-    if (!histBox) return;
-
-    const history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
-    
-    histBox.innerHTML = history.map(item => {
-        const sautiYaHapa = (lughaSasa === 'sw' ? `Ugonjwa: ${item.jina}. Tiba: ${item.tiba}` : `Disease: ${item.jina}. Treatment: ${item.tiba}`);
-        return `
-            <div class="hist-item" style="padding:12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; margin-bottom:5px; border-radius:8px;">
-                <div>
-                    <b style="color:#2e7d32;">✅ ${item.jina}</b><br>
-                    <small>${item.muda}</small>
-                </div>
-                <button onclick="ongeaSauti('${sautiYaHapa}', lughaSasa)" style="background:none; border:none; font-size:20px; cursor:pointer;">
-                    🔊
-                </button>
-            </div>`;
-    }).join('');
-}
-
-// Pakia historia app inapoanza
-window.addEventListener('load', loadHistory);
-
-// --- 4. Switch Tab (Inayolingana na IDs zako) ---
+// --- 4. Switch Tab ---
 function switchTab(tabId) {
     const majinaYaTabs = ['chat', 'hist', 'scan']; 
 
@@ -707,23 +731,18 @@ function switchTab(tabId) {
         if (area) {
             area.style.display = (t === tabId) ? 'block' : 'none';
         }
-
         if (btn) {
             (t === tabId) ? btn.classList.add('active') : btn.classList.remove('active');
         }
     });
 
-    // Usalama wa Kamera
+    window.speechSynthesis.cancel();
     if (tabId !== 'scan' && webcam) {
         webcam.pause();
         isScanning = false;
-        const laser = document.getElementById("laser-line");
-        if(laser) laser.style.display = "none";
     }
-
-    // Zima sauti inayoongea unapo-switch
-    window.speechSynthesis.cancel();
 }
+    
     function loginUser() {
         const u = document.getElementById("username").value.trim();
         if(!u) return; currentUser = u;

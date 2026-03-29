@@ -371,54 +371,7 @@ function showGuide(crop) {
         };
     }
     function startMic() { recognition ? (recognition.start(), document.getElementById("voice-btn").classList.add("recording")) : alert("Mic error."); }
-   // Function ya msingi ya kuongea
-// Variable ya kutunza jibu la mwisho lililopatikana
-let lughaSasa = 'sw'; // Default ni Kiswahili
-let ugonjwaWaMwisho = ""; // Inakumbuka jina la ugonjwa kwa ajili ya kubadili lugha
-let akibaYaJibu = ""; // Inatunza sentensi nzima ya sauti kwa ajili ya repeatVoice
-// 1. Function ya msingi ya kutoa sauti
-function ongeaSauti(t, lang = 'sw') {
-    window.speechSynthesis.cancel(); // Zima sauti inayoongea sasa hivi
-    
-    if (!t) return;
 
-    // Subiri kidogo kuzuia migongano ya sauti (ms 100)
-    setTimeout(() => {
-        const m = new SpeechSynthesisUtterance(t);
-        
-        // Chagua lugha ya sauti kulingana na chaguo la mtumiaji
-        m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
-        
-        m.pitch = 1;
-        m.rate = 0.85; // Kasi nzuri kwa mkulima kuelewa
-
-        window.speechSynthesis.speak(m);
-    }, 100);
-}
-
-// 2. Function ya kurudia sauti (Inatumiwa na button ya 🔊)
-function repeatVoice() {
-    // Tunachukua maandishi yaliyopo kwenye screen kwa sasa
-    const jina = document.getElementById("res-name").innerText;
-    const tiba = document.getElementById("sol-text").innerText;
-
-    if (jina && tiba) {
-        // Tunatengeneza sentensi kulingana na lugha iliyochaguliwa sasa hivi
-        const mwanzo = (lughaSasa === 'sw') ? "Ugonjwa ni " : "The disease is ";
-        const kati = (lughaSasa === 'sw') ? ". Tiba yake ni " : ". The treatment is ";
-        
-        akibaYaJibu = mwanzo + jina + kati + tiba;
-        
-        // Tunaita ongeaSauti tukipitisha lugha husika
-        ongeaSauti(akibaYaJibu, lughaSasa);
-    } else if (akibaYaJibu) {
-        // Kama screen imefutwa (mfano umehama tab), soma ile akiba ya mwisho
-        ongeaSauti(akibaYaJibu, lughaSasa);
-    } else {
-        const ujumbeKosa = (lughaSasa === 'sw') ? "Samahani, bado sijaona ugonjwa." : "Sorry, I haven't detected any disease yet.";
-        ongeaSauti(ujumbeKosa, lughaSasa);
-    }
-}
     // MODEL
     async function initModel() { if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json"); }
 
@@ -449,112 +402,112 @@ async function loop() {
 
 
 // --- 2. Function ya predict iliyoboreshwa ---
+// --- 1. Variables za Global ---
+let lughaSasa = 'sw'; 
+let ugonjwaWaMwisho = ""; 
+let akibaYaJibu = ""; 
+
+// --- 2. Function ya Kutambua Ugonjwa (Predict) ---
 async function predict(el) {
     const p = await model.predict(el);
     let high = p[0];
+    
     for(let i=1; i<p.length; i++) {
         if(p[i].probability > high.probability) high = p[i];
     }
 
-    if(high.probability > 0.85) {
-        const data = db[high.className];
-        if(data) {
-            ugonjwaWaMwisho = high.className; // Tunatunza jina la ugonjwa hapa
+    // Uhakika wa 90% na kuzuia background/giza
+    if (high.probability > 0.90 && high.className !== "Background") {
+        isScanning = false; 
+        if(webcam) webcam.pause(); // Tuliza picha ya mwisho
+        
+        document.getElementById("laser-line").style.display = "none"; 
+        document.getElementById("result-area").style.display = "block"; 
 
-            // 1. Jaza taarifa kwenye screen kulingana na lugha iliyochaguliwa
-            document.getElementById("res-name").innerText = high.className;
+        const data = db[high.className];
+        if (data) {
+            ugonjwaWaMwisho = high.className;
             
-            // Hapa inachukua data.sw au data.en kulingana na lughaSasa
+            // 1. Jaza maandishi kulingana na lugha
+            document.getElementById("res-name").innerText = high.className;
             const maelezo = data[lughaSasa]; 
             document.getElementById("sol-text").innerText = maelezo;
 
-            // 2. Tunatengeneza na kuhifadhi sentensi ya sauti hapa ili 'repeatVoice' ilijue
+            // 2. Tayarisha sentensi ya sauti
             const mwanzo = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ");
-            akibaYaJibu = mwanzo + high.className + ". " + maelezo;
+            const kati = (lughaSasa === 'sw' ? ". Tiba yake ni " : ". The treatment is ");
+            akibaYaJibu = mwanzo + high.className + kati + maelezo;
             
-            // 3. Inasoma automatically baada ya scan kwa kutumia lugha husika
+            // 3. Toa Sauti
             ongeaSauti(akibaYaJibu, lughaSasa);
             
-            // 4. Weka Link ya WhatsApp
+            // 4. Mambo mengine
             wekaLinkWhatsApp(high.className);
-
-            // 5. Nyinginezo
             saveHistory(high.className);
-            isScanning = false;
-            if(webcam) webcam.stop(); // Inasimamisha kamera baada ya kupata jibu sahihi
         }
     }
 }
 
 // --- 3. Function za Sauti ---
 
-// Inatumika kutoa sauti (Inaitwa ndani ya predict na badiliLugha)
 function ongeaSauti(t, lang = 'sw') {
-    window.speechSynthesis.cancel(); // Zima sauti yoyote inayoongea sasa hivi
+    window.speechSynthesis.cancel(); // Zima sauti yoyote inayoongea
+    
     if (!t) return;
 
+    // Delay kidogo inasaidia browsers kuanza sauti vizuri
     setTimeout(() => {
         const m = new SpeechSynthesisUtterance(t);
         m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
         m.pitch = 1;
-        m.rate = 0.9;
+        m.rate = 0.85; 
         window.speechSynthesis.speak(m);
     }, 100);
 }
-// Function ya kubadili lugha bila kurefresh
-// --- 4. Function ya Kubadili Lugha (Switch Language) ---
+
+function repeatVoice() {
+    const jina = document.getElementById("res-name").innerText;
+    const tiba = document.getElementById("sol-text").innerText;
+
+    if (jina && tiba) {
+        const mwanzo = (lughaSasa === 'sw') ? "Ugonjwa ni " : "The disease is ";
+        const kati = (lughaSasa === 'sw') ? ". Tiba yake ni " : ". The treatment is ";
+        akibaYaJibu = mwanzo + jina + kati + tiba;
+        ongeaSauti(akibaYaJibu, lughaSasa);
+    } else if (akibaYaJibu) {
+        ongeaSauti(akibaYaJibu, lughaSasa);
+    } else {
+        const ujumbeKosa = (lughaSasa === 'sw') ? "Samahani, bado sijaona ugonjwa." : "Sorry, I haven't detected any disease yet.";
+        ongeaSauti(ujumbeKosa, lughaSasa);
+    }
+}
+
+// --- 4. Function ya Kubadili Lugha ---
+
 function badiliLugha(mpya) {
     lughaSasa = mpya;
     
-    // Kama tayari kuna jibu kwenye screen, badili maandishi na sauti papo hapo
+    // Badili muonekano wa button active (Kama unatumia CSS classes)
+    const swBtn = document.getElementById("btn-sw");
+    const enBtn = document.getElementById("btn-en");
+    if(swBtn && enBtn) {
+        swBtn.classList.toggle("active", mpya === 'sw');
+        enBtn.classList.toggle("active", mpya === 'en');
+    }
+
     if (ugonjwaWaMwisho) {
         const data = db[ugonjwaWaMwisho];
         const maelezo = data[lughaSasa];
         document.getElementById("sol-text").innerText = maelezo;
         
-        // Update akiba ya sauti kwa lugha mpya
+        // Update akiba na ongea upya kwa lugha mpya
         const mwanzo = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ");
-        akibaYaJibu = mwanzo + ugonjwaWaMwisho + ". " + maelezo;
+        const kati = (lughaSasa === 'sw' ? ". Tiba yake ni " : ". The treatment is ");
+        akibaYaJibu = mwanzo + ugonjwaWaMwisho + kati + maelezo;
         
         ongeaSauti(akibaYaJibu, lughaSasa);
     }
 }
-
-// Hakikisha ongeaSauti inapokea lugha
-function ongeaSauti(t, lang = 'sw') {
-    window.speechSynthesis.cancel();
-    const m = new SpeechSynthesisUtterance(t);
-    m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
-    window.speechSynthesis.speak(m);
-}
-
-
-    // 2. Kinga dhidi ya "Giza" au "Majibu ya Haraka"
-    // Tunataka AI iwe na uhakika wa 90% na isichukue "Background" (kama una class ya background)
-    if (high.probability > 0.90 && high.className !== "Background") {
-        
-        isScanning = false; // SIMAMISHA SCANNING MARA MOJA
-        if(webcam) webcam.pause(); // Tuliza picha ya kamera
-        
-        document.getElementById("laser-line").style.display = "none"; // Zima mstari
-        document.getElementById("result-area").style.display = "block"; 
-
-        const data = db[high.className];
-        if (data) {
-            document.getElementById("res-name").innerText = high.className;
-            document.getElementById("sol-text").innerText = data.sw;
-            
-            // Sauti
-            ongeaSauti("Ugonjwa umetambuliwa kama: " + high.className + ". " + data.sw);
-            
-            // 3. Weka Link ya WhatsApp (Tutaiongeza hapa chini)
-            wekaLinkWhatsApp(high.className);
-
-            saveHistory(high.className);
-        }
-    }
-}
-
     // LOGIC
 function askAI() {
     const inputField = document.getElementById("chatIn");

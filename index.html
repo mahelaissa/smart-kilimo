@@ -60,8 +60,8 @@ content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.ne
 
         .view-box { position: relative; width: 100%; aspect-ratio: 1; border-radius: 18px; overflow: hidden; border: 4px solid var(--p); background: #000; margin-bottom: 15px; }
         #webcam-container, #image-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
-        .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: #00ff00; box-shadow: 0 0 20px #00ff00; z-index: 100; animation: moveLaser 2s infinite ease-in-out; }
-        @keyframes moveLaser { 0% { top: 0%; } 50% { top: 95%; } 100% { top: 0%; } }
+        .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 15px #00ff00; z-index: 100; animation: moveLaser 2.5s infinite ease-in-out; }
+        @keyframes moveLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
 
         .content-box { height: 180px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 14px; }
         .tab-btn { flex: 1; padding: 12px; background: #eee; font-weight: bold; }
@@ -465,44 +465,53 @@ async function handleUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    try {
-        // 1. Hakikisha Model ipo tayari
-        if (typeof initModel === "function") await initModel();
+    // UI: Onyesha laser na ficha kamera
+    const laser = document.getElementById("laser-line");
+    if(laser) laser.style.display = "block";
+    
+    document.getElementById("webcam-container").style.display = "none";
+    const preview = document.getElementById("image-preview");
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.src = e.target.result;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
 
-            // Tunahakikisha picha imepakiwa kikamilifu kwanza
-            img.onload = async function() {
-                // UI: Onyesha picha na washa laser
-                const preview = document.getElementById("image-preview");
-                if (preview) {
-                    preview.src = img.src;
-                    preview.style.display = "block";
+        img.onload = async function() {
+            // Onyesha picha kwenye kioo
+            if (preview) {
+                preview.src = img.src;
+                preview.style.display = "block";
+            }
+
+            // Tengeneza Canvas ya 400x400 kwa ajili ya AI
+            const c = document.createElement("canvas");
+            c.width = 400;
+            c.height = 400;
+            const ctx = c.getContext("2d");
+            ctx.drawImage(img, 0, 0, 400, 400);
+
+            // MUHIMU: Washa isScanning kabla ya kuita predict
+            isScanning = true; 
+
+            // Toa muda wa sekunde 1.5 kwa mkulima kuona laser ikiscan
+            setTimeout(async () => {
+                try {
+                    // Tuma picha kwenye predict
+                    await predict(c); 
+                    
+                    // Baada ya predict kutoa jibu, zima laser
+                    if(laser) laser.style.display = "none";
+                } catch (err) {
+                    console.error("AI Prediction Error:", err);
+                    isScanning = false;
                 }
-                
-                document.getElementById("webcam-container").style.display = "none";
-                document.getElementById("laser-line").style.display = "block";
-                
-                // Tunatengeneza Canvas ya 400x400 (Saizi inayopendwa na Teachable Machine)
-                const c = document.createElement("canvas");
-                c.width = 400;
-                c.height = 400;
-                const ctx = c.getContext("2d");
-                ctx.drawImage(img, 0, 0, 400, 400);
-
-                // Subiri kidogo (animation) kisha tabiri (Predict)
-                setTimeout(async () => {
-                    isScanning = true; // Ruhusu predict ifanye kazi
-                    await predict(c);  // Tuma picha kwenye AI
-                    document.getElementById("laser-line").style.display = "none";
-                }, 800);
-            };
+            }, 1500);
         };
-        reader.readAsDataURL(file);
-    } catch (err) {
+    };
+    reader.readAsDataURL(file);
+}
+    catch (err) {
         console.error("Shida ya Upload:", err);
         alert("Imeshindikana kusoma picha. Jaribu tena.");
     }

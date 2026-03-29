@@ -150,23 +150,27 @@ input, select {
         </div>
 
         <div class="card">
-            <div class="tabs-container">
+        <div class="tabs-container">
     <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
     <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
+    <button id="t-scan" class="tab-btn" onclick="switchTab('scan')">📷 Scan</button>
 </div>
 
-<div id="chat-area">
-    <div class="header-tools">
-        <span>AI Assistant</span>
-        <button onclick="clearChat()" class="btn-clear">🗑️ Safisha Chat</button>
+<div id="chat-area" class="tab-content">
+    <div id="chat-box" style="height: 400px; overflow-y: auto; padding: 15px; background: #fdfdfd; border-bottom: 1px solid #eee;">
+        </div>
+    
+    <div class="chat-input-container" style="display: flex; gap: 8px; padding: 10px; align-items: center;">
+        <button id="mic-btn" onclick="anzaKusikiliza()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🎤</button>
+        <input type="text" id="chat-input" placeholder="Ongea au andika hapa..." style="flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #ccc; outline: none;">
+        <button onclick="sendMessage()" style="background: var(--a); color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">Tuma</button>
     </div>
-    <div id="chat-box"></div>
-    </div>
+</div>
 
-<div id="hist-area" style="display:none;">
-    <div class="header-tools">
-        <h3>Historia ya Scan</h3>
-        <button onclick="clearAllHistory()" class="btn-delete-all">Futa Historia Yote</button>
+<div id="hist-area" class="tab-content" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px;">
+        <h3>Historia ya Mazao</h3>
+        <button onclick="clearAllHistory()" style="background: #ff4444; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">🗑️ Futa Yote</button>
     </div>
     <div id="hist-content">
         </div>
@@ -624,17 +628,17 @@ function showGuide(c) {
 
 // --- 1. Kufuta Chat na Historia (Clear All) ---
 // --- 1. Variables za Global za Speech Recognition ---
+// --- SPEECH RECOGNITION (Kupokea Sauti) ---
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
 
 if (Recognition) {
     recognition = new Recognition();
-    recognition.continuous = false; // Acha kusikiliza akitulia kidogo
+    recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onstart = () => {
-        const micBtn = document.getElementById("mic-btn");
-        if (micBtn) micBtn.style.color = "red"; // Inaonyesha inarekodi
+        document.getElementById("mic-btn").style.color = "red"; // Inarekodi
     };
 
     recognition.onresult = (event) => {
@@ -642,27 +646,25 @@ if (Recognition) {
         const input = document.getElementById("chat-input");
         if (input) {
             input.value = maneno;
-            sendMessage(); // Tuma ujumbe automatic baada ya kuongea
+            sendMessage(); // Tuma moja kwa moja baada ya kuongea
         }
     };
 
     recognition.onend = () => {
-        const micBtn = document.getElementById("mic-btn");
-        if (micBtn) micBtn.style.color = "black";
+        document.getElementById("mic-btn").style.color = "black";
     };
 }
 
-// Function ya kuwasha mic
 function anzaKusikiliza() {
     if (recognition) {
         recognition.lang = (lughaSasa === 'sw') ? 'sw-TZ' : 'en-US';
         recognition.start();
     } else {
-        alert("Browser yako hairuhusu kurekodi sauti.");
+        alert("Browser yako hairuhusu sauti.");
     }
 }
 
-// --- 2. Function ya Kutuma Chat (Iliyorekebishwa) ---
+// --- CHAT LOGIC (Kutuma Meseji) ---
 async function sendMessage() {
     const input = document.getElementById("chat-input");
     const chatBox = document.getElementById("chat-box");
@@ -671,60 +673,34 @@ async function sendMessage() {
 
     const ujumbe = input.value.trim();
     
-    // 1. Onyesha meseji ya mtumiaji
+    // 1. Onyesha meseji yako
     const userDiv = document.createElement("div");
-    userDiv.className = "message user";
-    userDiv.innerHTML = `<b>Wewe:</b> ${ujumbe}`;
+    userDiv.style.margin = "10px 0";
+    userDiv.innerHTML = `<div style="text-align: right;"><span style="background: #e1ffc7; padding: 8px 12px; border-radius: 15px; display: inline-block;">${ujumbe}</span></div>`;
     chatBox.appendChild(userDiv);
     
-    input.value = ""; // Safisha input
+    input.value = ""; 
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // 2. Pata jibu kutoka kwa AI 
-    // Hapa nimeiweka iweze kuitumia function yako ya 'getAIResponse' kama unayo, 
-    // la sivyo inatumia jibu la mfano hapa chini.
-    let jibuAI;
-    if (typeof getAIResponse === "function") {
-        jibuAI = await getAIResponse(ujumbe);
-    } else {
-        jibuAI = (lughaSasa === 'sw') ? "Ninachakata taarifa zako za kilimo..." : "I am processing your agricultural data...";
-    }
+    // 2. Jibu la AI
+    let jibuAI = (lughaSasa === 'sw') ? "Nimekuelewa, ninatafuta suluhisho..." : "I understand, looking for a solution...";
     
-    // 3. Onyesha jibu la AI baada ya sekunde 1
     setTimeout(() => {
         const aiDiv = document.createElement("div");
-        aiDiv.className = "message ai";
-        aiDiv.innerHTML = `<b>AI:</b> ${jibuAI}`;
+        aiDiv.style.margin = "10px 0";
+        aiDiv.innerHTML = `<div style="text-align: left;"><span style="background: #eee; padding: 8px 12px; border-radius: 15px; display: inline-block;"><b>AI:</b> ${jibuAI}</span></div>`;
         chatBox.appendChild(aiDiv);
         
-        // --- MUHIMU: Toa sauti ya jibu la AI ---
-        ongeaSauti(jibuAI, lughaSasa);
-        
+        ongeaSauti(jibuAI, lughaSasa); // Toa sauti ya jibu
         chatBox.scrollTop = chatBox.scrollHeight;
     }, 1000);
 }
 
-// --- 3. Function ya Kufuta Historia ---
-function clearAllHistory() {
-    const swali = (lughaSasa === 'sw') ? "Je, una uhakika unataka kufuta historia yote?" : "Are you sure you want to clear all history?";
-    
-    if (confirm(swali)) {
-        const histBox = document.getElementById("hist-content");
-        if (histBox) {
-            histBox.innerHTML = `<p style="text-align:center; padding:20px; color:#999;">${(lughaSasa === 'sw' ? 'Historia imefutwa.' : 'History cleared.')}</p>`;
-        }
-        localStorage.removeItem("smart_kilimo_history");
-        
-        const msg = (lughaSasa === 'sw') ? "Historia imefutwa kikamilifu." : "History has been permanently deleted.";
-        ongeaSauti(msg, lughaSasa);
-    }
-}
-
-// --- 4. Switch Tab ---
+// --- SWITCH TAB (Kuhama kurudi kama mwanzo) ---
 function switchTab(tabId) {
-    const majinaYaTabs = ['chat', 'hist', 'scan']; 
+    const tabs = ['chat', 'hist', 'scan']; 
 
-    majinaYaTabs.forEach(t => {
+    tabs.forEach(t => {
         const area = document.getElementById(t + '-area'); 
         const btn = document.getElementById('t-' + t); 
 

@@ -550,7 +550,7 @@ async function handleUpload(event) {
 async function loop() {
     if (isScanning && webcam) {
         webcam.update(); // Sasisha kioo cha kamera
-        
+    }
         // Hakikisha picha si giza (width > 0)
         if (webcam.canvas && webcam.canvas.width > 0) {
             await predict(webcam.canvas);
@@ -558,7 +558,7 @@ async function loop() {
         
         if(isScanning) requestAnimationFrame(loop);
     }
-}
+
 let lughaSasa = 'sw'; 
 let ugonjwaWaMwisho = ""; 
 let akibaYaJibu = ""; 

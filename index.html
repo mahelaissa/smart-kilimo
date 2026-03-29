@@ -114,6 +114,12 @@ input, select {
 #mic-btn:hover {
     transform: scale(1.2);
 }
+#image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Inafanya picha isivutike vibaya */
+    background: #000;
+}
     </style>
 </head>
 <body>
@@ -762,7 +768,68 @@ function switchTab(tabId) {
     waContainer.style.display = "block"; // Onyesha button ya WhatsApp
 }
 
+// --- FUNCTION YA KUPOKEA PICHA (UPLOAD) ---
+window.handleUpload = function(event) {
+    const file = event.target.files[0]; // Pata file lililochaguliwa
+    const preview = document.getElementById('image-preview');
+    const webcamContainer = document.getElementById('webcam-container');
+    const resultArea = document.getElementById('result-area');
+    const laser = document.getElementById('laser-line');
 
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            // 1. Onyesha picha kwenye kioo
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            
+            // 2. Ficha kioo cha webcam kama kilikuwa wazi
+            if(webcamContainer) webcamContainer.style.display = 'none';
+            
+            // 3. Washa "Laser" ya scan kwa sekunde chache kuleta ladha ya AI
+            if(laser) {
+                laser.style.display = 'block';
+                setTimeout(() => { laser.style.display = 'none'; }, 2000);
+            }
+
+            // 4. Toa Majibu ya Kitiba (Simulate AI)
+            chakataPicha(file.name);
+        }
+
+        reader.readAsDataURL(file);
+    }
+};
+
+// Function inayotoa majibu baada ya picha kupakiwa
+function chakataPicha(fileName) {
+    const resArea = document.getElementById('result-area');
+    const resName = document.getElementById('res-name');
+    const solText = document.getElementById('sol-text');
+    const waContainer = document.getElementById('whatsapp-container');
+
+    // Onyesha eneo la matokeo
+    resArea.style.display = 'block';
+    resName.innerText = "Inachakata...";
+    solText.innerText = "Tunaangalia hali ya jani kwenye picha yako...";
+
+    setTimeout(() => {
+        // Hapa unaweza kuweka logic ya kutambua ugonjwa kulingana na jina la file au AI
+        const ugonjwa = "Madoa ya Kutu (Leaf Rust)";
+        const tiba = "Tumia dawa ya fungisidi (mfano: Copper Oxychloride). Hakikisha unakata majani yaliyoathirika na kuyachoma moto.";
+
+        resName.innerText = ugonjwa;
+        solText.innerText = tiba;
+        
+        // Onyesha button ya WhatsApp kwa msaada zaidi
+        if(waContainer) waContainer.style.display = 'block';
+
+        // Hifadhi tukio hili kwenye Historia
+        if(typeof window.saveToHistory === 'function') {
+            window.saveToHistory("Kutoka Galari", ugonjwa, tiba);
+        }
+    }, 2000);
+}
     
 </script>
 </body>

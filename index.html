@@ -154,8 +154,8 @@ input, select {
                 <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
                 <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
             </div>
-            <div id="chat-content" class="content-box"><b>AI:</b> Karibu! Uliza chochote.</div>
-            <div id="hist-content" class="content-box" style="display:none;"></div>
+            <div id="chat-area" class="content-box"><b>AI:</b> Karibu! Uliza chochote.</div>
+            <div id="hist-area" class="content-box" style="display:none;"></div>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
                 <input type="text" id="chatIn" placeholder="Andika..." style="flex:1;">
                 <button id="voice-btn" onclick="startMic()" style="background:#d32f2f; color:white; width:45px;">🎤</button>
@@ -655,23 +655,45 @@ function loadHistory() {
 
 // Ite loadHistory page inapoanza
 window.onload = loadHistory;
-
-function switchTab(t) {
-    // 1. Dhibiti Content (Onyesha/Ficha)
-    const isChat = (t === 'chat');
     
-    document.getElementById("chat-content").style.display = isChat ? 'block' : 'none';
-    document.getElementById("chat-controls").style.display = isChat ? 'flex' : 'none';
-    document.getElementById("hist-content").style.display = isChat ? 'none' : 'block';
+function switchTab(tabId) {
+    // 1. Orodha ya tab zote zilizopo (Hakikisha majina haya yanaendana na HTML yako)
+    const majinaYaTabs = ['chat', 'hist', 'scan']; 
 
-    // 2. Dhibiti Muonekano wa Button (Active State)
-    if (isChat) {
-        document.getElementById("t-chat").classList.add("active");
-        document.getElementById("t-hist").classList.remove("active");
-    } else {
-        document.getElementById("t-hist").classList.add("active");
-        document.getElementById("t-chat").classList.remove("active");
+    majinaYaTabs.forEach(t => {
+        const area = document.getElementById(t + '-area'); // Inatafuta chat-area, hist-area, nk.
+        const btn = document.getElementById('t-' + t);    // Inatafuta t-chat, t-hist, nk.
+
+        if (area) {
+            // Kama t ni sawa na tabId uliyobonyeza, ionyeshe
+            if (t === tabId) {
+                area.style.display = 'block';
+            } else {
+                area.style.display = 'none'; // Ficha zingine
+            }
+        }
+
+        if (btn) {
+            // Weka rangi ya 'active' kwenye button husika
+            if (t === tabId) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    });
+
+    // 2. Usalama wa Kamera: Kama haupo kwenye tab ya scan, simamisha kamera
+    if (tabId !== 'scan' && webcam) {
+        webcam.pause();
+        isScanning = false;
+        if(document.getElementById("laser-line")) {
+             document.getElementById("laser-line").style.display = "none";
+        }
     }
+
+    // 3. Zima sauti yoyote inayoongea unapo-switch tab
+    window.speechSynthesis.cancel();
 }
     function loginUser() {
         const u = document.getElementById("username").value.trim();

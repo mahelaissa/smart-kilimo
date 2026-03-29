@@ -85,6 +85,12 @@ input, select {
     width: -webkit-fill-available; 
     background-color: #ffffff; /* Nyeupe safi kwa input */
 }
+        .lang-btn {
+        flex: 1; padding: 10px; border: 1px solid #ddd; background: white; border-radius: 5px; cursor: pointer;
+    }
+    .lang-btn.active {
+        background: #2e7d32; color: white; border-color: #2e7d32;
+    }
     </style>
 </head>
 <body>
@@ -122,6 +128,10 @@ input, select {
                 <div id="res-name" style="font-weight:bold; color:var(--p); text-transform:uppercase;"></div>
                 <p id="sol-text" style="font-size:14px; margin-top:8px;"></p>
             <div id="whatsapp-container" style="margin-top: 15px; display:none;">
+               <div id="language-switcher" style="display:flex; gap:10px; margin-bottom:10px;">
+        <button id="btn-sw" class="lang-btn active" onclick="badiliLugha('sw')">🇹🇿 Kiswahili</button>
+         <button id="btn-en" class="lang-btn" onclick="badiliLugha('en')">🇺🇸 English</button>
+        </div> 
             <a id="wa-link" href="#" target="_blank" 
                style="background: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
             💬 Ongea na Mtaalamu (WhatsApp)
@@ -417,6 +427,8 @@ async function loop() {
         requestAnimationFrame(loop);
     }
 }
+let lughaSasa = 'sw'; // Default ni Kiswahili
+let ugonjwaWaMwisho = ""; // Inakumbuka jina la ugonjwa kwa ajili ya kubadili lugha
 
 async function predict(el) {
     const p = await model.predict(el);
@@ -428,22 +440,54 @@ async function predict(el) {
     if(high.probability > 0.85) {
         const data = db[high.className];
         if(data) {
-            // Jaza taarifa kwenye screen
-            document.getElementById("res-name").innerText = high.className;
-            document.getElementById("sol-text").innerText = data.sw;
+            ugonjwaWaMwisho = high.className; // Tunatunza jina la ugonjwa hapa
 
-            // Tunahifadhi jibu hapa ili 'repeatVoice' ilijue
-            akibaYaJibu = `Ugonjwa umetambuliwa kama ${high.className}. ${data.sw}`;
+            // 1. Jaza taarifa kwenye screen kulingana na lugha iliyochaguliwa
+            document.getElementById("res-name").innerText = high.className;
             
-            // Inasoma automatically baada ya scan
-            ongeaSauti(akibaYaJibu);
+            // Hapa inachukua data.sw au data.en kulingana na lughaSasa
+            const maelezo = data[lughaSasa]; 
+            document.getElementById("sol-text").innerText = maelezo;
+
+            // 2. Tunahifadhi jibu hapa ili 'repeatVoice' ilijue
+            akibaYaJibu = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ") + high.className + ". " + maelezo;
             
-            // Nyinginezo
+            // 3. Inasoma automatically baada ya scan (Inatumia lugha iliyochaguliwa)
+            ongeaSauti(akibaYaJibu, lughaSasa);
+            
+            // 4. Weka Link ya WhatsApp
+            wekaLinkWhatsApp(high.className);
+
+            // 5. Nyinginezo
             saveHistory(high.className);
             isScanning = false;
         }
     }
 }
+
+// Function ya kubadili lugha bila kurefresh
+function badiliLugha(mpya) {
+    lughaSasa = mpya;
+    
+    // Kama tayari kuna jibu, libadilishe maandishi na sauti papo hapo
+    if (ugonjwaWaMwisho) {
+        const data = db[ugonjwaWaMwisho];
+        const maelezo = data[lughaSasa];
+        document.getElementById("sol-text").innerText = maelezo;
+        
+        akibaYaJibu = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ") + ugonjwaWaMwisho + ". " + maelezo;
+        ongeaSauti(akibaYaJibu, lughaSasa);
+    }
+}
+
+// Hakikisha ongeaSauti inapokea lugha
+function ongeaSauti(t, lang = 'sw') {
+    window.speechSynthesis.cancel();
+    const m = new SpeechSynthesisUtterance(t);
+    m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
+    window.speechSynthesis.speak(m);
+}
+
 
     // 2. Kinga dhidi ya "Giza" au "Majibu ya Haraka"
     // Tunataka AI iwe na uhakika wa 90% na isichukue "Background" (kama una class ya background)
@@ -659,6 +703,37 @@ function switchTab(t) {
     waLink.href = link;
     waContainer.style.display = "block"; // Onyesha button ya WhatsApp
 }
+
+    let lughaSasa = 'sw'; // Default ni Kiswahili
+let ugonjwaWaMwisho = ""; // Inakumbuka jina la ugonjwa uliopatikana
+
+function badiliLugha(mpya) {
+    lughaSasa = mpya;
+    
+    // 1. Badili rangi ya button ili mtumiaji ajue amechagua nini
+    document.getElementById("btn-sw").classList.toggle("active", mpya === 'sw');
+    document.getElementById("btn-en").classList.toggle("active", mpya === 'en');
+
+    // 2. Kama tayari kuna jibu kwenye screen, libadilishe haraka
+    if (ugonjwaWaMwisho) {
+        const data = db[ugonjwaWaMwisho];
+        const maelezo = data[lughaSasa];
+        document.getElementById("sol-text").innerText = maelezo;
+        
+        // 3. Ongea kwa lugha mpya
+        ongeaSauti(maelezo, mpya); 
+    }
+}
+
+// Boresha ongeaSauti iweze kupokea lugha
+function ongeaSauti(t, lang = 'sw') {
+    window.speechSynthesis.cancel();
+    const m = new SpeechSynthesisUtterance(t);
+    m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
+    m.rate = 0.85;
+    window.speechSynthesis.speak(m);
+}
+    
 </script>
 </body>
 </html>

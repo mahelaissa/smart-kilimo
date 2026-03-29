@@ -150,19 +150,28 @@ input, select {
         </div>
 
         <div class="card">
-            <div class="tabs" style="display:flex; gap:5px; margin-bottom:10px;">
-                <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
-                <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
-            </div>
-            <div id="chat-area" class="content-box"><b>AI:</b> Karibu! Uliza chochote.</div>
-            <div id="hist-area" class="content-box" style="display:none;"></div>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <input type="text" id="chatIn" placeholder="Andika..." style="flex:1;">
-                <button id="voice-btn" onclick="startMic()" style="background:#d32f2f; color:white; width:45px;">🎤</button>
-                <button onclick="askAI()" style="background:var(--p); color:white; padding:0 15px;">Tuma</button>
-            </div>
-            <button onclick="clearChat()" style="width:100%; background:#f44336; color:white; padding:8px; font-size:12px;">🗑️ Safisha Chat</button>
+            <div class="tabs-container">
+    <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
+    <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
+</div>
+
+<div id="chat-area">
+    <div class="header-tools">
+        <span>AI Assistant</span>
+        <button onclick="clearChat()" class="btn-clear">🗑️ Safisha Chat</button>
+    </div>
+    <div id="chat-box"></div>
+    </div>
+
+<div id="hist-area" style="display:none;">
+    <div class="header-tools">
+        <h3>Historia ya Scan</h3>
+        <button onclick="clearAllHistory()" class="btn-delete-all">Futa Historia Yote</button>
+    </div>
+    <div id="hist-content">
         </div>
+</div>
+    </div>
 
         <div class="card">
             <h3 style="color:var(--p); margin-top:0;">📚 Maktaba Kitaalamu</h3>
@@ -613,86 +622,106 @@ function showGuide(c) {
     ongeaSauti("Mwongozo wa " + c); 
 }
 
-function clearChat() { 
-    document.getElementById("chat-content").innerHTML = "<b>AI:</b> Chat na historia zimesafishwa. Karibu tena!"; 
-    document.getElementById("hist-content").innerHTML = ""; 
-    localStorage.removeItem("kilimo_history");
-    ongeaSauti("Historia imefutwa.");
+// --- 1. Kufuta Chat na Historia (Clear All) ---
+function clearChat() {
+    // 1. Safisha Chat Box
+    const chatBox = document.getElementById("chat-box");
+    if (chatBox) {
+        const msg = (lughaSasa === 'sw') ? "Chat na historia zimesafishwa. Karibu tena!" : "Chat and history cleared. Welcome back!";
+        chatBox.innerHTML = `<div class="message ai"><b>AI:</b> ${msg}</div>`;
+        ongeaSauti(msg, lughaSasa);
+    }
+
+    // 2. Safisha Historia kwenye Screen
+    const histBox = document.getElementById("hist-content");
+    if (histBox) histBox.innerHTML = "";
+
+    // 3. Futa kwenye Memory (LocalStorage)
+    localStorage.removeItem("smart_kilimo_history");
 }
 
+// --- 2. Kusave Historia ya Scan ---
 function saveHistory(n) {
     const histBox = document.getElementById("hist-content");
-    const data = db[n]; // Pata tiba kutoka kwenye database yako
-    const maelezo = data ? data.sw : "Maelezo hayapo";
+    const data = db[n]; 
+    const maelezo = data ? data[lughaSasa] : (lughaSasa === 'sw' ? "Maelezo hayapo" : "No details available");
     
-    // Tunatengeneza jibu la sauti kwa ajili ya hii entry ya history pekee
-    const sautiYaHapa = `Ugonjwa: ${n}. Tiba: ${maelezo}`;
+    const wakati = new Date().toLocaleTimeString();
+    const sautiYaHapa = (lughaSasa === 'sw' ? `Ugonjwa: ${n}. Tiba: ${maelezo}` : `Disease: ${n}. Treatment: ${maelezo}`);
 
-    const entry = `
-        <div style="padding:12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+    // Kutengeneza muonekano wa entry mpya
+    const entryHTML = `
+        <div class="hist-item" style="padding:12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; margin-bottom:5px; border-radius:8px;">
             <div>
                 <b style="color:#2e7d32;">✅ ${n}</b><br>
-                <small>${new Date().toLocaleTimeString()}</small>
+                <small>${wakati}</small>
             </div>
-            <button onclick="ongeaSauti('${sautiYaHapa}')" style="background:none; border:none; font-size:20px; cursor:pointer;">
+            <button onclick="ongeaSauti('${sautiYaHapa}', lughaSasa)" style="background:none; border:none; font-size:20px; cursor:pointer;">
                 🔊
             </button>
         </div>`;
     
-    histBox.innerHTML = entry + histBox.innerHTML;
-    
-    // Save kwenye LocalStorage kama tulivyofanya awali...
-}
-// 2. Function ya kupakia data ukifungua page (Iweke mwishoni mwa script yako)
-function loadHistory() {
-    const histBox = document.getElementById("hist-content");
-    const history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
-    
-    histBox.innerHTML = history.map(item => 
-        `<div style="padding:10px; border-bottom:1px solid #eee;">${item}</div>`
-    ).join('');
+    // Ongeza juu ya list kwenye screen
+    if (histBox) histBox.innerHTML = entryHTML + histBox.innerHTML;
+
+    // --- Hifadhi kwenye LocalStorage ---
+    let history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
+    history.unshift({ jina: n, muda: wakati, tiba: maelezo });
+    if (history.length > 20) history.pop(); // Tunza records 20 tu
+    localStorage.setItem("smart_kilimo_history", JSON.stringify(history));
 }
 
-// Ite loadHistory page inapoanza
-window.onload = loadHistory;
+// --- 3. Kupakia Data Ukifungua Page (Load History) ---
+function loadHistory() {
+    const histBox = document.getElementById("hist-content");
+    if (!histBox) return;
+
+    const history = JSON.parse(localStorage.getItem("smart_kilimo_history")) || [];
     
+    histBox.innerHTML = history.map(item => {
+        const sautiYaHapa = (lughaSasa === 'sw' ? `Ugonjwa: ${item.jina}. Tiba: ${item.tiba}` : `Disease: ${item.jina}. Treatment: ${item.tiba}`);
+        return `
+            <div class="hist-item" style="padding:12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:white; margin-bottom:5px; border-radius:8px;">
+                <div>
+                    <b style="color:#2e7d32;">✅ ${item.jina}</b><br>
+                    <small>${item.muda}</small>
+                </div>
+                <button onclick="ongeaSauti('${sautiYaHapa}', lughaSasa)" style="background:none; border:none; font-size:20px; cursor:pointer;">
+                    🔊
+                </button>
+            </div>`;
+    }).join('');
+}
+
+// Pakia historia app inapoanza
+window.addEventListener('load', loadHistory);
+
+// --- 4. Switch Tab (Inayolingana na IDs zako) ---
 function switchTab(tabId) {
-    // 1. Orodha ya tab zote zilizopo (Hakikisha majina haya yanaendana na HTML yako)
     const majinaYaTabs = ['chat', 'hist', 'scan']; 
 
     majinaYaTabs.forEach(t => {
-        const area = document.getElementById(t + '-area'); // Inatafuta chat-area, hist-area, nk.
-        const btn = document.getElementById('t-' + t);    // Inatafuta t-chat, t-hist, nk.
+        const area = document.getElementById(t + '-area'); 
+        const btn = document.getElementById('t-' + t); 
 
         if (area) {
-            // Kama t ni sawa na tabId uliyobonyeza, ionyeshe
-            if (t === tabId) {
-                area.style.display = 'block';
-            } else {
-                area.style.display = 'none'; // Ficha zingine
-            }
+            area.style.display = (t === tabId) ? 'block' : 'none';
         }
 
         if (btn) {
-            // Weka rangi ya 'active' kwenye button husika
-            if (t === tabId) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
+            (t === tabId) ? btn.classList.add('active') : btn.classList.remove('active');
         }
     });
 
-    // 2. Usalama wa Kamera: Kama haupo kwenye tab ya scan, simamisha kamera
+    // Usalama wa Kamera
     if (tabId !== 'scan' && webcam) {
         webcam.pause();
         isScanning = false;
-        if(document.getElementById("laser-line")) {
-             document.getElementById("laser-line").style.display = "none";
-        }
+        const laser = document.getElementById("laser-line");
+        if(laser) laser.style.display = "none";
     }
 
-    // 3. Zima sauti yoyote inayoongea unapo-switch tab
+    // Zima sauti inayoongea unapo-switch
     window.speechSynthesis.cancel();
 }
     function loginUser() {

@@ -361,9 +361,35 @@ function showGuide(crop) {
         };
     }
     function startMic() { recognition ? (recognition.start(), document.getElementById("voice-btn").classList.add("recording")) : alert("Mic error."); }
-    function ongeaSauti(t) { window.speechSynthesis.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang = 'sw-TZ'; window.speechSynthesis.speak(m); }
-    function repeatVoice() { const txt = document.getElementById("sol-text").innerText; if(txt) ongeaSauti(txt); }
+   // Function ya msingi ya kuongea
+// Variable ya kutunza jibu la mwisho lililopatikana
+let akibaYaJibu = "";
 
+function ongeaSauti(t) {
+    window.speechSynthesis.cancel();
+    if (!t) return;
+    
+    const m = new SpeechSynthesisUtterance(t);
+    m.lang = 'sw-TZ'; 
+    m.rate = 0.9;
+    window.speechSynthesis.speak(m);
+}
+
+function repeatVoice() {
+    // 1. Jaribu kusoma kutoka kwenye screen ya matokeo (Chatbox/Scanner)
+    const jina = document.getElementById("res-name").innerText;
+    const tiba = document.getElementById("sol-text").innerText;
+
+    if (jina && tiba) {
+        akibaYaJibu = `Ugonjwa: ${jina}. Maelezo: ${tiba}`;
+        ongeaSauti(akibaYaJibu);
+    } else if (akibaYaJibu) {
+        // 2. Kama screen haina kitu, soma lile jibu la mwisho tulilohifadhi
+        ongeaSauti(akibaYaJibu);
+    } else {
+        ongeaSauti("Samahani, bado sijapata ugonjwa wa kusoma.");
+    }
+}
     // MODEL
     async function initModel() { if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json"); }
 
@@ -393,15 +419,31 @@ async function loop() {
 }
 
 async function predict(el) {
-    const prediction = await model.predict(el);
-    
-    // Tafuta ugonjwa wenye probability ya juu zaidi
-    let high = prediction[0];
-    for (let i = 1; i < prediction.length; i++) {
-        if (prediction[i].probability > high.probability) {
-            high = prediction[i];
+    const p = await model.predict(el);
+    let high = p[0];
+    for(let i=1; i<p.length; i++) {
+        if(p[i].probability > high.probability) high = p[i];
+    }
+
+    if(high.probability > 0.85) {
+        const data = db[high.className];
+        if(data) {
+            // Jaza taarifa kwenye screen
+            document.getElementById("res-name").innerText = high.className;
+            document.getElementById("sol-text").innerText = data.sw;
+
+            // Tunahifadhi jibu hapa ili 'repeatVoice' ilijue
+            akibaYaJibu = `Ugonjwa umetambuliwa kama ${high.className}. ${data.sw}`;
+            
+            // Inasoma automatically baada ya scan
+            ongeaSauti(akibaYaJibu);
+            
+            // Nyinginezo
+            saveHistory(high.className);
+            isScanning = false;
         }
     }
+}
 
     // 2. Kinga dhidi ya "Giza" au "Majibu ya Haraka"
     // Tunataka AI iwe na uhakika wa 90% na isichukue "Background" (kama una class ya background)
@@ -526,19 +568,29 @@ function clearChat() {
     ongeaSauti("Historia imefutwa.");
 }
 
-function saveHistory(n) { 
+function saveHistory(n) {
     const histBox = document.getElementById("hist-content");
-    const entry = `<div style="padding:15px; border-bottom:1px solid #ddd; background:#fff; border-radius:8px; margin-bottom:5px;">
-                    ✅ <b>${n}</b> <br> 
-                    <small style="color:gray;">${new Date().toLocaleTimeString()}</small>
-                   </div>`;
+    const data = db[n]; // Pata tiba kutoka kwenye database yako
+    const maelezo = data ? data.sw : "Maelezo hayapo";
     
-    histBox.innerHTML = entry + histBox.innerHTML; 
+    // Tunatengeneza jibu la sauti kwa ajili ya hii entry ya history pekee
+    const sautiYaHapa = `Ugonjwa: ${n}. Tiba: ${maelezo}`;
 
-    // MUHIMU: Hama kwenda tab ya Historia mara moja
-    switchTab('hist');
+    const entry = `
+        <div style="padding:12px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <b style="color:#2e7d32;">✅ ${n}</b><br>
+                <small>${new Date().toLocaleTimeString()}</small>
+            </div>
+            <button onclick="ongeaSauti('${sautiYaHapa}')" style="background:none; border:none; font-size:20px; cursor:pointer;">
+                🔊
+            </button>
+        </div>`;
+    
+    histBox.innerHTML = entry + histBox.innerHTML;
+    
+    // Save kwenye LocalStorage kama tulivyofanya awali...
 }
-
 // 2. Function ya kupakia data ukifungua page (Iweke mwishoni mwa script yako)
 function loadHistory() {
     const histBox = document.getElementById("hist-content");

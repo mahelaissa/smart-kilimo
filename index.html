@@ -685,35 +685,7 @@ function switchTab(t) {
     waContainer.style.display = "block"; // Onyesha button ya WhatsApp
 }
 
-    let lughaSasa = 'sw'; // Default ni Kiswahili
-let ugonjwaWaMwisho = ""; // Inakumbuka jina la ugonjwa uliopatikana
 
-function badiliLugha(mpya) {
-    lughaSasa = mpya;
-    
-    // 1. Badili rangi ya button ili mtumiaji ajue amechagua nini
-    document.getElementById("btn-sw").classList.toggle("active", mpya === 'sw');
-    document.getElementById("btn-en").classList.toggle("active", mpya === 'en');
-
-    // 2. Kama tayari kuna jibu kwenye screen, libadilishe haraka
-    if (ugonjwaWaMwisho) {
-        const data = db[ugonjwaWaMwisho];
-        const maelezo = data[lughaSasa];
-        document.getElementById("sol-text").innerText = maelezo;
-        
-        // 3. Ongea kwa lugha mpya
-        ongeaSauti(maelezo, mpya); 
-    }
-}
-
-// Boresha ongeaSauti iweze kupokea lugha
-function ongeaSauti(t, lang = 'sw') {
-    window.speechSynthesis.cancel();
-    const m = new SpeechSynthesisUtterance(t);
-    m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
-    m.rate = 0.85;
-    window.speechSynthesis.speak(m);
-}
     
 </script>
 </body>

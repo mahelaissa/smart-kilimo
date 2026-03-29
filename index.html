@@ -389,19 +389,7 @@ function showGuide(crop) {
     });
 }
 
-    // SPEECH
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
-    if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.lang = 'sw-TZ';
-        recognition.onresult = (e) => { 
-            document.getElementById("chatIn").value = e.results[0][0].transcript; 
-            document.getElementById("voice-btn").classList.remove("recording");
-            askAI(); 
-        };
-    }
-  
+    
     // MODEL
     async function initModel() { if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json"); }
 
@@ -429,9 +417,7 @@ async function loop() {
         requestAnimationFrame(loop);
     }
 }
-  function startMic() { recognition ? (recognition.start(), document.getElementById("voice-btn").classList.add("recording")) : alert("Mic error."); }
 
-    // --- 1. Variables za Global (Hakikisha zipo juu kabisa) ---
 let lughaSasa = 'sw'; 
 let ugonjwaWaMwisho = ""; 
 let akibaYaJibu = ""; 
@@ -624,7 +610,9 @@ if (Recognition) {
         if(mic) mic.style.color = "black";
     };
 }
+  function startMic() { recognition ? (recognition.start(), document.getElementById("voice-btn").classList.add("recording")) : alert("Mic error."); }
 
+    // --- 1. Variables za Global (Hakikisha zipo juu kabisa) ---
 // --- 2. CHAT LOGIC ---
 async function sendMessage() {
     const input = document.getElementById("chat-input");

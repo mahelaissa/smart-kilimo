@@ -2,7 +2,8 @@
 <html lang="sw">    
 <head> 
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net;">
+<meta http-equiv="Content-Security-Policy" 
+content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Kilimo</title>
     <script src="tf.min.js"></script>
@@ -705,7 +706,7 @@ function switchTab(tabId) {
         if(!u) return; currentUser = u;
         document.getElementById("login-section").style.display = "none";
         document.getElementById("main-app").style.display = "block";
-        document.getElementById("display-user").innerText = "👨‍🌾 " + u;
+        document.getElementById("display-user").innerText = "👨‍🌾Mkulima: " + u;
     }
     function logout() { location.reload(); }
 

@@ -9,6 +9,108 @@ content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.ne
     <script src="tf.min.js"></script>
     <script src="teachablemachine-image.min.js"></script>
     <style>
+
+    
+    /* ... (Kodi zako za mwanzo baki nazo, ongeza hizi chini) ... */
+
+    /* Maboresho ya Tabs */
+    .tabs-container {
+        display: flex;
+        background: #fdfdfd;
+        border-bottom: 2px solid #eee;
+        border-radius: 15px 15px 0 0;
+        overflow: hidden;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 14px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-weight: bold;
+        color: #777;
+        transition: 0.3s;
+        font-size: 14px;
+    }
+
+    .tab-btn.active {
+        color: var(--p);
+        background: #e8f5e9;
+        border-bottom: 3px solid var(--p);
+    }
+
+    /* Maboresho ya Chat Box */
+    #chat-box {
+        height: 400px; /* Urefu uliothibitiwa */
+        overflow-y: auto;
+        padding: 15px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        scroll-behavior: smooth;
+    }
+
+    /* Bubbles za Meseji */
+    .msg-ai {
+        align-self: flex-start;
+        background: #f1f1f1;
+        color: #333;
+        padding: 10px 14px;
+        border-radius: 18px 18px 18px 4px;
+        font-size: 14px;
+        max-width: 85%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .msg-user {
+        align-self: flex-end;
+        background: var(--p);
+        color: white;
+        padding: 10px 14px;
+        border-radius: 18px 18px 4px 18px;
+        font-size: 14px;
+        max-width: 85%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Container ya Input */
+    .chat-input-container {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        align-items: center;
+        border-top: 1px solid #f0f0f0;
+        background: #fafafa;
+        border-radius: 0 0 15px 15px;
+    }
+
+    #chat-input {
+        flex: 1;
+        padding: 12px 18px;
+        border-radius: 25px;
+        border: 1px solid #ddd;
+        outline: none;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+
+    #chat-input:focus {
+        border-color: var(--p);
+        box-shadow: 0 0 5px rgba(46, 125, 50, 0.2);
+    }
+
+    .send-btn {
+        background: var(--p);
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
         :root { --p: #2e7d32; --s: #1b5e20; --a: #ff9800; --bg: #f4f7f4; --white: #ffffff; --school-p: #0000FF; --school-s: #FFD700; }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: var(--bg); color: #333; overflow-x: hidden; }
         
@@ -143,45 +245,48 @@ input, select {
             <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleUpload(event)">
         </div>
 
-    <div class="card">
-    
-    <div class="tabs-container">
-        <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
-        <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
-        <button id="t-scan" class="tab-btn" onclick="switchTab('scan')">📷 Scan</button>
-    </div>
+<div class="card" style="padding: 0; overflow: hidden;">
+        <div class="tabs-container">
+            <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
+            <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
+            <button id="t-scan" class="tab-btn" onclick="switchTab('scan')">📷 Scan</button>
+        </div>
 
-    <div id="chat-area" class="tab-content">
-        <div id="chat-box">
-            <div style="text-align: left;">
-                <span style="background: #f1f1f1; padding: 10px 15px; border-radius: 15px; display: inline-block; font-size: 14px;">
-                    Habari! Karibu Smart Kilimo AI. Una swali gani leo?
-                </span>
+        <div id="chat-area" class="tab-content">
+            <div id="chat-box">
+                <div class="msg-ai">
+                    Habari! Karibu <b>Smart Kilimo AI</b>. Una swali gani leo kuhusu kilimo?
+                </div>
+            </div>
+
+            <div style="padding: 5px 15px; text-align: right; background: #fafafa;">
+                <button id="dynamic-delete-btn" style="background:none; color:#ff5252; border:none; font-size:11px; font-weight:bold; cursor:pointer; display:none;">
+                    🗑️ Safisha Maongezi
+                </button>
+            </div>
+
+            <div class="chat-input-container">
+                <button id="mic-btn" onclick="anzaKusikiliza()" title="Ongea" style="background:none; border:none; font-size:22px; cursor:pointer; padding: 0 5px;">🎤</button>
+                <input type="text" id="chat-input" placeholder="Uliza swali hapa...">
+                <button onclick="sendMessage()" class="send-btn">Tuma</button>
             </div>
         </div>
 
-        <div style="padding: 0 15px; text-align: right;">
-            <button id="dynamic-delete-btn" style="background:none; color:#ff4444; border:none; font-size:11px; font-weight:bold; cursor:pointer; display:none;">
-                🗑️ Safisha Chat
-            </button>
+        <div id="hist-area" class="tab-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background: #fcfcfc;">
+                <h3 style="margin: 0; font-size: 15px; color: #333;">📜 Historia ya Scan</h3>
+                <button onclick="clearAllHistory()" style="background: #ffeeee; color: #ff4444; border: 1px solid #ffcccc; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold;">
+                    🗑️ Futa Yote
+                </button>
+            </div>
+            <div id="hist-content" style="height: 350px; overflow-y: auto; padding: 15px; background: #fdfdfd;">
+                <p style="text-align:center; color:#999; margin-top:20px; font-size: 13px;">Hakuna kumbukumbu bado.</p>
+            </div>
         </div>
-
-        <div class="chat-input-container">
-            <button id="mic-btn" onclick="anzaKusikiliza()" style="background:none; border:none; font-size:22px; cursor:pointer;">🎤</button>
-            <input type="text" id="chat-input" placeholder="Andika au ongea...">
-            <button onclick="sendMessage()" style="background: var(--kijani); color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold;">Tuma</button>
+        
+        <div id="scan-area" class="tab-content" style="display: none; padding: 20px; text-align: center;">
+             <p style="font-size: 14px; color: #666;">Tumia kitufe cha kamera juu kuanza scan.</p>
         </div>
-    </div>
-
-    <div id="hist-area" class="tab-content" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee;">
-            <h3 style="margin: 0; font-size: 16px;">📜 Historia</h3>
-            <button onclick="clearAllHistory()" style="background: #ffeeee; color: #ff4444; border: 1px solid #ffcccc; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight:bold;">🗑️ Futa Yote</button>
-        </div>
-        <div id="hist-content">
-            <p style="text-align:center; color:#999; margin-top:20px;">Hakuna kumbukumbu bado.</p>
-        </div>
-    </div>
     </div>
         <div class="card">
             <h3 style="color:var(--p); margin-top:0;">📚 Maktaba Kitaalamu</h3>

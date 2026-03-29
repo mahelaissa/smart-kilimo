@@ -932,10 +932,7 @@ function clearAllHistory() {
         document.getElementById('hist-content').innerHTML = '<p id="no-hist" style="text-align:center; color:#999; margin-top:20px;">Hakuna kumbukumbu bado.</p>';
     }
 }
-   
-    
-
-    function loginUser() {
+function loginUser() {
         const u = document.getElementById("username").value.trim();
         if(!u) return; currentUser = u;
         document.getElementById("login-section").style.display = "none";

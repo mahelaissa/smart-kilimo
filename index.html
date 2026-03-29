@@ -165,13 +165,21 @@ input, select {
                 
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button onclick="startCam()" style="background:var(--p); color:white; padding:15px; font-weight:bold;">📷 Kamera</button>
-                <button onclick="document.getElementById('file-input').click()" style="background:#0288d1; color:white; padding:15px; font-weight:bold;">📁 Picha</button>
-                <button onclick="repeatVoice()" style="background:var(--a); color:white; padding:15px; font-weight:bold; grid-column: span 2;">🔊 Sikiliza Tiba kwa Sauti</button>
-            </div>
-            <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleUpload(event)">
-        </div>
+   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
+    <button onclick="startCam()" style="background: var(--p); color: white; padding: 16px; border-radius: 12px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+        <span style="font-size: 20px;">📷</span> Kamera
+    </button>
+
+    <button onclick="document.getElementById('smart-file-input').click()" style="background: #0288d1; color: white; padding: 16px; border-radius: 12px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+        <span style="font-size: 20px;">📁</span> Picha
+    </button>
+
+    <input type="file" id="smart-file-input" accept="image/*" style="display: none;" onchange="handleUpload(event)">
+
+    <button onclick="repeatVoice()" style="background: var(--a); color: white; padding: 16px; border-radius: 12px; font-weight: bold; grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <span style="font-size: 18px;">🔊</span> Sikiliza Tiba kwa Sauti
+    </button>
+</div>
 
 <div class="card" style="padding: 0; overflow: hidden;">
         <div class="tabs-container">
@@ -415,121 +423,196 @@ function showGuide(crop) {
     // MODEL
     async function initModel() { if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json"); }
 
- async function startCam() {
+// --- 1. KAMERA (Kuscan Moja kwa Moja) ---
+async function startCam() {
     try {
-        await initModel(); // Hakikisha model imepakiwa kwanza
-        
-        // 1. Setup Webcam (400x400)
-        webcam = new tmImage.Webcam(400, 400, true); 
-        await webcam.setup({ facingMode: "environment" }); // Camera ya nyuma
-        
-        // 2. Subiri ianze kucheza (Play)
-        await webcam.play();
-        
-        // 3. MUHIMU: Hakikisha video stream imefika kabla ya kuanza Loop
-        // Hii inazuia kuscan giza mwanzoni
-        const checkVideo = setInterval(() => {
-            if (webcam.canvas) {
-                document.getElementById("webcam-container").innerHTML = "";
-                document.getElementById("webcam-container").appendChild(webcam.canvas);
-                
-                document.getElementById("image-preview").style.display = "none";
-                document.getElementById("laser-line").style.display = "block"; 
-                
-                isScanning = true;
-                requestAnimationFrame(loop); 
-                clearInterval(checkVideo); // Acha kucheck mara tu ikianza
-            }
-        }, 100);
+        await initModel(); // Wait for model to be ready
 
+        // UI Updates: Ficha preview ya upload, onyesha kamera
+        document.getElementById("image-preview").style.display = "none";
+        document.getElementById("webcam-container").style.display = "block";
+        document.getElementById("laser-line").style.display = "block";
+
+        if (!webcam) {
+            webcam = new tmImage.Webcam(400, 400, true);
+            await webcam.setup({ facingMode: "environment" });
+            await webcam.play();
+            
+            // Subiri video iwe na picha halisi (Zuia Giza)
+            const checkVideo = setInterval(() => {
+                if (webcam.canvas && webcam.canvas.width > 0) {
+                    const container = document.getElementById("webcam-container");
+                    container.innerHTML = ""; 
+                    container.appendChild(webcam.canvas);
+                    
+                    isScanning = true; 
+                    requestAnimationFrame(loop);
+                    clearInterval(checkVideo);
+                }
+            }, 100);
+        } else {
+            await webcam.play();
+            isScanning = true;
+            requestAnimationFrame(loop);
+        }
     } catch (e) {
-        console.error("Kamera imekataa:", e);
-        alert("Tafadhali ruhusu kamera (Allow Camera) ili uweze kuscan.");
+        alert("Shida ya Kamera: Hakikisha umetoa ruhusa ya kamera.");
     }
 }
 
+// --- 2. UPLOAD (Kuscan Picha ya Galari) ---
+async function handleUpload(event) {
+    const file = e.target.files[0]; 
+    if(!file) return;
+
+    try {
+        await initModel(); // Hakikisha model ipo
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            
+            // UI Updates: Ficha kamera, onyesha picha iliyopakiwa
+            isScanning = false; // Zima loop ya kamera
+            if(webcam) webcam.pause();
+
+            const preview = document.getElementById("image-preview");
+            preview.src = img.src;
+            preview.style.display = "block";
+            document.getElementById("webcam-container").style.display = "none";
+            document.getElementById("laser-line").style.display = "block";
+
+            img.onload = async () => {
+                // Tunatengeneza canvas ya siri ili kuituma kwenye predict()
+                const c = document.createElement("canvas"); 
+                c.width = 400; c.height = 400;
+                const ctx = c.getContext("2d");
+                
+                // Chora picha ienee vizuri (400x400) bila kuharibu shape
+                ctx.drawImage(img, 0, 0, 400, 400);
+
+                // Simulation ya "Scanning" kwa sekunde 1
+                setTimeout(async () => {
+                    document.getElementById("laser-line").style.display = "none";
+                    // Tuma canvas kwenye predict function yako
+                    await predict(c); 
+                }, 1500);
+            };
+        };
+        reader.readAsDataURL(file);
+    } catch (err) {
+        alert("Error loading image/model.");
+    }
+}
+
+// --- 3. LOOP YA KAMERA ---
 async function loop() {
     if (isScanning && webcam) {
         webcam.update(); // Sasisha kioo cha kamera
         
-        // Hakikisha canvas ina picha (sio giza) kabla ya predict
+        // Hakikisha picha si giza (width > 0)
         if (webcam.canvas && webcam.canvas.width > 0) {
             await predict(webcam.canvas);
         }
         
-        requestAnimationFrame(loop);
+        if(isScanning) requestAnimationFrame(loop);
     }
 }
-
 let lughaSasa = 'sw'; 
 let ugonjwaWaMwisho = ""; 
 let akibaYaJibu = ""; 
 
 // --- 2. Function ya Predict (Iliyoboreshwa kuzuia ku-stack) ---
 async function predict(el) {
+    // 1. Zuia utabiri kama scan haijawashwa
     if (!isScanning) return; 
 
-    // --- 1. KIZUIZI CHA GIZA (Brightness Check) ---
-    // Tunatengeneza canvas ndogo kupima mwanga wa picha
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 1; canvas.height = 1;
-    ctx.drawImage(el, 0, 0, 1, 1);
-    const dataImg = ctx.getImageData(0, 0, 1, 1).data;
+    // --- 2. KIZUIZI CHA GIZA (Brightness Check) ---
+    const canvasMwangaza = document.createElement('canvas');
+    const ctxMwangaza = canvasMwangaza.getContext('2d');
+    canvasMwangaza.width = 1; canvasMwangaza.height = 1;
+    ctxMwangaza.drawImage(el, 0, 0, 1, 1);
+    const dataImg = ctxMwangaza.getImageData(0, 0, 1, 1).data;
+    // Pata wastani wa mwangaza (R+G+B / 3)
     const mwangaza = (dataImg[0] + dataImg[1] + dataImg[2]) / 3;
 
-    // Kama mwangaza ni mdogo sana (chini ya 40), usiscan, subiri mwanga
-    if (mwangaza < 40) {
-        console.log("Kamera ina giza, tafadhali washa taa au nenda kwenye mwanga.");
+    // Kama kuna giza sana (chini ya 45), rudi nyuma usitoe majibu ya uongo
+    if (mwangaza < 45) {
+        console.log("Kamera ina giza mno...");
         return; 
     }
 
+    // --- 3. ANZA UTABIRI (AI Prediction) ---
     const p = await model.predict(el);
+    
+    // Tafuta daraja lenye uwezekano mkubwa (Highest Probability)
     let high = p[0];
     for(let i=1; i<p.length; i++) {
         if(p[i].probability > high.probability) high = p[i];
     }
 
-    // --- 2. USALAMA NA ACCURACY (Uhakika > 90%) ---
+    // --- 4. USALAMA NA ACCURACY (Vigezo vya kutoa jibu) ---
+    // Tunatoa jibu kama Uhakika ni zaidi ya 90% na siyo "Background"
     if (high.probability > 0.90 && high.className !== "Background") {
-        isScanning = false; 
-        if(webcam) webcam.pause(); 
         
+        isScanning = false; // Simamisha scan
+        if(webcam) webcam.pause(); // Simamisha video kama ipo
+        
+        // Zima laser na onyesha eneo la matokeo
         const resArea = document.getElementById("result-area");
         const laser = document.getElementById("laser-line");
         if(resArea) resArea.style.display = "block";
         if(laser) laser.style.display = "none";
 
+        // Pata data kutoka kwenye database yako (db)
         const data = db[high.className];
         if (data) {
             ugonjwaWaMwisho = high.className;
 
-            // Kokotoa Accuracy asilimia (%)
-            const asilimia = (high.probability * 100).toFixed(1); // Mfano: 95.4%
+            // Kokotoa Accuracy kwa usahihi (Asilimia %)
+            const asilimia = (high.probability * 100).toFixed(1); 
 
-            // Jaza maandishi kwenye screen (Ikiwa ni pamoja na Accuracy)
-            const jinaLaUgonjwa = document.getElementById("res-name");
-            if(jinaLaUgonjwa) {
-                jinaLaUgonjwa.innerHTML = `${high.className} <span style="color: #2e7d32; font-size: 0.8em;">(${asilimia}%)</span>`;
+            // Jaza Jina la Ugonjwa na Accuracy kwenye UI
+            const jinaElement = document.getElementById("res-name");
+            if(jinaElement) {
+                // Inaonyesha mfano: "Leaf Rust (98.5%)"
+                jinaElement.innerHTML = `${high.className} <span style="color: #2e7d32; font-size: 0.8em; font-weight: normal;">(${asilimia}%)</span>`;
             }
 
+            // Jaza Maelezo ya Tiba kulingana na lugha iliyochaguliwa
             const maelezo = data[lughaSasa]; 
-            document.getElementById("sol-text").innerText = maelezo;
+            const solText = document.getElementById("sol-text");
+            if(solText) solText.innerText = maelezo;
 
-            // Tayarisha sentensi ya sauti
+            // --- 5. TAYARISHA NA TOA SAUTI ---
             const mwanzo = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ");
-            const kati = (lughaSasa === 'sw' ? ". Uhakika ni asilimia " : ". Accuracy is ");
+            const kati = (lughaSasa === 'sw' ? ". Uhakika wetu ni asilimia " : ". Our accuracy is ");
             const mwisho = (lughaSasa === 'sw' ? ". Tiba yake ni " : " percent. The treatment is ");
             
-            // Sauti itataja Accuracy pia ili mkulima aelewe uhakika wa AI
+            // Unganisha sentensi kamili
             akibaYaJibu = mwanzo + high.className + kati + asilimia + mwisho + maelezo;
             
-            // Toa Sauti Automatic
-            ongeaSauti(akibaYaJibu, lughaSasa);
+            // Toa Sauti Automatic (Inatumia function yako ya ongeaSauti)
+            if (typeof ongeaSauti === "function") {
+                ongeaSauti(akibaYaJibu, lughaSasa);
+            }
             
-            // Link ya WhatsApp na History (Mawasiliano yanalindwa)
+            // --- 6. HIFADHI NA WHATSAPP ---
             if (typeof wekaLinkWhatsApp === "function") wekaLinkWhatsApp(high.className);
             if (typeof saveHistory === "function") saveHistory(high.className);
+
+            // Tuma pia ujumbe kwenye Chat Box kwa muonekano mzuri
+            const chatBox = document.getElementById("chat-box");
+            if(chatBox) {
+                chatBox.innerHTML += `
+                    <div class="msg-ai">
+                        <b>Scan Imekamilika:</b><br>
+                        Ugonjwa: ${high.className}<br>
+                        Uhakika: ${asilimia}%
+                    </div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
         }
     }
 }
@@ -808,67 +891,7 @@ function switchTab(tabId) {
 }
 
 // --- FUNCTION YA KUPOKEA PICHA (UPLOAD) ---
-window.handleUpload = function(event) {
-    const file = event.target.files[0]; // Pata file lililochaguliwa
-    const preview = document.getElementById('image-preview');
-    const webcamContainer = document.getElementById('webcam-container');
-    const resultArea = document.getElementById('result-area');
-    const laser = document.getElementById('laser-line');
 
-    if (file) {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            // 1. Onyesha picha kwenye kioo
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            
-            // 2. Ficha kioo cha webcam kama kilikuwa wazi
-            if(webcamContainer) webcamContainer.style.display = 'none';
-            
-            // 3. Washa "Laser" ya scan kwa sekunde chache kuleta ladha ya AI
-            if(laser) {
-                laser.style.display = 'block';
-                setTimeout(() => { laser.style.display = 'none'; }, 2000);
-            }
-
-            // 4. Toa Majibu ya Kitiba (Simulate AI)
-            chakataPicha(file.name);
-        }
-
-        reader.readAsDataURL(file);
-    }
-};
-
-// Function inayotoa majibu baada ya picha kupakiwa
-function chakataPicha(fileName) {
-    const resArea = document.getElementById('result-area');
-    const resName = document.getElementById('res-name');
-    const solText = document.getElementById('sol-text');
-    const waContainer = document.getElementById('whatsapp-container');
-
-    // Onyesha eneo la matokeo
-    resArea.style.display = 'block';
-    resName.innerText = "Inachakata...";
-    solText.innerText = "Tunaangalia hali ya jani kwenye picha yako...";
-
-    setTimeout(() => {
-        // Hapa unaweza kuweka logic ya kutambua ugonjwa kulingana na jina la file au AI
-        const ugonjwa = "Madoa ya Kutu (Leaf Rust)";
-        const tiba = "Tumia dawa ya fungisidi (mfano: Copper Oxychloride). Hakikisha unakata majani yaliyoathirika na kuyachoma moto.";
-
-        resName.innerText = ugonjwa;
-        solText.innerText = tiba;
-        
-        // Onyesha button ya WhatsApp kwa msaada zaidi
-        if(waContainer) waContainer.style.display = 'block';
-
-        // Hifadhi tukio hili kwenye Historia
-        if(typeof window.saveToHistory === 'function') {
-            window.saveToHistory("Kutoka Galari", ugonjwa, tiba);
-        }
-    }, 2000);
-}
     
 </script>
 </body>

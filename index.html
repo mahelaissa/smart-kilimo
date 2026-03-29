@@ -121,6 +121,13 @@ input, select {
             <div id="result-area" style="display: none; background: #e8f5e9; padding:15px; border-radius:12px; margin-bottom:15px; border-left: 6px solid var(--p);">
                 <div id="res-name" style="font-weight:bold; color:var(--p); text-transform:uppercase;"></div>
                 <p id="sol-text" style="font-size:14px; margin-top:8px;"></p>
+            <div id="whatsapp-container" style="margin-top: 15px; display:none;">
+            <a id="wa-link" href="#" target="_blank" 
+               style="background: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            💬 Ongea na Mtaalamu (WhatsApp)
+    </a>
+</div>
+                
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -359,73 +366,68 @@ function showGuide(crop) {
 
     // MODEL
     async function initModel() { if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json"); }
+
     async function startCam() {
-        await initModel();
-        webcam = new tmImage.Webcam(400, 400, true);
-        await webcam.setup({ facingMode: "environment" });
-        webcam.play();
-        document.getElementById("webcam-container").innerHTML = "";
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
-        document.getElementById("image-preview").style.display = "none";
-        document.getElementById("laser-line").style.display = "block";
-        isScanning = true; loop();
-    }
-    async function loop() { if(isScanning) { webcam.update(); await predict(webcam.canvas); requestAnimationFrame(loop); } }
-    async function handleUpload(e) {
-        const file = e.target.files[0]; if(!file) return;
-        const img = document.getElementById("image-preview");
-        isScanning = false; if(webcam) webcam.stop();
-        document.getElementById("laser-line").style.display = "block";
-        const reader = new FileReader();
-        reader.onload = (f) => {
-            img.src = f.target.result; img.style.display = "block";
-            img.onload = async () => { await initModel(); await predict(img); };
-        };
-        reader.readAsDataURL(file);
-    }
-async function predict(el) {
-    const p = await model.predict(el);
-    let high = p[0];
+    await initModel();
+    // 1. Hakikisha webcam inakaa kwenye size sahihi
+    webcam = new tmImage.Webcam(400, 400, true); 
+    await webcam.setup({ facingMode: "environment" }); // Inatumia camera ya nyuma
+    await webcam.play();
     
-    // Tafuta ugonjwa wenye uwezekano mkubwa (Probability)
-    for(let i=1; i<p.length; i++) {
-        if(p[i].probability > high.probability) high = p[i];
+    document.getElementById("webcam-container").innerHTML = "";
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+    
+    document.getElementById("image-preview").style.display = "none";
+    document.getElementById("laser-line").style.display = "block"; // Washa mstari
+    
+    isScanning = true;
+    requestAnimationFrame(loop); // Anza loop
+}
+
+async function loop() {
+    if (isScanning) {
+        webcam.update();
+        await predict(webcam.canvas);
+        requestAnimationFrame(loop);
+    }
+}
+
+async function predict(el) {
+    const prediction = await model.predict(el);
+    
+    // Tafuta ugonjwa wenye probability ya juu zaidi
+    let high = prediction[0];
+    for (let i = 1; i < prediction.length; i++) {
+        if (prediction[i].probability > high.probability) {
+            high = prediction[i];
+        }
     }
 
-    // AI iwe na uhakika wa zaidi ya 85%
-    if(high.probability > 0.85) {
-        isScanning = false;
-        document.getElementById("laser-line").style.display = "none";
-        document.getElementById("result-area").style.display = "block";
+    // 2. Kinga dhidi ya "Giza" au "Majibu ya Haraka"
+    // Tunataka AI iwe na uhakika wa 90% na isichukue "Background" (kama una class ya background)
+    if (high.probability > 0.90 && high.className !== "Background") {
         
-        // Tunachukua data kutoka kwenye DB yako mpya
+        isScanning = false; // SIMAMISHA SCANNING MARA MOJA
+        if(webcam) webcam.pause(); // Tuliza picha ya kamera
+        
+        document.getElementById("laser-line").style.display = "none"; // Zima mstari
+        document.getElementById("result-area").style.display = "block"; 
+
         const data = db[high.className];
-
-        if(data) {
-            // 1. Onyesha jina la ugonjwa (Kichwa cha habari)
+        if (data) {
             document.getElementById("res-name").innerText = high.className;
-
-            // 2. Onyesha maelezo ya Kiswahili
-            const maelezo = data.sw;
-            document.getElementById("sol-text").innerText = maelezo;
-
-            // 3. Sauti: Itataja jina la ugonjwa kwanza, kisha tiba
-            const sautiYaKusoma = "Ugonjwa umetambuliwa kama: " + high.className + ". " + maelezo;
-            ongeaSauti(sautiYaKusoma);
-
-            // 4. (Bonus) Kama unataka picha ionekane pia, unaweza kuongeza hapa:
-            // document.getElementById("picha-ya-gonjwa").src = data.img;
+            document.getElementById("sol-text").innerText = data.sw;
+            
+            // Sauti
+            ongeaSauti("Ugonjwa umetambuliwa kama: " + high.className + ". " + data.sw);
+            
+            // 3. Weka Link ya WhatsApp (Tutaiongeza hapa chini)
+            wekaLinkWhatsApp(high.className);
 
             saveHistory(high.className);
-        } else {
-            // Kama jina la Class halipo kwenye DB yako
-            document.getElementById("res-name").innerText = high.className;
-            document.getElementById("sol-text").innerText = "Ugonjwa umetambuliwa lakini maelezo ya tiba hayajapatikana.";
-            ongeaSauti("Ugonjwa ni " + high.className);
         }
     }
 }
-    
 
     // LOGIC
 function askAI() {
@@ -591,6 +593,20 @@ function switchTab(t) {
             });
         });
     };
+
+    function wekaLinkWhatsApp(ugonjwa) {
+    const nambaYaMtaalamu = "255795023200"; // WEKA NAMBA YAKO HAPA (Anza na 255)
+    const ujumbe = `Habari mtaalamu, nimeitumia App ya Smart Kilimo na imegundua kuwa mahindi yangu yana ugonjwa wa: ${ugonjwa}. Naomba msaada zaidi.`;
+    
+    const encodedUjumbe = encodeURIComponent(ujumbe);
+    const link = `https://wa.me/${nambaYaMtaalamu}?text=${encodedUjumbe}`;
+    
+    const waContainer = document.getElementById("whatsapp-container");
+    const waLink = document.getElementById("wa-link");
+    
+    waLink.href = link;
+    waContainer.style.display = "block"; // Onyesha button ya WhatsApp
+}
 </script>
 </body>
 </html>

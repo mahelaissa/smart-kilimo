@@ -142,11 +142,11 @@ input, select {
                 <button onclick="logout()" style="background:#666; color:white; padding:5px 10px; font-size:11px;">Toka</button>
             </div>
             
-            <div class="view-box">
-                <div id="laser-line" class="laser"></div>
-                <div id="webcam-container"></div>
-                <img id="image-preview" src="" style="display:none;">
-            </div>
+          <div class="view-box">
+    <div id="laser-line" class="laser"></div>
+    <div id="webcam-container"></div>
+    <img id="image-preview" src="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:15px;">
+</div>
 
             <div id="result-area" style="display: none; background: #e8f5e9; padding:15px; border-radius:12px; margin-bottom:15px; border-left: 6px solid var(--p);">
                 <div id="res-name" style="font-weight:bold; color:var(--p); text-transform:uppercase;"></div>
@@ -462,47 +462,49 @@ async function startCam() {
 
 // --- 2. UPLOAD (Kuscan Picha ya Galari) ---
 async function handleUpload(event) {
-    const file = e.target.files[0]; 
-    if(!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
     try {
-        await initModel(); // Hakikisha model ipo
+        // 1. Hakikisha Model ipo tayari
+        if (typeof initModel === "function") await initModel();
 
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = function(e) {
             const img = new Image();
-            img.src = event.target.result;
-            
-            // UI Updates: Ficha kamera, onyesha picha iliyopakiwa
-            isScanning = false; // Zima loop ya kamera
-            if(webcam) webcam.pause();
+            img.src = e.target.result;
 
-            const preview = document.getElementById("image-preview");
-            preview.src = img.src;
-            preview.style.display = "block";
-            document.getElementById("webcam-container").style.display = "none";
-            document.getElementById("laser-line").style.display = "block";
-
-            img.onload = async () => {
-                // Tunatengeneza canvas ya siri ili kuituma kwenye predict()
-                const c = document.createElement("canvas"); 
-                c.width = 400; c.height = 400;
-                const ctx = c.getContext("2d");
+            // Tunahakikisha picha imepakiwa kikamilifu kwanza
+            img.onload = async function() {
+                // UI: Onyesha picha na washa laser
+                const preview = document.getElementById("image-preview");
+                if (preview) {
+                    preview.src = img.src;
+                    preview.style.display = "block";
+                }
                 
-                // Chora picha ienee vizuri (400x400) bila kuharibu shape
+                document.getElementById("webcam-container").style.display = "none";
+                document.getElementById("laser-line").style.display = "block";
+                
+                // Tunatengeneza Canvas ya 400x400 (Saizi inayopendwa na Teachable Machine)
+                const c = document.createElement("canvas");
+                c.width = 400;
+                c.height = 400;
+                const ctx = c.getContext("2d");
                 ctx.drawImage(img, 0, 0, 400, 400);
 
-                // Simulation ya "Scanning" kwa sekunde 1
+                // Subiri kidogo (animation) kisha tabiri (Predict)
                 setTimeout(async () => {
+                    isScanning = true; // Ruhusu predict ifanye kazi
+                    await predict(c);  // Tuma picha kwenye AI
                     document.getElementById("laser-line").style.display = "none";
-                    // Tuma canvas kwenye predict function yako
-                    await predict(c); 
-                }, 1500);
+                }, 800);
             };
         };
         reader.readAsDataURL(file);
     } catch (err) {
-        alert("Error loading image/model.");
+        console.error("Shida ya Upload:", err);
+        alert("Imeshindikana kusoma picha. Jaribu tena.");
     }
 }
 

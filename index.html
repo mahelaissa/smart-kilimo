@@ -494,8 +494,8 @@ async function handleUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+    // 1. ANZA TRY BLOCK HAPA
     try {
-        // UI: Onyesha laser na ficha kamera
         const laser = document.getElementById("laser-line");
         if(laser) laser.style.display = "block";
         
@@ -510,45 +510,40 @@ async function handleUpload(event) {
             img.src = e.target.result;
 
             img.onload = async function() {
-                // Onyesha picha kwenye kioo
                 if (preview) {
                     preview.src = img.src;
                     preview.style.display = "block";
                 }
 
-                // Tengeneza Canvas ya 400x400 kwa ajili ya AI
                 const c = document.createElement("canvas");
                 c.width = 400;
                 c.height = 400;
                 const ctx = c.getContext("2d");
                 ctx.drawImage(img, 0, 0, 400, 400);
 
-                // MUHIMU: Washa isScanning kabla ya kuita predict
                 isScanning = true; 
 
-                // Toa muda wa sekunde 1.5 kwa mkulima kuona laser ikiscan
                 setTimeout(async () => {
                     try {
-                        // Tuma picha kwenye predict
                         await predict(c); 
-                        
-                        // Baada ya predict kutoa jibu, zima laser
                         if(laser) laser.style.display = "none";
-                    } catch (err) {
-                        console.error("AI Prediction Error:", err);
+                    } catch (predictErr) {
+                        console.error("AI Prediction Error:", predictErr);
                         isScanning = false;
                         if(laser) laser.style.display = "none";
                     }
                 }, 1500);
-            };
-        };
+            }; // Mwisho wa img.onload
+        }; // Mwisho wa reader.onload
+        
         reader.readAsDataURL(file);
 
-    } catch (err) {
+    } catch (err) { 
+        // 2. CATCH HII SASA IPO NDANI YA FUNCTION SAHIHI
         console.error("Shida ya Upload:", err);
         alert("Imeshindikana kusoma picha. Jaribu tena.");
     }
-}
+} // MWISHO WA FUNCTION YOTE
 
 // --- 3. LOOP YA KAMERA ---
 async function loop() {

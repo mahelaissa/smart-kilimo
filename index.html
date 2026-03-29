@@ -579,7 +579,24 @@ function showGuide(c) {
     document.getElementById("guide-content").innerHTML = cropGuides[c]; 
     ongeaSauti("Mwongozo wa " + c); 
 }
-// --- 1. SPEECH RECOGNITION (Kusikiliza Mkulima) ---
+
+    // --- 0. VARIABLES ZA MSINGI (Lazima ziwepo kwanza) ---
+let lughaSasa = 'sw'; 
+let isScanning = false;
+let webcam = null; // Tunaiweka null ili isilete error ikikosekana
+
+// Mfano wa database (Hakikisha hii ipo au imepakiwa)
+const chatKnowledge = {
+    "sw": [
+        { key: ["mbolea", "rutuba"], ans: "Mbolea ya DAP inafaa wakati wa kupanda mahindi." },
+        { key: ["wadudu", "dudu"], ans: "Tumia dawa ya kibaolojia kama Neem oil kupambana na wadudu." }
+    ],
+    "en": [
+        { key: ["fertilizer", "manure"], ans: "Use DAP fertilizer during planting for better results." }
+    ]
+};
+
+// --- 1. SPEECH RECOGNITION ---
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
 
@@ -598,7 +615,7 @@ if (Recognition) {
         const input = document.getElementById("chat-input");
         if (input) {
             input.value = maneno;
-            sendMessage(); // Tuma moja kwa moja akimaliza kuongea
+            sendMessage(); 
         }
     };
 
@@ -608,16 +625,7 @@ if (Recognition) {
     };
 }
 
-function anzaKusikiliza() {
-    if (recognition) {
-        recognition.lang = (lughaSasa === 'sw') ? 'sw-TZ' : 'en-US';
-        recognition.start();
-    } else {
-        alert("Browser yako hairuhusu sauti.");
-    }
-}
-
-// --- 2. CHAT LOGIC (Kutuma na Kupata Jibu la AI) ---
+// --- 2. CHAT LOGIC ---
 async function sendMessage() {
     const input = document.getElementById("chat-input");
     const chatBox = document.getElementById("chat-box");
@@ -627,19 +635,17 @@ async function sendMessage() {
     const swali = input.value.trim();
     const swaliLower = swali.toLowerCase();
     
-    // Onyesha meseji ya Mkulima
     chatBox.innerHTML += `
         <div style="margin-bottom:10px; text-align:right;">
-            <p style="margin:0; font-size:11px; color:#666;">Wewe</p>
-            <div style="background:#e1ffc7; padding:10px; border-radius:15px; display:inline-block; max-width:80%; text-align:left;">${swali}</div>
+            <div style="background:#e1ffc7; padding:10px; border-radius:15px; display:inline-block; max-width:80%;">${swali}</div>
         </div>`;
     
     input.value = ""; 
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // TAFUTA JIBU KWENYE DATABASE (chatKnowledge)
     let jibuAI = "";
-    const maarifa = chatKnowledge[lughaSasa] || chatKnowledge["sw"]; 
+    // USALAMA: Tunakagua kama chatKnowledge ipo
+    const maarifa = (chatKnowledge && chatKnowledge[lughaSasa]) ? chatKnowledge[lughaSasa] : []; 
     let limepatikana = false;
 
     for (let item of maarifa) {
@@ -652,24 +658,21 @@ async function sendMessage() {
 
     if (!limepatikana) {
         jibuAI = (lughaSasa === 'sw') 
-            ? `Asante kwa swali lako kuhusu "${swali}". Kwa sasa nimebobea zaidi kwenye Mahindi, Kabichi na Mchicha. Endelea kuhudumia shamba lako, Kilimo ni ajira!` 
-            : `Thanks for asking about "${swali}". Currently, I specialize in Maize, Cabbage, and Spinach. Keep farming, agriculture is a noble job!`;
+            ? `Asante kwa swali kuhusu "${swali}". Kwa sasa nabobea kwenye Mahindi na Mchicha.` 
+            : `Thanks for asking about "${swali}". I specialize in Maize and Spinach currently.`;
     }
 
-    // Onyesha Jibu la AI baada ya delay kidogo
     setTimeout(() => {
         chatBox.innerHTML += `
             <div style="margin-bottom:10px; text-align:left;">
-                <p style="margin:0; font-size:11px; color:green;">Smart Kilimo AI</p>
                 <div style="background:#eee; padding:10px; border-radius:15px; display:inline-block; max-width:80%;">${jibuAI}</div>
             </div>`;
-        
         chatBox.scrollTop = chatBox.scrollHeight;
-        ongeaSauti(jibuAI, lughaSasa);
+        if(typeof ongeaSauti === "function") ongeaSauti(jibuAI, lughaSasa);
     }, 800);
 }
 
-// --- 3. TAB SWITCH & DYNAMIC BUTTONS (Futa Hist/Chat) ---
+// --- 3. TAB SWITCH (Iliyorekebishwa isigande) ---
 function switchTab(tabId) {
     const tabs = ['chat', 'hist', 'scan'];
     const deleteBtn = document.getElementById("dynamic-delete-btn");
@@ -681,7 +684,6 @@ function switchTab(tabId) {
         if (btn) (t === tabId) ? btn.classList.add('active') : btn.classList.remove('active');
     });
 
-    // BADILISHA BUTTON YA KUFUTA KULINGANA NA TAB
     if (deleteBtn) {
         if (tabId === 'chat') {
             deleteBtn.innerText = "🗑️ Safisha Chat";
@@ -696,27 +698,15 @@ function switchTab(tabId) {
         }
     }
 
-    window.speechSynthesis.cancel();
-    if (tabId !== 'scan' && webcam) { webcam.pause(); isScanning = false; }
-}
-
-// --- 4. KUFUTA (CLEANING) FUNCTIONS ---
-function clearChat() {
-    const chatBox = document.getElementById("chat-box");
-    if(confirm(lughaSasa === 'sw' ? "Je, ufute maongezi yote?" : "Clear all chat?")) {
-        chatBox.innerHTML = "";
-        ongeaSauti(lughaSasa === 'sw' ? "Chat imesafishwa" : "Chat cleared", lughaSasa);
-    }
-}
-
-function clearAllHistory() {
-    if(confirm(lughaSasa === 'sw' ? "Je, ufute historia yote ya matokeo?" : "Delete all results history?")) {
-        document.getElementById("hist-content").innerHTML = "";
-        localStorage.removeItem("smart_kilimo_history");
-        ongeaSauti(lughaSasa === 'sw' ? "Historia imefutwa" : "History deleted", lughaSasa);
-    }
-}
+    // USALAMA: Zima sauti na kamera bila kuleta error
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     
+    // Angalia kama webcam ipo na inafanya kazi kabla ya ku-pause
+    if (tabId !== 'scan' && webcam && typeof webcam.pause === "function") { 
+        webcam.pause(); 
+        isScanning = false; 
+    }
+}
     function loginUser() {
         const u = document.getElementById("username").value.trim();
         if(!u) return; currentUser = u;

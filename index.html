@@ -753,7 +753,6 @@ startScanEffect: function() {
 
         }, 1000);
     },
-         // HISTORY
          saveToHistory: function(name) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
             hist.unshift({ name, date: new Date().toLocaleTimeString() });

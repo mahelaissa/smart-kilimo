@@ -333,22 +333,35 @@
         currentUser: "",
         lastScanResult: "",
 
-        login: function() {
-            const name = document.getElementById("username").value.trim();
+      login: function() {
+            const nameInput = document.getElementById("username");
+            const name = nameInput.value.trim();
+            
             if (name) {
                 this.currentUser = name;
-                localStorage.setItem("kilimo_user", name);
+                // Tunahifadhi jina kwa kutumia KEY sahihi
+                localStorage.setItem("smart_kilimo_user", name);
+                
+                // Zima kioo cha login na washa app
                 document.getElementById("login-overlay").style.display = "none";
                 document.getElementById("app-body").style.display = "block";
-                document.getElementById("user-tag").innerText = "👤 Karibu, " + name;
+                
+                // Onyesha jina la mkulima
+                const userTag = document.getElementById("user-tag");
+                if(userTag) userTag.innerText = "👤 Karibu, " + name;
+                
+                // Pakia historia ya huyu mkulima
                 this.loadHistory();
             } else {
-                alert("Weka jina kwanza!");
+                alert("Tafadhali weka jina kwanza!");
+                nameInput.focus();
             }
         },
 
         logout: function() {
-            localStorage.removeItem("kilimo_user");
+            // Futa jina na historia ya muda (kama unataka)
+            localStorage.removeItem("smart_kilimo_user");
+            // Rudisha ukurasa upya
             location.reload();
         },
 
@@ -546,10 +559,14 @@ showResult: function(resKey) {
     };
 
     window.onload = () => {
-        const saved = localStorage.getItem("kilimo_user");
-        if (saved) {
-            document.getElementById("username").value = saved;
-            app.login();
+        const savedUser = localStorage.getItem("smart_kilimo_user");
+        if (savedUser) {
+            // Kama alishalogin, mwingize ndani moja kwa moja
+            app.currentUser = savedUser;
+            document.getElementById("login-overlay").style.display = "none";
+            document.getElementById("app-body").style.display = "block";
+            document.getElementById("user-tag").innerText = "👤 Karibu, " + savedUser;
+            app.loadHistory();
         }
     };
     startMic: function() {

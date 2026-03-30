@@ -186,7 +186,10 @@
             </div>
             <div class="chat-input-wrapper">
                 <button class="mic-btn" onclick="app.startMic()">🎤</button>
-                <input type="text" id="chat-input" placeholder="Uliza swali...">
+               <input type="text" id="chat-input" 
+           onkeypress="if(event.key === 'Enter') app.sendMsg()" 
+           placeholder="Ongea au andika hapa..." 
+           style="flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #ddd; outline: none;">
                 <button class="send-btn" onclick="app.sendMsg()">🚀</button>
             </div>
         </div>
@@ -551,36 +554,37 @@
 
         // CHAT ENGINE
      // Function ya Chat Box (Hakikisha haichukui lastScanResult kimakosa)
-   sendMsg: function() {
-    const input = document.getElementById("chat-input");
-    const message = input.value.trim();
-    if (!message) return;
+  // 2. KUTUMA UJUMBE (Manual na Automatic)
+    sendMsg: function() {
+        const input = document.getElementById("chat-input");
+        const chatBox = document.getElementById("chat-box");
+        const msg = input.value.trim();
 
-    // 1. Onyesha ujumbe wa mtumiaji kwenye kioo
-    const chatBox = document.getElementById("chat-box");
-    chatBox.innerHTML += `
-        <div style="align-self: flex-end; background: var(--p); color: white; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; max-width: 80%; font-size: 13px;">
-            ${message}
-        </div>`;
-    
-    input.value = ""; // Safisha box
-    chatBox.scrollTop = chatBox.scrollHeight;
+        if (!msg) return; // Kama box lipo wazi, isitume
 
-    // 2. AI inajibu (Simulated AI reply)
-    setTimeout(() => {
-        let replyText = "Asante kwa swali lako kuhusu '" + message + "'. Mtaalamu wetu wa kilimo atawasiliana nawe hivi punde kupitia WhatsApp.";
-        
-        chatBox.innerHTML += `
-            <div style="align-self: flex-start; background: #eee; color: #333; padding: 10px; border-radius: 15px 15px 15px 0; margin: 5px; max-width: 80%; font-size: 13px;">
-                <b>AI:</b> ${replyText}
-            </div>`;
-        
+        // Onyesha ujumbe wa mtumiaji
+        const userMsg = document.createElement("div");
+        userMsg.style = "align-self: flex-end; background: var(--p); color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; margin: 5px; max-width: 80%; font-size: 13px;";
+        userMsg.innerText = msg;
+        chatBox.appendChild(userMsg);
+
+        input.value = ""; // Safisha box ya kuandikia
         chatBox.scrollTop = chatBox.scrollHeight;
-        
-        // 3. AI inaongea jibu la chat (Siyo jibu la Scan!)
-        this.speak(replyText); 
-    }, 1000);
-},
+
+        // Jibu la AI
+        setTimeout(() => {
+            const reply = "Asante kwa ujumbe wako kuhusu '" + msg + "'. Mtaalamu atajibu hivi punde.";
+            const aiMsg = document.createElement("div");
+            aiMsg.style = "align-self: flex-start; background: #f0f0f0; color: #333; padding: 10px 15px; border-radius: 15px 15px 15px 0; margin: 5px; max-width: 80%; font-size: 13px;";
+            aiMsg.innerHTML = `<b>Smart Kilimo:</b> <br>${reply}`;
+            chatBox.appendChild(aiMsg);
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // AI iongee jibu la chat (Isichanganye na majibu ya Scan)
+            this.speak(reply);
+        }, 1000);
+    },
        // HISTORY
         saveToHistory: function(name) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
@@ -594,45 +598,38 @@
             box.innerHTML = hist.length ? hist.map(h => `<div style="padding:10px; border-bottom:1px solid #eee; text-align:left;">📜 <b>${h.name}</b> <small>(${h.date})</small></div>`).join("") : "Hakuna historia.";
         
     },
-       startMic: function() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Browser yako haina uwezo wa kusikiliza sauti.");
-        return;
-    }
+       // 1. MAIKROFONI (Inatuma Automatic)
+    startMic: function() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return alert("Browser yako haikubali Mic.");
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'sw-TZ'; // Inasikiliza Kiswahili
-    const micBtn = document.querySelector(".mic-btn");
-    const input = document.getElementById("chat-input");
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'sw-TZ';
+        const micBtn = document.querySelector(".mic-btn");
+        const chatInput = document.getElementById("chat-input");
 
-    recognition.onstart = () => {
-        micBtn.innerHTML = "🔴"; // Inabadilika rangi ikisikiliza
-        micBtn.style.color = "red";
-    };
+        recognition.onstart = () => {
+            micBtn.innerHTML = "🔴";
+            micBtn.style.color = "red";
+        };
 
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        input.value = transcript; // Inaingiza maandishi kwenye box
-        
-        // MUHIMU: Inatuma ujumbe moja kwa moja baada ya sekunde 1
-        setTimeout(() => {
-            this.sendMsg(); 
-        }, 500);
-    };
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript; // Inaweka maneno kwenye box
 
-    recognition.onerror = () => {
-        micBtn.innerHTML = "🎤";
-        micBtn.style.color = "";
-    };
+            // --- HAPA NDIPO INATUMA AUTOMATIC ---
+            setTimeout(() => {
+                this.sendMsg(); 
+            }, 600); // Inasubiri nusu sekunde kisha inatuma
+        };
 
-    recognition.onend = () => {
-        micBtn.innerHTML = "🎤";
-        micBtn.style.color = "";
-    };
+        recognition.onend = () => {
+            micBtn.innerHTML = "🎤";
+            micBtn.style.color = "";
+        };
 
-    recognition.start();
-}, 
+        recognition.start();
+    },
 };
        window.onload = () => {
           const savedUser = localStorage.getItem("smart_kilimo_user");

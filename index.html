@@ -213,6 +213,8 @@
     const MODEL_URL = "./model/";
 
     // --- 2. DATABASE YA MAGONJWA ---
+    
+    // --- 1. DATA YA MAGONJWA (DISEASE DATA) ---
     const db = {
         "Cabbage Healthy": {
             "sw": "Kabichi yako haina ugonjwa. Endelea kumwagilia, tumia mbolea na linda dhidi ya wadudu.",
@@ -286,171 +288,198 @@
         }
     };
 
-    // --- 3. CHAT KNOWLEDGE BASE ---
+    // --- 2. MAKTABA (LIBRARY GUIDES) ---
+    const cropGuides = {
+        "mahindi": `
+            <h4 style="margin-top:0; color:#fbc02d; border-bottom:1px solid #ddd;">Kilimo cha Mahindi Bora 🌽</h4>
+            <p><b>1. Mbegu:</b> Ekari moja kilo 8-10. Nafasi sm 75x25.</p>
+            <p><b>2. Mbolea:</b> DAP (kupanda), UREA (wiki 3-4).</p>
+            <p><b>3. Udhibiti:</b> Dhibiti Viwavi Jeshi kwa dawa kama Belt.</p>
+            <p><b>4. Uvunaji:</b> Siku 90-120 baada ya kupanda.</p>`,
+        "kabichi": `
+            <h4 style="margin-top:0; color:#81c784; border-bottom:1px solid #ddd;">Kilimo cha Kabichi 🥬</h4>
+            <p><b>1. Kitalu:</b> Hamisha miche baada ya wiki 4-6.</p>
+            <p><b>2. Nafasi:</b> sm 60x60 kwa aina kubwa.</p>
+            <p><b>3. Maji:</b> Inahitaji maji mengi asubuhi na jioni.</p>
+            <p><b>4. Changamoto:</b> Kinga dhidi ya Black Rot na DBM.</p>`,
+        "mchicha": `
+            <h4 style="margin-top:0; color:#2e7d32; border-bottom:1px solid #ddd;">Kilimo cha Mchicha 🌿</h4>
+            <p><b>1. Maandalizi:</b> Lima ardhi iwe laini sana.</p>
+            <p><b>2. Upandaji:</b> Changanya mbegu na mchanga (1:3).</p>
+            <p><b>3. Rutuba:</b> Samadi iliyooza na Foliar booster.</p>
+            <p><b>4. Uvunaji:</b> Wiki 3 baada ya kupanda.</p>`
+    };
+
+    // --- 3. CHAT KNOWLEDGE (AI BRAIN) ---
     const chatKnowledge = {
         "sw": [
-            { key: ["jinsi", "tumia", "kufanya"], ans: "Ili kunitumia: 1. Bonyeza Kamera au Pakia Jani. 2. Subiri AI isome. 3. Angalia ushauri chini." },
-            { key: ["mbolea", "mahindi"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (wiki 3-4), na CAN (mbelewele)." },
-            { key: ["mbolea", "kabichi"], ans: "Kabichi inapenda samadi iliyooza na NPK 10-10-10 kwa vichwa vikubwa." },
-            { key: ["mbolea", "mchicha"], ans: "Mchicha unahitaji Nitrojeni. Tumia samadi au Foliar kila baada ya kuvuna." },
-            { key: ["wadudu", "funza"], ans: "Kwa funza wa mahindi, tumia Belt au Emamectin mapema asubuhi." },
+            { key: ["jinsi", "tumia"], ans: "Ili kunitumia: 1. Bonyeza Kamera au Pakia Jani. 2. Subiri AI isome picha. 3. Angalia ushauri chini ya picha." },
+            { key: ["mbolea", "mahindi"], ans: "Kwa mahindi: Tumia DAP (kupanda) na UREA (kukuzia wiki ya 3-4)." },
+            { key: ["mbolea", "kabichi"], ans: "Kabichi inahitaji samadi nyingi na NPK 10-10-10." },
+            { key: ["mln", "virusi"], ans: "MLN haina tiba. Ng'oa mmea na uchome moto kuzuia kuenea." },
             { key: ["habari", "mambo"], ans: "Safi sana mkulima! Karibu. Una swali gani kuhusu mazao leo?" }
         ],
         "en": [
-            { key: ["how", "use"], ans: "1. Click Camera or Upload leaf. 2. Wait for AI scan. 3. Read the advice below." },
-            { key: ["fertilizer", "maize"], ans: "Use DAP for planting, UREA for top dressing, and CAN during tasseling." }
+            { key: ["how", "use"], ans: "1. Click Camera or Upload a leaf. 2. Wait for AI scan. 3. See results below the image." },
+            { key: ["fertilizer", "maize"], ans: "For maize: Use DAP for planting and UREA for top dressing." },
+            { key: ["offline"], ans: "This app works offline once installed on your phone!" }
         ]
     };
 
-    // --- 4. LOGIN & AUTHENTICATION ---
+    // --- 4. APP ENGINE ---
     const app = {
+        currentUser: "",
+        lastScanResult: "",
+
         login: function() {
-            const u = document.getElementById('username').value.trim();
-            if(!u) return alert("Andika jina lako kwanza.");
-            localStorage.setItem("active_farmer", u);
-            currentUser = u;
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('app-body').style.display = 'flex';
-            document.getElementById('user-tag').innerText = "👤 Mkulima: " + u;
-            this.loadData();
+            const name = document.getElementById("username").value.trim();
+            if (name) {
+                this.currentUser = name;
+                localStorage.setItem("kilimo_user", name);
+                document.getElementById("login-overlay").style.display = "none";
+                document.getElementById("app-body").style.display = "block";
+                document.getElementById("user-tag").innerText = "👤 Karibu, " + name;
+                this.loadHistory();
+            } else {
+                alert("Weka jina kwanza!");
+            }
         },
 
         logout: function() {
-            if(confirm("Je, unataka kutoka?")) {
-                localStorage.removeItem("active_farmer");
-                location.reload();
-            }
+            localStorage.removeItem("kilimo_user");
+            location.reload();
         },
 
-        loadData: function() {
-            const user = localStorage.getItem("active_farmer");
-            if(user) {
-                const savedChat = localStorage.getItem("chat_" + user);
-                if(savedChat) document.getElementById("chat-box").innerHTML = savedChat;
-                const savedHist = localStorage.getItem("hist_" + user);
-                if(savedHist) document.getElementById("hist-ui").innerHTML = savedHist;
+        // SCANNING
+        startScanEffect: function() {
+            const laser = document.getElementById("laser");
+            laser.style.display = "block";
+            
+            setTimeout(() => {
+                laser.style.display = "none";
+                const keys = Object.keys(db);
+                const randomRes = keys[Math.floor(Math.random() * keys.length)];
+                this.showResult(randomRes);
+            }, 2500);
+        },
+
+        handleUpload: function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById("preview");
+                img.src = e.target.result;
+                img.style.display = "block";
+                this.startScanEffect();
+            };
+            reader.readAsDataURL(file);
+        },
+
+        showResult: function(resKey) {
+            const result = db[resKey];
+            const chatBox = document.getElementById("chat-box");
+            this.lastScanResult = result.sw;
+
+            chatBox.innerHTML += `
+                <div style="margin:10px 0; padding:10px; border-left:4px solid var(--p); background:#fff;">
+                    <b style="color:var(--p)">Utambuzi: ${resKey}</b><br>${result.sw}
+                </div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            this.saveToHistory(resKey);
+        },
+
+        speak: function(customText = null) {
+            const text = customText || this.lastScanResult || "Tafadhali kagua jani kwanza.";
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'sw-TZ';
+            window.speechSynthesis.speak(msg);
+        },
+
+        // CALCULATOR
+        calculate: function() {
+            const acres = document.getElementById("acres").value;
+            const crop = document.getElementById("crop-select").value;
+            const resBox = document.getElementById("calc-res");
+
+            if (!acres || acres <= 0) return alert("Weka ekari!");
+
+            let calcText = "";
+            if (crop === "mahindi") {
+                calcText = `Ekari ${acres}: Utahitaji kilo ${acres * 10} za mbegu na mifuko ${acres} ya DAP.`;
+            } else if (crop === "kabichi") {
+                calcText = `Ekari ${acres}: Utahitaji miche ${acres * 11000} na gramu 200 za mbegu.`;
+            } else {
+                calcText = `Ekari ${acres}: Utahitaji kilo 3 za mbegu za mchicha.`;
             }
+
+            resBox.innerHTML = `✅ ${calcText}`;
+            resBox.style.display = "block";
+            this.speak(calcText);
+        },
+
+        // TABS & LIBRARY
+        switchTab: function(tab) {
+            document.getElementById("chat-ui").style.display = tab === 'chat' ? 'block' : 'none';
+            document.getElementById("hist-ui").style.display = tab === 'hist' ? 'block' : 'none';
+            document.getElementById("tab-c").className = tab === 'chat' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById("tab-h").className = tab === 'hist' ? 'tab-btn active' : 'tab-btn';
+        },
+
+        lib: function(zao) {
+            const box = document.getElementById("lib-box");
+            box.innerHTML = cropGuides[zao];
+            this.speak(box.innerText);
+        },
+
+        // CHAT ENGINE
+        sendMsg: function() {
+            const input = document.getElementById("chat-input");
+            const text = input.value.toLowerCase().trim();
+            if (!text) return;
+
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<div style="text-align:right; font-size:13px; margin:5px 0;"><b>Wewe:</b> ${input.value}</div>`;
+            
+            let ans = "Samahani, sijapata jibu la hilo. Uliza kuhusu mbolea, magonjwa au jinsi ya kutumia app.";
+            
+            // Search in Swahili then English
+            const allItems = [...chatKnowledge.sw, ...chatKnowledge.en];
+            for (let item of allItems) {
+                if (item.key.some(k => text.includes(k))) {
+                    ans = item.ans;
+                    break;
+                }
+            }
+
+            setTimeout(() => {
+                chatBox.innerHTML += `<div style="color:var(--p); font-size:13px; margin-bottom:10px;"><b>AI:</b> ${ans}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                this.speak(ans);
+            }, 600);
+            input.value = "";
+        },
+
+        // HISTORY
+        saveToHistory: function(name) {
+            let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
+            hist.unshift({ name, date: new Date().toLocaleTimeString() });
+            localStorage.setItem("kilimo_hist", JSON.stringify(hist.slice(0, 10)));
+        },
+
+        loadHistory: function() {
+            const box = document.getElementById("hist-ui");
+            let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
+            box.innerHTML = hist.length ? hist.map(h => `<div style="padding:10px; border-bottom:1px solid #eee; text-align:left;">📜 <b>${h.name}</b> <small>(${h.date})</small></div>`).join("") : "Hakuna historia.";
         }
     };
 
-    // --- 5. SCANNER & MODEL LOGIC ---
-    async function initModel() {
-        if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
-    }
-
-    async function handleUpload(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = document.getElementById('preview');
-            img.src = ev.target.result;
-            img.style.display = 'block';
-            startScanEffect();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function startScanEffect() {
-        const l = document.getElementById('laser');
-        l.style.display = 'block';
-        setTimeout(async () => {
-            l.style.display = 'none';
-            // Hapa AI inafanya kazi (Simulation ya matokeo ya jani)
-            const result = "Maize Healthy"; // Mfano wa jibu la AI
-            const msg = db[result].sw;
-            alert("Scan Imekamilika: " + result);
-            document.getElementById("chat-box").innerHTML += `<div style="color:var(--p)"><b>AI:</b> ${msg}</div>`;
-            ongeaSauti(msg);
-            saveHistory(result);
-        }, 3000);
-    }
-
-    // --- 6. CHAT & SPEECH SYSTEM ---
-    function sendMsg() {
-        const inp = document.getElementById('chat-input');
-        const txt = inp.value.trim().toLowerCase();
-        if(!txt) return;
-
-        const box = document.getElementById('chat-box');
-        box.innerHTML += `<div style="text-align:right; margin-bottom:8px;"><b>Wewe:</b> ${txt}</div>`;
-        
-        let reply = "Samahani, sijaelewa. Uliza kuhusu mbolea au magonjwa ya mahindi.";
-        const knowledge = chatKnowledge["sw"];
-        for(let item of knowledge) {
-            if(item.key.some(k => txt.includes(k))) { reply = item.ans; break; }
-        }
-
-        setTimeout(() => {
-            box.innerHTML += `<div style="color:var(--p); margin-bottom:10px;"><b>AI:</b> ${reply}</div>`;
-            box.scrollTop = box.scrollHeight;
-            ongeaSauti(reply);
-            localStorage.setItem("chat_" + currentUser, box.innerHTML);
-        }, 800);
-        inp.value = "";
-    }
-
-    function ongeaSauti(text) {
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'sw-TZ';
-        msg.rate = 0.9;
-        window.speechSynthesis.speak(msg);
-    }
-
-    // --- 7. MAKTABA & KIKOKOTOO ---
-    const cropGuides = {
-        "mahindi": "Mahindi: Tumia DAP kupanda. Nafasi sm 75x25. Palilia wiki ya 2 na ya 4.",
-        "kabichi": "Kabichi: Inahitaji maji mengi na samadi iliyooza. Mwagilia kila siku.",
-        "mchicha": "Mchicha: Vuna baada ya wiki 3-4. Ongeza mbolea ya majani baada ya kila mkato."
-    };
-
-    function lib(z) {
-        const res = cropGuides[z] || "Chagua zao kuona maelezo.";
-        document.getElementById('lib-box').innerText = res;
-        ongeaSauti(res);
-    }
-
-    function calculate() {
-        const size = document.getElementById('acres').value;
-        const crop = document.getElementById('crop-select').value;
-        if(!size || size <= 0) return alert("Ingiza ekari.");
-
-        let res = "";
-        if(crop === "mahindi") res = `Kwa ekari ${size}: Utahitaji kilo ${size*10} za mbegu na mifuko ${size} ya DAP.`;
-        else if(crop === "kabichi") res = `Kwa ekari ${size}: Utahitaji miche ${size*11000} na maji mengi.`;
-        else res = `Kwa ekari ${size}: Utahitaji kilo ${size*3} za mbegu za mchicha.`;
-
-        const div = document.getElementById('calc-res');
-        div.innerHTML = `<b>Matokeo:</b><br>${res}`;
-        div.style.display = 'block';
-        ongeaSauti(res);
-    }
-
-    function saveHistory(msg) {
-        const ui = document.getElementById("hist-ui");
-        if(ui.innerText.includes("Hakuna")) ui.innerHTML = "";
-        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        ui.innerHTML = `<div style="padding:5px; border-bottom:1px solid #eee;"><b>${time}:</b> ${msg}</div>` + ui.innerHTML;
-        localStorage.setItem("hist_" + currentUser, ui.innerHTML);
-    }
-
-    function switchTab(t) {
-        document.getElementById('chat-ui').style.display = t === 'chat' ? 'block' : 'none';
-        document.getElementById('hist-ui').style.display = t === 'hist' ? 'block' : 'none';
-        document.getElementById('tab-c').classList.toggle('active', t === 'chat');
-        document.getElementById('tab-h').classList.toggle('active', t === 'hist');
-    }
-
-    // Start checking login on load
     window.onload = () => {
-        const user = localStorage.getItem("active_farmer");
-        if(user) {
-            currentUser = user;
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('app-body').style.display = 'flex';
-            document.getElementById('user-tag').innerText = "👤 Mkulima: " + user;
-            app.loadData();
+        const saved = localStorage.getItem("kilimo_user");
+        if (saved) {
+            document.getElementById("username").value = saved;
+            app.login();
         }
     };
 </script>

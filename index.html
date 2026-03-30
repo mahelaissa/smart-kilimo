@@ -846,6 +846,97 @@ sendMsg: function() {
             app.loadHistory();
         }
     };
+    function askAI() {
+    const inputField = document.getElementById("chatIn");
+    const langSelect = document.getElementById("lang");
+    
+    // 1. Pata Maandishi na Lugha
+    if (!inputField || !langSelect) return;
+    const txt = inputField.value.trim().toLowerCase();
+    const l = langSelect.value; 
+
+    if (!txt) return;
+
+    let reply = "";
+    
+    // 2. Tafuta Jibu kwenye Database (Validation Check)
+    if (chatKnowledge[l]) {
+        for (let item of chatKnowledge[l]) {
+            if (item.key.some(k => txt.includes(k))) { 
+                reply = item.ans; 
+                break; 
+            }
+        }
+    }
+
+    // 3. Kama swali halipo (Smart Default Reply)
+    if (!reply) {
+        const extraCrops = ["nyanya", "tomato", "maharagwe", "beans", "pamba", "cotton", "mpunga", "rice"];
+        const isExtra = extraCrops.some(m => txt.includes(m));
+
+        if (isExtra) {
+            reply = (l === 'sw') 
+                ? "Asante mkulima. Kwa sasa Smart Kilimo AI inatambua Mahindi, Kabichi na Mchicha tu. Tunaendelea kuongeza mazao mengine hivi karibuni."
+                : "Thank you farmer. Currently, we focus on Maize, Cabbage, and Spinach. More crops coming soon!";
+        } else {
+            reply = (l === 'sw') 
+                ? "Samahani, sijaelewa swali lako. Jaribu kuuliza kuhusu mbolea, magonjwa ya mahindi, au jinsi ya kunitumia." 
+                : "I'm sorry, I didn't quite catch that. Try asking about fertilizers, maize diseases, or how to use me.";
+        }
+    }
+
+    // 4. HIFADHI JIBU
+    lastChatReply = reply;
+    
+    // 5. Onyesha kwenye Chat Box
+    const box = document.getElementById("chat-content");
+    if (box.innerText.includes("Mimi ni msaidizi")) { box.innerHTML = ""; }
+
+    // Chat Bubbles (User & AI)
+    box.innerHTML += `
+        <div style="margin-top: 12px; padding: 10px; border-radius: 12px 15px 0 12px; background: var(--p); color: white; align-self: flex-end; margin-left: auto; max-width: 85%; font-size: 13px;">
+            <b style="font-size: 10px; opacity: 0.8;">Wewe:</b><br>${inputField.value}
+        </div>
+        <div style="margin-top: 8px; padding: 12px; border-radius: 15px 12px 12px 0; background: #fff; border-left: 5px solid var(--p); box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 85%; position: relative; font-size: 13px;">
+            <b style="color: var(--p); font-size: 10px;">Smart Kilimo AI:</b><br>${reply}
+            <button onclick="ongeaSauti(lastChatReply)" style="background:none; border:none; cursor:pointer; float:right; font-size:18px; margin-top:-5px;">🔊</button>
+            <div style="clear:both;"></div>
+        </div>
+    `;
+    
+    // 6. TOA SAUTI MOJA KWA MOJA
+    ongeaSauti(reply); 
+
+    // 7. Safisha na Shuka Chini
+    inputField.value = "";
+    box.scrollTop = box.scrollHeight;
+
+    // 8. Hifadhi kwenye Memory
+    if (typeof currentUser !== 'undefined') {
+        localStorage.setItem("chat_" + currentUser, box.innerHTML);
+    }
+}
+    function ongeaSauti(text) {
+    if (!text) return;
+
+    // Zima sauti inayoongea sasa hivi kwanza
+    window.speechSynthesis.cancel();
+
+    const msg = new SpeechSynthesisUtterance(text);
+    const l = document.getElementById("lang").value;
+
+    // Set lugha sahihi
+    if (l === 'sw') {
+        msg.lang = 'sw-TZ';
+    } else {
+        msg.lang = 'en-US';
+    }
+
+    msg.rate = 0.9; // Kasi ya wastani
+    msg.pitch = 1.0;
+    
+    window.speechSynthesis.speak(msg);
+}
 </script>
 
 </body>

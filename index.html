@@ -224,8 +224,8 @@
         },
 
         switchTab: function(t) {
-            document.getElementById('chat-area').style.display = t === 'chat' ? 'block' : 'none';
-            document.getElementById('hist-area').style.display = t === 'hist' ? 'block' : 'none';
+            document.getElementById('chat-ui').style.display = t === 'chat' ? 'block' : 'none';
+            document.getElementById('hist-ui').style.display = t === 'hist' ? 'block' : 'none';
             document.getElementById('tab-c').classList.toggle('active', t === 'chat');
             document.getElementById('tab-h').classList.toggle('active', t === 'hist');
         },

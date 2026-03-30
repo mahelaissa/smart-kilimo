@@ -205,95 +205,255 @@
         <div id="calc-res" style="display:none; margin-top:10px; font-size:13px; background:white; padding:12px; border-radius:12px;"></div>
     </div>
 </div>
-
 <script>
-    
+    // --- 1. VARIABLES NA CONFIGURATION ---
+    let model, webcam, maxPredictions, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
+    let lastChatReply = "";
+    let isScanning = true; 
+    const MODEL_URL = "./model/";
+
+    // --- 2. DATABASE YA MAGONJWA ---
+    const db = {
+        "Cabbage Healthy": {
+            "sw": "Kabichi yako haina ugonjwa. Endelea kumwagilia, tumia mbolea na linda dhidi ya wadudu.",
+            "en": "Your cabbage is healthy. Continue watering, fertilizing, and pest control.",
+            "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Cabbage_Field.jpg/300px-Cabbage_Field.jpg"
+        },
+        "Black Rot": {
+            "sw": "Black Rot: Majani yanakuwa ya njano yenye umbo la 'V' na mishipa myeusi. Tumia mbegu safi na epuka maji kusimama.",
+            "en": "Black Rot: Causes V-shaped yellow leaves and black veins. Use clean seeds and avoid water stagnation.",
+            "img": "https://content.ces.ncsu.edu/media/images/black-rot-cabbage-v-shaped-lesion.JPG"
+        },
+        "Downy Mildew Cabbage": {
+            "sw": "Downy Mildew: Ukungu wa kijivu chini ya jani. Tumia fungicide (mfano: Copper) na punguza msongamano.",
+            "en": "Downy Mildew: Grey mold under leaves. Use fungicide and reduce plant congestion.",
+            "img": "https://gardenerspath.com/wp-content/uploads/2021/04/Downy-Mildew-on-Cabbage-Leaves.jpg"
+        },
+        "Maize Healthy": {
+            "sw": "Mahindi yako yana afya. Endelea na matunzo bora kama palizi na mbolea ya kukuzia.",
+            "en": "Your maize is healthy. Maintain good farming practices like weeding.",
+            "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Zea_mays_-_Kohl-5.jpg/300px-Zea_mays_-_Kohl-5.jpg"
+        },
+        "MLN": {
+            "sw": "MLN: Ugonjwa hatari wa virusi. Ukiona mmea unadumaa, ng'oa na uchome moto haraka sana.",
+            "en": "MLN: Dangerous viral disease. If stunting occurs, uproot and burn the plant immediately.",
+            "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Lethal-Necrosis.jpg"
+        },
+        "MSV": {
+            "sw": "MSV: Mistari ya njano kwenye mishipa ya jani. Dhibiti wadudu wa Leafhoppers na panda mbegu bora.",
+            "en": "MSV: Yellow streaks along veins. Control Leafhoppers and plant resistant varieties.",
+            "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Maize_streak_virus.jpg/300px-Maize_streak_virus.jpg"
+        },
+        "Common Rust": {
+            "sw": "Common Rust: Madoa ya kahawia kama kutu pande zote za jani. Tumia fungicide mapema.",
+            "en": "Common Rust: Brown pustules like rust on leaves. Apply fungicide early.",
+            "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Common-Rust.jpg"
+        },
+        "Northern Leaf Blight": {
+            "sw": "Leaf Blight: Madoa marefu ya kijivu yanayofanana na sigara. Ondoa majani yaliyoathirika.",
+            "en": "Leaf Blight: Long gray cigar-shaped spots. Remove infected leaves.",
+            "img": "https://content.ces.ncsu.edu/media/images/Northern-Corn-Leaf-Blight-lesions-on-maize.jpg"
+        },
+        "Gray Leaf Spot": {
+            "sw": "Gray Leaf Spot: Madoa ya kijivu ya mstatili kati ya mishipa. Punguza unyevu shambani.",
+            "en": "Gray Leaf Spot: Gray rectangular lesions. Reduce humidity and ensure air circulation.",
+            "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Gray-Leaf-Spot.jpg"
+        },
+        "Spinach Healthy": {
+            "sw": "Spinach yako ina afya. Ongeza mbolea ya samadi au ya majani (foliar booster).",
+            "en": "Your spinach is healthy. Add manure or foliar fertilizer.",
+            "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Spinach_leaves.jpg/300px-Spinach_leaves.jpg"
+        },
+        "Anthracnose": {
+            "sw": "Anthracnose: Madoa meusi yaliyozama. Tumia fungicide na usiguse mimea ikiwa mibichi.",
+            "en": "Anthracnose: Dark sunken spots. Apply fungicide; avoid handling wet plants.",
+            "img": "https://extension.umd.edu/sites/extension.umd.edu/files/styles/optimized/public/2021-03/Anthracnose_Spinach.jpg"
+        },
+        "Bacterial Spot": {
+            "sw": "Bacterial Spot: Madoa madogo ya majimaji. Tumia bactericides na epuka kumwagilia juu ya majani.",
+            "en": "Bacterial Spot: Small water-soaked spots. Use bactericide.",
+            "img": "https://agsci.oregonstate.edu/sites/agscid7/files/bacterial-leaf-spot-on-spinach.jpg"
+        },
+        "Downy Mildew Spinach": {
+            "sw": "Downy Mildew: Ukungu wa zambarau chini ya majani. Punguza unyevu na nafasi iwe sahihi.",
+            "en": "Downy Mildew: Purple growth under leaves. Reduce moisture.",
+            "img": "https://agsci.oregonstate.edu/sites/agscid7/files/downy-mildew-on-spinach.jpg"
+        },
+        "Pest Damage": {
+            "sw": "Uharibifu wa wadudu: Majani yana matundu. Tumia insecticide (mfano: Dudumeki) au Neem oil.",
+            "en": "Pest damage: Holes on leaves. Use insecticide or Neem oil.",
+            "img": "https://gardenerspath.com/wp-content/uploads/2021/05/Cabbage-Looper-Damage-on-Leaves.jpg"
+        }
+    };
+
+    // --- 3. CHAT KNOWLEDGE BASE ---
+    const chatKnowledge = {
+        "sw": [
+            { key: ["jinsi", "tumia", "kufanya"], ans: "Ili kunitumia: 1. Bonyeza Kamera au Pakia Jani. 2. Subiri AI isome. 3. Angalia ushauri chini." },
+            { key: ["mbolea", "mahindi"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (wiki 3-4), na CAN (mbelewele)." },
+            { key: ["mbolea", "kabichi"], ans: "Kabichi inapenda samadi iliyooza na NPK 10-10-10 kwa vichwa vikubwa." },
+            { key: ["mbolea", "mchicha"], ans: "Mchicha unahitaji Nitrojeni. Tumia samadi au Foliar kila baada ya kuvuna." },
+            { key: ["wadudu", "funza"], ans: "Kwa funza wa mahindi, tumia Belt au Emamectin mapema asubuhi." },
+            { key: ["habari", "mambo"], ans: "Safi sana mkulima! Karibu. Una swali gani kuhusu mazao leo?" }
+        ],
+        "en": [
+            { key: ["how", "use"], ans: "1. Click Camera or Upload leaf. 2. Wait for AI scan. 3. Read the advice below." },
+            { key: ["fertilizer", "maize"], ans: "Use DAP for planting, UREA for top dressing, and CAN during tasseling." }
+        ]
+    };
+
+    // --- 4. LOGIN & AUTHENTICATION ---
     const app = {
         login: function() {
-            const u = document.getElementById('username').value;
-            if(!u) return alert("Weka jina lako");
+            const u = document.getElementById('username').value.trim();
+            if(!u) return alert("Andika jina lako kwanza.");
+            localStorage.setItem("active_farmer", u);
+            currentUser = u;
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('app-body').style.display = 'flex';
-            document.getElementById('user-tag').innerText = "👤 " + u;
+            document.getElementById('user-tag').innerText = "👤 Mkulima: " + u;
+            this.loadData();
         },
 
         logout: function() {
-            if(confirm("Je, unataka kutoka kwenye mfumo?")) {
+            if(confirm("Je, unataka kutoka?")) {
+                localStorage.removeItem("active_farmer");
                 location.reload();
             }
         },
 
-        switchTab: function(t) {
-            document.getElementById('chat-ui').style.display = t === 'chat' ? 'block' : 'none';
-            document.getElementById('hist-ui').style.display = t === 'hist' ? 'block' : 'none';
-            document.getElementById('tab-c').classList.toggle('active', t === 'chat');
-            document.getElementById('tab-h').classList.toggle('active', t === 'hist');
-        },
-
-        handleUpload: function(e) {
-            const f = e.target.files[0];
-            if(f) {
-                const r = new FileReader();
-                r.onload = (ev) => {
-                    document.getElementById('preview').src = ev.target.result;
-                    document.getElementById('preview').style.display = 'block';
-                    app.startScanEffect();
-                };
-                r.readAsDataURL(f);
+        loadData: function() {
+            const user = localStorage.getItem("active_farmer");
+            if(user) {
+                const savedChat = localStorage.getItem("chat_" + user);
+                if(savedChat) document.getElementById("chat-box").innerHTML = savedChat;
+                const savedHist = localStorage.getItem("hist_" + user);
+                if(savedHist) document.getElementById("hist-ui").innerHTML = savedHist;
             }
-        },
+        }
+    };
 
-        startScanEffect: function() {
-            const l = document.getElementById('laser');
-            l.style.display = 'block';
-            setTimeout(() => {
-                l.style.display = 'none';
-                const msg = "Scan imekamilika. Zao linaonekana kuwa na upungufu wa Nitrojeni.";
-                alert(msg);
-                app.speak(msg);
-            }, 3000);
-        },
+    // --- 5. SCANNER & MODEL LOGIC ---
+    async function initModel() {
+        if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+    }
 
-        sendMsg: function() {
-            const inp = document.getElementById('chat-input');
-            const val = inp.value;
-            if(!val) return;
-            const box = document.getElementById('chat-box');
-            box.innerHTML += `<div style="text-align:right; margin-bottom:8px;"><b>Wewe:</b> ${val}</div>`;
-            inp.value = "";
-            setTimeout(() => {
-                const rep = "Tumia kilo 50 za mbolea ya UREA kwa kila ekari kupata matokeo bora.";
-                box.innerHTML += `<div style="color:var(--p)"><b>AI:</b> ${rep}</div>`;
-                box.scrollTop = box.scrollHeight;
-                app.speak(rep);
-            }, 1000);
-        },
+    async function handleUpload(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = document.getElementById('preview');
+            img.src = ev.target.result;
+            img.style.display = 'block';
+            startScanEffect();
+        };
+        reader.readAsDataURL(file);
+    }
 
-        calculate: function() {
-            const a = document.getElementById('acres').value;
-            const z = document.getElementById('crop-select').value;
-            if(!a) return alert("Ingiza ekari");
-            const res = `Kwa ekari ${a} za ${z}, utahitaji mifuko ${a*2} ya mbolea.`;
-            document.getElementById('calc-res').style.display = 'block';
-            document.getElementById('calc-res').innerText = res;
-            app.speak(res);
-        },
+    function startScanEffect() {
+        const l = document.getElementById('laser');
+        l.style.display = 'block';
+        setTimeout(async () => {
+            l.style.display = 'none';
+            // Hapa AI inafanya kazi (Simulation ya matokeo ya jani)
+            const result = "Maize Healthy"; // Mfano wa jibu la AI
+            const msg = db[result].sw;
+            alert("Scan Imekamilika: " + result);
+            document.getElementById("chat-box").innerHTML += `<div style="color:var(--p)"><b>AI:</b> ${msg}</div>`;
+            ongeaSauti(msg);
+            saveHistory(result);
+        }, 3000);
+    }
 
-        lib: function(z) {
-            const d = {'mchicha':'Mchicha unahitaji maji mengi.','kabichi':'Kabichi hupenda baridi kiasi.','mahindi':'Mahindi yanahitaji palizi ya kwanza mapema.'};
-            document.getElementById('lib-box').innerText = d[z];
-            app.speak(d[z]);
-        },
+    // --- 6. CHAT & SPEECH SYSTEM ---
+    function sendMsg() {
+        const inp = document.getElementById('chat-input');
+        const txt = inp.value.trim().toLowerCase();
+        if(!txt) return;
 
-        speak: function(text) {
-            const msg = new SpeechSynthesisUtterance();
-            msg.text = text;
-            msg.lang = 'sw-TZ';
-            window.speechSynthesis.speak(msg);
-        },
+        const box = document.getElementById('chat-box');
+        box.innerHTML += `<div style="text-align:right; margin-bottom:8px;"><b>Wewe:</b> ${txt}</div>`;
+        
+        let reply = "Samahani, sijaelewa. Uliza kuhusu mbolea au magonjwa ya mahindi.";
+        const knowledge = chatKnowledge["sw"];
+        for(let item of knowledge) {
+            if(item.key.some(k => txt.includes(k))) { reply = item.ans; break; }
+        }
 
-        startMic: function() { alert("Mic inasikiliza..."); }
+        setTimeout(() => {
+            box.innerHTML += `<div style="color:var(--p); margin-bottom:10px;"><b>AI:</b> ${reply}</div>`;
+            box.scrollTop = box.scrollHeight;
+            ongeaSauti(reply);
+            localStorage.setItem("chat_" + currentUser, box.innerHTML);
+        }, 800);
+        inp.value = "";
+    }
+
+    function ongeaSauti(text) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'sw-TZ';
+        msg.rate = 0.9;
+        window.speechSynthesis.speak(msg);
+    }
+
+    // --- 7. MAKTABA & KIKOKOTOO ---
+    const cropGuides = {
+        "mahindi": "Mahindi: Tumia DAP kupanda. Nafasi sm 75x25. Palilia wiki ya 2 na ya 4.",
+        "kabichi": "Kabichi: Inahitaji maji mengi na samadi iliyooza. Mwagilia kila siku.",
+        "mchicha": "Mchicha: Vuna baada ya wiki 3-4. Ongeza mbolea ya majani baada ya kila mkato."
+    };
+
+    function lib(z) {
+        const res = cropGuides[z] || "Chagua zao kuona maelezo.";
+        document.getElementById('lib-box').innerText = res;
+        ongeaSauti(res);
+    }
+
+    function calculate() {
+        const size = document.getElementById('acres').value;
+        const crop = document.getElementById('crop-select').value;
+        if(!size || size <= 0) return alert("Ingiza ekari.");
+
+        let res = "";
+        if(crop === "mahindi") res = `Kwa ekari ${size}: Utahitaji kilo ${size*10} za mbegu na mifuko ${size} ya DAP.`;
+        else if(crop === "kabichi") res = `Kwa ekari ${size}: Utahitaji miche ${size*11000} na maji mengi.`;
+        else res = `Kwa ekari ${size}: Utahitaji kilo ${size*3} za mbegu za mchicha.`;
+
+        const div = document.getElementById('calc-res');
+        div.innerHTML = `<b>Matokeo:</b><br>${res}`;
+        div.style.display = 'block';
+        ongeaSauti(res);
+    }
+
+    function saveHistory(msg) {
+        const ui = document.getElementById("hist-ui");
+        if(ui.innerText.includes("Hakuna")) ui.innerHTML = "";
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        ui.innerHTML = `<div style="padding:5px; border-bottom:1px solid #eee;"><b>${time}:</b> ${msg}</div>` + ui.innerHTML;
+        localStorage.setItem("hist_" + currentUser, ui.innerHTML);
+    }
+
+    function switchTab(t) {
+        document.getElementById('chat-ui').style.display = t === 'chat' ? 'block' : 'none';
+        document.getElementById('hist-ui').style.display = t === 'hist' ? 'block' : 'none';
+        document.getElementById('tab-c').classList.toggle('active', t === 'chat');
+        document.getElementById('tab-h').classList.toggle('active', t === 'hist');
+    }
+
+    // Start checking login on load
+    window.onload = () => {
+        const user = localStorage.getItem("active_farmer");
+        if(user) {
+            currentUser = user;
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-body').style.display = 'flex';
+            document.getElementById('user-tag').innerText = "👤 Mkulima: " + user;
+            app.loadData();
+        }
     };
 </script>
+
 </body>
 </html>

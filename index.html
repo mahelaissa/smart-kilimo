@@ -1,83 +1,17 @@
-<!DOCTYPE html>  
-<html lang="sw">     
-<head> 
+<!DOCTYPE html>
+<html lang="sw">
+<head>
     <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" 
-content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Kilimo</title>
-    <script src="tf.min.js"></script>
-    <script src="teachablemachine-image.min.js"></script>
+    <title>Smart Kilimo AI Pro</title>
     <style>
-
-    
-    /* ... (Kodi zako za mwanzo baki nazo, ongeza hizi chini) ... */
-
-    /* Maboresho ya Tabs */
-    /*.tabs-container {
-       display: flex; gap: 8px; margin-top: 10px;
-    }
- .tab-btn { flex: 1; padding: 12px; background: #e0e0e0; border-radius: 12px; font-size: 0.85rem; color: #666; cursor: pointer; border: none; font-weight: 600; }
-        .tab-btn.active { background: var(--p); color: white; }*/
-     /*   .tabs-container {
-    display: flex;
-    background: #f1f1f1;
-    border-bottom: 1px solid #ddd;
-}
-.tab-btn {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-weight: bold;
-    color: #666;
-    transition: 0.3s;
-}
-.tab-btn.active {
-    background: white;
-    color: var(--p);
-    border-top: 3px solid var(--p);
-}
-.tab-content {
-    animation: fadeIn 0.3s ease;
-}*/
-@keyframes fadeIn {
-    from { opacity: 0; } to { opacity: 1; }
-}
-.hist-item {
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    border-left: 5px solid var(--p);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-        
-        .content-wrapper { position: relative; margin-top: 10px; }
-        .content-box { height: 250px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 12px; font-size: 0.9rem; text-align: left; line-height: 1.4; }
-        .btn-delete { position: absolute; top: 8px; right: 8px; background: rgba(255, 68, 68, 0.8); color: white; border: none; padding: 5px 10px; border-radius: 8px; font-size: 0.7rem; cursor: pointer; z-index: 10; }
-        
-        #chat-input-area { display: flex; gap: 8px; margin-top: 12px; }
-        #chatIn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ccc; outline: none; }
-   
-
-    .send-btn {
-        background: var(--p);
-        color: white;
-        border: none;
-        padding: 10px 18px;
-        border-radius: 25px;
-        font-weight: bold;
-        cursor: pointer;
-    }
- :root { 
+        :root { 
             --p: #2e7d32; --s: #1b5e20; --a: #fbc02d; --bg: #f4f7f4; 
             --mchicha: #4caf50; --kabichi: #8bc34a; --mahindi: #fdd835;
         }
 
         body { font-family: 'Poppins', sans-serif; margin: 0; background: var(--bg); }
-
+        
         /* LOGIN SCREEN - IMEREKEBISHWA KWA MVUTIO */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -97,7 +31,7 @@ content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.ne
             margin-bottom: 20px; outline: none; box-sizing: border-box; font-size: 16px;
         }
 
-            /* HEADER NA LOGOUT */
+        /* HEADER NA LOGOUT */
         header { 
             background: var(--p); color: white; padding: 15px 20px; 
             display: flex; justify-content: space-between; align-items: center;
@@ -108,23 +42,12 @@ content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.ne
         .container { padding: 20px; max-width: 500px; margin: auto; display: flex; flex-direction: column; gap: 30px; }
         .card { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
 
-       
-        
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        button { 
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            cursor: pointer; border: none; outline: none; border-radius: 12px; 
-        }
-        button:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        button:active { transform: scale(0.92); }
-
-        .view-box { position: relative; width: 100%; aspect-ratio: 1.2; border-radius: 28px; overflow: hidden; border: 4px solid var(--p); background: #000; margin-bottom: 15px; }
-        #webcam-container, #image-preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
-         .laser { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 25px #00ff00; z-index: 20; animation: moveLaser 2.5s infinite linear; }
+        /* SCANNER */
+        .view-box { position: relative; width: 100%; aspect-ratio: 1.2; border-radius: 20px; overflow: hidden; background: #000; margin-bottom: 15px; }
+        .laser { position: absolute; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 20px #00ff00; z-index: 20; animation: moveLaser 2s infinite linear; display: none; }
         @keyframes moveLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-       
-         /* TABS */
+
+        /* TABS */
         .tabs { display: flex; background: #eee; border-radius: 15px; padding: 5px; margin-bottom: 15px; }
         .tab-btn { flex: 1; border: none; padding: 10px; background: none; font-weight: bold; cursor: pointer; border-radius: 10px; color: #777; transition: 0.3s; }
         .tab-btn.active { background: white; color: var(--p); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -150,172 +73,72 @@ content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.ne
         .btn-calc { width: 100%; padding: 16px; border-radius: 15px; border: none; background: #1565c0; color: white; font-weight: bold; cursor: pointer; }
 
         .btn-main { width: 100%; padding: 15px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; color: white; }
-   
-        .recording { animation: micPulse 1s infinite; background: #ff5252 !important; color: white !important; }
-        @keyframes micPulse { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,0.7); } 70% { box-shadow: 0 0 0 15px rgba(211,47,47,0); } 100% { box-shadow: 0 0 0 0 rgba(211,47,47,0); } }
-
-
-#splash-screen { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    /* MCHANGANYIKO WA KUVUTIA: Nyeupe + Kijani + Njano */
-    background: radial-gradient(circle at center, #ffffff 30%, #f1f8e9 60%, #fffde7 100%); 
-    color: #333333; /* Maandishi ya kiza ili yaonekane */
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    z-index: 20000; 
-    text-align: center; 
-    /* Smooth fade-out animation */
-    transition: opacity 1s ease, visibility 1s; 
-}
-
-/* Ili majina yenu yaonekane vizuri kwenye background mpya */
-#type-app { color: #2e7d32; } /* Kijani cha Smart Kilimo */
-#type-dev { color: #555555; } /* Kijivu cha Mahela Issa & Erick */
-#type-sch { color: #2e7d32; font-weight: bold; } /* kijani ya Kibaha Secondary */
-
-input, select { 
-    padding: 12px; 
-    border-radius: 10px; 
-    border: 1px solid #ddd; 
-    font-size: 14px; 
-    width: -webkit-fill-available; 
-    background-color: #ffffff; /* Nyeupe safi kwa input */
-}
-        .lang-btn {
-        flex: 1; padding: 10px; border: 1px solid #ddd; background: white; border-radius: 5px; cursor: pointer;
-    }
-    .lang-btn.active {
-        background: #2e7d32; color: white; border-color: #2e7d32;
-    }
-
-      
-#mic-btn:hover {
-    transform: scale(1.2);
-}
-
     </style>
 </head>
 <body>
 
-<div id="splash-screen">
-    <img src="data:image/png;base64,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" alt="KSS Logo" style="width:120px; border-radius:50%; background:white; padding:5px; margin-bottom:20px;">
-    <div id="type-app" style="font-size: 24px; font-weight: bold; color: var(--school-s);"></div>
-    <div id="type-dev" style="font-size: 14px; margin-top: 10px;"></div>
-    <div id="type-sch" style="font-weight: bold; margin-top: 5px;"></div>
-</div>
 <div id="login-overlay">
     <div class="login-card">
         <div class="login-plant">🌱</div>
         <h2 style="color: var(--p); margin-top: 0;">Smart Kilimo AI</h2>
         <p style="color: #666; font-size: 14px;">Karibu, ingiza jina kuanza safari yako.</p>
         <input type="text" id="username" placeholder="Jina lako hapa...">
-        <button onclick="loginUser()" class="btn-main" style="background: var(--p);">INGIA SASA</button>
+        <button onclick="app.login()" class="btn-main" style="background: var(--p);">INGIA SASA</button>
     </div>
 </div>
+
 <header>
     <span>🌽 Smart Kilimo</span>
-    <button class="logout-btn" onclick="logout()">LOGOUT</button>
-
+    <button class="logout-btn" onclick="app.logout()">LOGOUT</button>
 </header>
 
-
-
-    <div class="container" id="main-app" style="display:none;">
-        <div class="card">
-           <b id="display-user" style="color: var(--p); display: block; margin-bottom: 10px;"></b>  
-            
-    <div class="view-box">
-    <div id="laser-line" class="laser"></div>
-    <div id="webcam-container"></div>
-    <img id="image-preview" src="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:15px;">
-</div>
-
-            <div id="result-area" style="display: none; background: #e8f5e9; padding:15px; border-radius:12px; margin-bottom:15px; border-left: 6px solid var(--p);">
-                <div id="res-name" style="font-weight:bold; color:var(--p); text-transform:uppercase;"></div>
-                <p id="sol-text" style="font-size:14px; margin-top:8px;"></p>
-                
-                 <div id="language-switcher" style="display:flex; gap:10px; margin-bottom:10px;">
-        <button id="btn-sw" class="lang-btn active" onclick="badiliLugha('sw')">🇹🇿 Kiswahili</button>
-         <button id="btn-en" class="lang-btn" onclick="badiliLugha('en')">🇺🇸 English</button>
-        </div>
-            <div id="whatsapp-container" style="margin-top: 15px; display:none;">
-               <a id="wa-link" href="#" target="_blank" 
-               style="background: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-            💬 Ongea na Mtaalamu (WhatsApp)
-    </a>
-</div>
-                
-            </div>
-
-   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
-    <button onclick="startCam()" style="background: var(--p); color: white; padding: 16px; border-radius: 12px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px;">
-        <span style="font-size: 20px;">📷</span> Kamera
-    </button>
-
-    <button onclick="document.getElementById('smart-file-input').click()" style="background: #0288d1; color: white; padding: 16px; border-radius: 12px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px;">
-        <span style="font-size: 20px;">📁</span> Picha
-    </button>
-
-    <input type="file" id="smart-file-input" accept="image/*" style="display: none;" onchange="handleUpload(event)">
-
-    <button onclick="repeatVoice()" style="background: var(--a); color: white; padding: 16px; border-radius: 12px; font-weight: bold; grid-column: span 2; display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <span style="font-size: 18px;">🔊</span> Sikiliza Tiba kwa Sauti
-    </button>
-</div>
-            
-<div class="card" style="padding: 0; overflow: hidden; position: relative;">
-    <div class="tabs-container" style="margin: 15px;>
-        <button id="t-chat" class="tab-btn active" onclick="switchTab('chat')">🤖 Chat</button>
-        <button id="t-hist" class="tab-btn" onclick="switchTab('hist')">📜 Historia</button>
-       
-    </div>
-
-    <div id="chat-area" style="padding: 0 15px 15px 15px;>
-        <div id="chat-box" style="height: 150px; overflow-y: auto;  background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 10px; font-size: 14px;">
-            <div class="msg-ai"style="color:var(--p)">
-                Habari! Karibu <b>Smart Kilimo AI</b>. Una swali gani leo kuhusu kilimo?
-            </div>
-        </div>
-        <div class="chat-input-wrapper">
-            <button id="mic-btn" onclick="anzaKusikiliza()">🎤</button>
-            <input type="text" id="chat-input" placeholder="Uliza swali hapa...">
-            <button class="send-btn" onclick="app.sendMsg()">🚀</button>
-        </div>
-    </div>
-
-    <div id="hist-area" style="display: none;"padding: 20px; text-align: center; color: #999;">Hakuna historia bado.</div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee;">
-            <h3 style="margin: 0; font-size: 15px;">📜 Historia ya Scan</h3>
-            <button onclick="clearAllHistory()" style="background:#ffeeee; color:#ff4444; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">Futa Yote</button>
-        </div>
-        <div id="hist-content" style="height: 350px; overflow-y: auto; padding: 15px; background: #fdfdfd;">
-            <p id="no-hist" style="text-align:center; color:#999; margin-top:20px;">Hakuna kumbukumbu bado.</p>
-        </div>
-    </div>
-
+<div class="container" id="app-body" style="display: none;">
     
-</div>
-
-        <div class="card">
-            <h3 style="color:var(--p);"margin-top:0; font-size: 16px;">📚 Maktaba Kitaalamu</h3>
-            <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:10px;">
-                <button class="btn-mahindi" onclick="showGuide('mahindi')" style="background:#fbc02d; color:white; padding:10px 18px; border-radius:20px; font-weight:bold; white-space:nowrap;">🌽 Mahindi</button>
-                <button class="btn-kabichi"  onclick="showGuide('kabichi')" style="background:#81c784; color:white; padding:10px 18px; border-radius:20px; font-weight:bold; white-space:nowrap;">🥬 Kabichi</button>
-                <button class="btn-mahindi" onclick="showGuide('mchicha')" style="background:#2e7d32; color:white; padding:10px 18px; border-radius:20px; font-weight:bold; white-space:nowrap;">🌿 Mchicha</button>
-            </div>
-            <div id="lib-box" style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; border:1px dashed #ccc;">Bonyeza zao kusoma miongozo.</div>
+    <div class="card">
+        <b id="user-tag" style="color: var(--p); display: block; margin-bottom: 10px;"></b>
+        <div class="view-box">
+            <div id="laser" class="laser"></div>
+            <img id="preview" src="" style="display:none; width:100%; height:100%; object-fit:cover;">
         </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button onclick="app.startScanEffect()" class="btn-main" style="background: var(--p);">📷 KAMERA</button>
+            <button onclick="document.getElementById('file-in').click()" class="btn-main" style="background: #1976d2;">📁 PAKIA</button>
+        </div>
+        <input type="file" id="file-in" hidden onchange="app.handleUpload(event)">
+        <button onclick="app.speak('Matokeo bado hayajachakatwa')" class="btn-main" style="background: var(--a); color: #333; margin-top: 12px;">🔊 SIKILIZA TIBA</button>
+    </div>
 
-        <div class="card" style="background:#e3f2fd;">
-            <h3 style="color:#1565c0; margin-top:0;">🧮 Kikokotoo</h3>
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <div class="calc-series">
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div class="tabs" style="margin: 15px;">
+            <button id="tab-c" class="tab-btn active" onclick="app.switchTab('chat')">🤖 Chat</button>
+            <button id="tab-h" class="tab-btn" onclick="app.switchTab('hist')">📜 Historia</button>
+        </div>
+        <div id="chat-ui" style="padding: 0 15px 15px 15px;">
+            <div id="chat-box" style="height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 14px;">
+                <div style="color:var(--p)"><b>AI:</b> Karibu! Naweza kukusaidia leo?</div>
+            </div>
+            <div class="chat-input-wrapper">
+                <button class="mic-btn" onclick="app.startMic()">🎤</button>
+                <input type="text" id="chat-input" placeholder="Uliza swali...">
+                <button class="send-btn" onclick="app.sendMsg()">🚀</button>
+            </div>
+        </div>
+        <div id="hist-ui" style="display: none; padding: 20px; text-align: center; color: #999;">Hakuna historia bado.</div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top:0; font-size: 16px;">📚 Maktaba</h3>
+        <div class="lib-scroll">
+            <button class="btn-mchicha" onclick="app.lib('mchicha')">🌿 Mchicha</button>
+            <button class="btn-kabichi" onclick="app.lib('kabichi')">🥬 Kabichi</button>
+            <button class="btn-mahindi" onclick="app.lib('mahindi')">🌽 Mahindi</button>
+        </div>
+        <div id="lib-box" style="margin-top:15px; font-size:14px; background:#f1f8e9; padding:15px; border-radius:15px;">Gusa zao...</div>
+    </div>
+
+    <div class="card" style="background: #e3f2fd;">
+        <h3 style="margin:0 0 15px 0; color: #1565c0; font-size: 16px;">🧮 Kikokotoo</h3>
+        <div class="calc-series">
             <div class="calc-box"><label>Ekari</label><input type="number" id="acres" placeholder="0"></div>
             <div class="calc-box">
                 <label>Zao</label>
@@ -326,713 +149,99 @@ input, select {
                 </select>
             </div>
         </div>
-            <button class="btn-calc" onclick="calculateInputs()" style="background:#1565c0; width:100%; color:white; padding:15px; font-weight:bold;">PIGA HESABU</button>
-            <div id="calc-result" style="margin-top:15px; display:none; background:white; padding:15px; border-radius:10px;"></div>
-        </div>
+        <button class="btn-calc" onclick="app.calculate()">PIGA HESABU</button>
+        <div id="calc-res" style="display:none; margin-top:10px; font-size:13px; background:white; padding:12px; border-radius:12px;"></div>
     </div>
 </div>
 
 <script>
-    let model, webcam, isScanning = false, currentUser = "";
-    const MODEL_URL = "./model/";
+    
+    const app = {
+        login: function() {
+            const u = document.getElementById('username').value;
+            if(!u) return alert("Weka jina lako");
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-body').style.display = 'flex';
+            document.getElementById('user-tag').innerText = "👤 " + u;
+        },
 
-    const db = {
-    "Cabbage Healthy": {
-    "sw": "Kabichi yako haina ugonjwa. Endelea kumwagilia, tumia mbolea na linda dhidi ya wadudu.",
-    "en": "Your cabbage is healthy. Continue watering, fertilizing, and pest control.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Cabbage_Field.jpg/300px-Cabbage_Field.jpg"
-  },
-
-  "Black Rot": {
-    "sw": "Black Rot: Majani yanakuwa ya njano yenye umbo la 'V' na mishipa myeusi. Tumia mbegu safi, badilisha mazao kila msimu na epuka maji kusimama shambani.",
-    "en": "Black Rot: Causes V-shaped yellow leaves and black veins. Use clean seeds, rotate crops, and avoid water stagnation.",
-    "img": "https://content.ces.ncsu.edu/media/images/black-rot-cabbage-v-shaped-lesion.JPG"
-  },
-
-  "Downy Mildew Cabbage": {
-    "sw": "Downy Mildew: Husababishwa na unyevu mwingi. Utaona ukungu wa kijivu chini ya jani. Tumia fungicide (mfano: Copper) na punguza msongamano wa mimea.",
-    "en": "Downy Mildew: Caused by high moisture. Look for grey mold under leaves. Use fungicide and reduce plant congestion.",
-    "img": "https://gardenerspath.com/wp-content/uploads/2021/04/Downy-Mildew-on-Cabbage-Leaves.jpg"
-  },
-
-  "Maize Healthy": {
-    "sw": "Mahindi yako yako salama na yana afya. Endelea na matunzo bora ya shamba kama palizi na mbolea ya kukuzia.",
-    "en": "Your maize is healthy. Maintain good farming practices like weeding and top-dressing.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Zea_mays_-_Kohl-5.jpg/300px-Zea_mays_-_Kohl-5.jpg"
-  },
-
-  "MLN": {
-    "sw": "MLN: Ugonjwa hatari sana wa virusi. Ukiona mmea unadumaa na majani yananyauka kuanzia juu, ng'oa na uchome moto mmea huo haraka sana.",
-    "en": "MLN: A very dangerous viral disease. If you see stunting and drying from the top, uproot and burn the plant immediately.",
-    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Lethal-Necrosis.jpg"
-  },
-
-  "MSV": {
-    "sw": "MSV (Maize Streak Virus): Husababisha mistari myembamba ya njano inayofuata mishipa ya jani. Dhibiti wadudu wa Leafhoppers (siyo whiteflies) na panda mbegu zinazovumilia.",
-    "en": "MSV: Causes thin yellow streaks along veins. Control Leafhoppers and plant resistant varieties.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Maize_streak_virus.jpg/300px-Maize_streak_virus.jpg"
-  },
-
-  "Common Rust": {
-    "sw": "Common Rust: Madoa madogo ya kahawia yaliyoinuka kama kutu pande zote za jani. Tumia fungicide mapema kabla ugonjwa haujaenea.",
-    "en": "Common Rust: Small raised brown pustules on both sides of the leaf. Apply fungicide early.",
-    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Common-Rust.jpg"
-  },
-
-  "Northern Leaf Blight": {
-    "sw": "Leaf Blight: Madoa marefu ya kijivu au kahawia yanayofanana na sigara. Ondoa majani yaliyoathirika na fanya mzunguko wa mazao.",
-    "en": "Leaf Blight: Long gray or brown cigar-shaped spots. Remove infected leaves and practice crop rotation.",
-    "img": "https://content.ces.ncsu.edu/media/images/Northern-Corn-Leaf-Blight-lesions-on-maize.jpg"
-  },
-
-  "Gray Leaf Spot": {
-    "sw": "Gray Leaf Spot: Madoa ya kijivu yenye umbo la mstatili kati ya mishipa ya jani. Punguza unyevu na hakikisha mzunguko wa hewa ni mzuri.",
-    "en": "Gray Leaf Spot: Gray rectangular lesions between leaf veins. Reduce humidity and ensure good air circulation.",
-    "img": "https://pesticidestewardship.org/wp-content/uploads/2016/09/Maize-Gray-Leaf-Spot.jpg"
-  },
-
-  "Spinach Healthy": {
-    "sw": "Spinach yako ina afya. Endelea kuitunza vizuri kwa kuongeza mbolea ya samadi au ya majani (foliar).",
-    "en": "Your spinach is healthy. Keep taking care of it by adding manure or foliar fertilizer.",
-    "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Spinach_leaves.jpg/300px-Spinach_leaves.jpg"
-  },
-
-  "Anthracnose": {
-    "sw": "Anthracnose: Madoa meusi au ya kahawia yaliyozama kwenye majani. Tumia fungicide na usiguse mimea ikiwa na unyevu wa mvua.",
-    "en": "Anthracnose: Dark sunken spots. Apply fungicide and avoid handling plants when wet.",
-    "img": "https://extension.umd.edu/sites/extension.umd.edu/files/styles/optimized/public/2021-03/Anthracnose_Spinach.jpg"
-  },
-
-  "Bacterial Spot": {
-    "sw": "Bacterial Spot: Madoa madogo yenye muonekano wa majimaji (water-soaked). Tumia dawa za bakteria (bactericides) na epuka kumwagilia maji juu ya majani.",
-    "en": "Bacterial Spot: Small water-soaked spots. Use bactericide and avoid overhead irrigation.",
-    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/bacterial-leaf-spot-on-spinach.jpg"
-  },
-
-  "Downy Mildew Spinach": {
-    "sw": "Downy Mildew: Ukungu wa zambarau au kijivu chini ya majani na madoa ya njano juu. Punguza unyevu na hakikisha nafasi ya upandaji ni sahihi.",
-    "en": "Downy Mildew: Purple/gray fungal growth under leaves with yellow spots above. Reduce moisture and ensure proper spacing.",
-    "img": "https://agsci.oregonstate.edu/sites/agscid7/files/downy-mildew-on-spinach.jpg"
-  },
-
-  "Pest Damage": {
-    "sw": "Uharibifu wa wadudu: Majani yamechimbwa matundu au kuliwa kingo. Tumia insecticide (mfano: Dudumeki) au dawa ya asili ya Neem oil.",
-    "en": "Pest damage: Holes or eaten edges on leaves. Use insecticide or organic Neem oil.",
-    "img": "https://gardenerspath.com/wp-content/uploads/2021/05/Cabbage-Looper-Damage-on-Leaves.jpg"
-  }    };
-
- const chatKnowledge = {
-        "sw": [
-            { key: ["jinsi", "tumia", "kufanya"], ans: "Ili kunitumia: 1. Bonyeza Kamera au Pakia Jani. 2. Subiri AI isome picha. 3. Angalia majibu na ushauri wa kitaalamu chini ya picha." },
-            { key: ["mbolea", "mahindi"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (kukuzia - wiki 3-4), na CAN (wakati wa kutoa mbelewele)." },
-            { key: ["mbolea", "kabichi"], ans: "Kabichi inapenda mbolea ya samadi (bolea) iliyooza vizuri na NPK 10-10-10 kwa ajili ya vichwa vikubwa." },
-            { key: ["mbolea", "mchicha"], ans: "Mchicha unahitaji Nitrojeni nyingi. Tumia samadi au mbolea ya majani (Foliar) kila baada ya kuvuna." },
-            { key: ["mln", "virusi", "hatari"], ans: "MLN haina dawa. Ukiona mmea una madoa ya njano na unanyauka kuanzia juu, ung'oe na uuchome mara moja kuzuia kuenea." },
-            { key: ["wadudu", "funza", "kiwavi"], ans: "Kwa funza wa mahindi (Fall Armyworm), tumia dawa kama 'Belt' au 'Emamectin Benzoate' mapema asubuhi au jioni." },
-            { key: ["offline", "internet"], ans: "App hii inafanya kazi hata kama huna bando (Offline) kwa sababu model ya AI ipo ndani ya simu yako!" },
-            { key: ["history", "kumbukumbu"], ans: "Kila matokeo unayopata yanahifadhiwa kwenye tab ya 'Historia Yangu' ili uweze kuyaona baadae." },
-            { key: ["nani", "tengeneza"], ans: "Smart Kilimo AI imetengenezwa kusaidia wakulima wadogo na wa kati kupata utambuzi wa magonjwa kwa haraka." },
-            { key: ["bei", "soko"], ans: "Kwa sasa najihusisha na afya ya mimea zaidi. Kwa bei za soko, tafadhali wasiliana na viongozi wa soko la karibu nawe." },
-            { key: ["habari", "mambo"], ans: "Safi sana mkulima! Karibu. Una swali gani kuhusu mazao yako leo?" },
-            { key: ["jinsi", "tumia", "fanya", "shamba"], ans: "Ili kunitumia: 1. Bonyeza 'Kamera' au 'Pakia' picha ya jani. 2. Subiri AI isome picha. 3. Angalia majibu na ushauri chini ya picha." },
-            { key: ["offline", "internet", "bando"], ans: "App hii inafanya kazi hata bila internet (Offline) mara baada ya kuinstall kwenye simu yako." },
-            { key: ["futa", "history", "kumbukumbu"], ans: "Unaweza kufuta kumbukumbu zako kwa kubonyeza kitufe chekundu cha 'Futa Historia' au 'Futa Chats' hapo juu." },
-            { key: ["mahindi", "maize"], ans: "Kwa mahindi: Tumia DAP (kupanda), UREA (wiki 3-4), na CAN (wakati wa kutoa mbelewele). Hakikisha unapalilia mapema." },
-            { key: ["kabichi", "cabbage"], ans: "Kabichi inahitaji mbolea ya samadi iliyooza vizuri na NPK kwa ajili ya vichwa vikubwa na vyenye afya." },
-            { key: ["mchicha", "spinach"], ans: "Mchicha unahitaji Nitrojeni nyingi. Tumia samadi au mbolea ya majani (Foliar) kila baada ya kuvuna ili yachipue tena haraka." },
-            { key: ["mln", "maize lethal"], ans: "MLN ni virusi hatari. Ukiona madoa ya njano na mmea unanyauka juu, ng'oa na uchome moto shamba zima haraka." },
-            { key: ["msv", "streak"], ans: "MSV husababisha mistari ya njano. Inazuiliwa kwa kupanda mbegu bora na kudhibiti wadudu wa leafhoppers." },
-            { key: ["rust", "kutu"], ans: "Common Rust huleta madoa ya kahawia kama kutu. Tumia dawa za kuzuia kuvu (fungicides) kama Mancozeb." },
-            { key: ["blight", "northern"], ans: "Leaf Blight huleta madoa marefu ya kijivu. Punguza unyevu na ondoa majani ya chini yaliyoathirika." },
-            { key: ["gray leaf"], ans: "Gray Leaf Spot huleta madoa yenye pembe. Inatokea sana kukiwa na unyevu mwingi na hewa isiyopita vizuri." },
-            { key: ["black rot", "oza"], ans: "Black Rot husababishwa na bakteria. Epuka kumwagilia maji juu ya majani, mwagilia kwenye mizizi tu." },
-            { key: ["mildew", "downy"], ans: "Downy Mildew huleta ukungu mweupe chini ya jani. Tumia dawa za kuzuia kuvu (Copper fungicides)." },
-            { key: ["anthracnose"], ans: "Anthracnose huleta madoa meusi yaliyozama. Usiguse mimea ikiwa na unyevu wa mvua kuzuia kuenea." },
-            { key: ["bacterial spot"], ans: "Bacterial Spot huleta madoa madogo ya maji. Tumia mbegu zilizoidhinishwa na TOSCI pekee." },
-            { key: ["wadudu", "funza", "kiwavi"], ans: "Kwa wadudu kama funza, tumia dawa ya asili ya Neem au insecticide kama Dudumeki mapema asubuhi." }
-        ],
-        "en": [
-            { key: ["how", "use", "work"], ans: "1. Click Camera or Upload a leaf image. 2. Wait for AI to scan. 3. Read the diagnosis and advice provided below the image." },
-            { key: ["fertilizer", "maize"], ans: "For maize: Use DAP for planting, UREA for top dressing (3-4 weeks), and CAN during tasseling." },
-            { key: ["fertilizer", "cabbage"], ans: "Cabbage loves well-decomposed manure and NPK 10-10-10 for firm, large heads." },
-            { key: ["mln", "lethal"], ans: "MLN has no cure. If you see yellowing and stunted growth, uproot and burn the plant immediately to save your farm." },
-            { key: ["pest", "insect", "worm"], ans: "For Fall Armyworm in maize, use insecticides like 'Belt' or 'Emamectin' during early morning or evening hours." },
-            { key: ["offline"], ans: "This app works offline! Once installed, you can scan crops without an active internet connection." 
+        logout: function() {
+            if(confirm("Je, unataka kutoka kwenye mfumo?")) {
+                location.reload();
             }
-        ]
-    };
+        },
 
-    
-    const cropGuides = {
-       "mahindi": `
-        <h4 style="margin-top:0; color:#fbc02d; border-bottom:1px solid #ddd;">Kilimo cha Mahindi Bora 🌽</h4>
-        <p><b>1. Mbegu na Upandaji:</b> Tumia mbegu zilizoidhinishwa (Hybrid au OPV). Ekari moja inahitaji kilo 8-10. Nafasi ni sm 75 kati ya mistari na sm 25 kati ya shimo na shimo (shimo 1 mbegu 1).</p>
-        <p><b>2. Mbolea:</b> 
-            <br>• <i>Kupanda:</i> Tumia DAP au Minjingu (Kijiko 1 cha chai kwa shimo).
-            <br>• <i>Kukuzia:</i> Weka UREA au CAN mmea ukiwa na urefu wa goti (wiki 3-4).</p>
-        <p><b>3. Udhibiti wa Wadudu:</b> Kagua 'Viwavi Jeshi' (Fall Armyworm). Ukiona matundu kwenye majani, tumia dawa kama <i>Belt</i> au <i>Emamectin Benzoate</i> mapema.</p>
-        <p><b>4. Uvunaji:</b> Mahindi hukomaa baada ya siku 90-120 kulingana na aina ya mbegu. Vuna yakiwa yamekakaa (unyevu chini ya 13%).</p>
-    `,
-    "kabichi": `
-        <h4 style="margin-top:0; color:#81c784; border-bottom:1px solid #ddd;">Kilimo cha Kabichi 🥬</h4>
-        <p><b>1. Kitalu:</b> Panda mbegu kitaluni kwanza. Tumia sm 10-15 kati ya mistari kitaluni. Hamishia shambani mche ukiwa na majani 4-6 (wiki 4-6).</p>
-        <p><b>2. Nafasi na Upandaji:</b> Tumia sm 60x60 kwa aina kubwa, au sm 45x60 kwa aina ndogo. Hakikisha udongo una unyevu wakati wa kuhamisha miche.</p>
-        <p><b>3. Mahitaji ya Maji:</b> Kabichi inahitaji maji mengi sana. Mwagilia kila asubuhi na jioni, hasa wakati kichwa (head) kinaanza kutengenezwa.</p>
-        <p><b>4. Changamoto:</b> Kinga dhidi ya 'Diamondback Moth' na 'Black Rot'. Badilisha mazao (Crop Rotation) kila msimu; usipande kabichi sehemu moja mfululizo.</p>
-    `,
-    "mchicha": `
-        <h4 style="margin-top:0; color:#2e7d32; border-bottom:1px solid #ddd;">Kilimo cha Mchicha (Mboga za Majani) 🌿</h4>
-        <p><b>1. Maandalizi:</b> Lima ardhi iwe laini sana (Fine tilth). Mchicha una mbegu ndogo, hivyo unahitaji ardhi iliyopondwa vizuri.</p>
-        <p><b>2. Upandaji:</b> Changanya mbegu na mchanga (uwiano 1:3) ili usipande kwa msongamano. Panda kwenye mistari ya sm 20-30 au tawanya kwenye tuta.</p>
-        <p><b>3. Rutuba:</b> Mchicha unapenda samadi iliyooza vizuri sana. Ongeza mbolea ya majani (Foliar Booster) kila baada ya wiki 2 ili kupata maji mapana na ya kijani.</p>
-        <p><b>4. Uvunaji:</b> Unaweza kuanza kuvuna majani makubwa baada ya wiki 3. Ukikata na kuacha shina, mchicha utachipua tena kwa ajili ya mavuno ya pili na ya tatu.</p>
-    `
-};
+        switchTab: function(t) {
+            document.getElementById('chat-area').style.display = t === 'chat' ? 'block' : 'none';
+            document.getElementById('hist-area').style.display = t === 'hist' ? 'block' : 'none';
+            document.getElementById('tab-c').classList.toggle('active', t === 'chat');
+            document.getElementById('tab-h').classList.toggle('active', t === 'hist');
+        },
 
-function showGuide(crop) {
-    const content = document.getElementById("guide-content");
-    content.style.display = "block"; // Hakikisha inaonekana
-    content.innerHTML = cropGuides[crop];
-    
-    // Inasogeza kioo ili mkulima aone maelezo vizuri
-    window.scrollTo({
-        top: document.getElementById("library-area").offsetTop - 20,
-        behavior: 'smooth'
-    });
-}
-
-    
-    // MODEL
-    async function initModel() { if(!model) model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json"); }
-
-// --- 1. KAMERA (Kuscan Moja kwa Moja) ---
-async function startCam() {
-    try {
-        await initModel(); // Wait for model to be ready
-
-        // UI Updates: Ficha preview ya upload, onyesha kamera
-        document.getElementById("image-preview").style.display = "none";
-        document.getElementById("webcam-container").style.display = "block";
-        document.getElementById("laser-line").style.display = "block";
-
-        if (!webcam) {
-            webcam = new tmImage.Webcam(400, 400, true);
-            await webcam.setup({ facingMode: "environment" });
-            await webcam.play();
-            
-            // Subiri video iwe na picha halisi (Zuia Giza)
-            const checkVideo = setInterval(() => {
-                if (webcam.canvas && webcam.canvas.width > 0) {
-                    const container = document.getElementById("webcam-container");
-                    container.innerHTML = ""; 
-                    container.appendChild(webcam.canvas);
-                    
-                    isScanning = true; 
-                    requestAnimationFrame(loop);
-                    clearInterval(checkVideo);
-                }
-            }, 100);
-        } else {
-            await webcam.play();
-            isScanning = true;
-            requestAnimationFrame(loop);
-        }
-    } catch (e) {
-        alert("Shida ya Kamera: Hakikisha umetoa ruhusa ya kamera.");
-    }
-}
-
-// --- 2. UPLOAD (Kuscan Picha ya Galari) ---
-async function handleUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // 1. ANZA TRY BLOCK HAPA
-    try {
-        const laser = document.getElementById("laser-line");
-        if(laser) laser.style.display = "block";
-        
-        const webcamContainer = document.getElementById("webcam-container");
-        if(webcamContainer) webcamContainer.style.display = "none";
-        
-        const preview = document.getElementById("image-preview");
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.src = e.target.result;
-
-            img.onload = async function() {
-                if (preview) {
-                    preview.src = img.src;
-                    preview.style.display = "block";
-                }
-
-                const c = document.createElement("canvas");
-                c.width = 400;
-                c.height = 400;
-                const ctx = c.getContext("2d");
-                ctx.drawImage(img, 0, 0, 400, 400);
-
-                isScanning = true; 
-
-                setTimeout(async () => {
-                    try {
-                        await predict(c); 
-                        if(laser) laser.style.display = "none";
-                    } catch (predictErr) {
-                        console.error("AI Prediction Error:", predictErr);
-                        isScanning = false;
-                        if(laser) laser.style.display = "none";
-                    }
-                }, 1500);
-            }; // Mwisho wa img.onload
-        }; // Mwisho wa reader.onload
-        
-        reader.readAsDataURL(file);
-
-    } catch (err) { 
-        // 2. CATCH HII SASA IPO NDANI YA FUNCTION SAHIHI
-        console.error("Shida ya Upload:", err);
-        alert("Imeshindikana kusoma picha. Jaribu tena.");
-    }
-} // MWISHO WA FUNCTION YOTE
-
-// --- 3. LOOP YA KAMERA ---
-async function loop() {
-    if (isScanning && webcam) {
-        webcam.update(); // Sasisha kioo cha kamera
-    }
-        // Hakikisha picha si giza (width > 0)
-        if (webcam.canvas && webcam.canvas.width > 0) {
-            await predict(webcam.canvas);
-        }
-        
-        if(isScanning) requestAnimationFrame(loop);
-    }
-
-let lughaSasa = 'sw'; 
-let ugonjwaWaMwisho = ""; 
-let akibaYaJibu = ""; 
-
-// --- 2. Function ya Predict (Iliyoboreshwa kuzuia ku-stack) ---
-async function predict(el) {
-    // 1. Zuia utabiri kama scan haijawashwa
-    if (!isScanning) return; 
-
-    // --- 2. KIZUIZI CHA GIZA (Brightness Check) ---
-    const canvasMwangaza = document.createElement('canvas');
-    const ctxMwangaza = canvasMwangaza.getContext('2d');
-    canvasMwangaza.width = 1; canvasMwangaza.height = 1;
-    ctxMwangaza.drawImage(el, 0, 0, 1, 1);
-    const dataImg = ctxMwangaza.getImageData(0, 0, 1, 1).data;
-    // Pata wastani wa mwangaza (R+G+B / 3)
-    const mwangaza = (dataImg[0] + dataImg[1] + dataImg[2]) / 3;
-
-    // Kama kuna giza sana (chini ya 45), rudi nyuma usitoe majibu ya uongo
-    if (mwangaza < 45) {
-        console.log("Kamera ina giza mno...");
-        return; 
-    }
-
-    // --- 3. ANZA UTABIRI (AI Prediction) ---
-    const p = await model.predict(el);
-    
-    // Tafuta daraja lenye uwezekano mkubwa (Highest Probability)
-    let high = p[0];
-    for(let i=1; i<p.length; i++) {
-        if(p[i].probability > high.probability) high = p[i];
-    }
-
-    // --- 4. USALAMA NA ACCURACY (Vigezo vya kutoa jibu) ---
-    // Tunatoa jibu kama Uhakika ni zaidi ya 90% na siyo "Background"
-    if (high.probability > 0.90 && high.className !== "Background") {
-        
-        isScanning = false; // Simamisha scan
-        if(webcam) webcam.pause(); // Simamisha video kama ipo
-        
-        // Zima laser na onyesha eneo la matokeo
-        const resArea = document.getElementById("result-area");
-        const laser = document.getElementById("laser-line");
-        if(resArea) resArea.style.display = "block";
-        if(laser) laser.style.display = "none";
-
-        // Pata data kutoka kwenye database yako (db)
-        const data = db[high.className];
-        if (data) {
-            ugonjwaWaMwisho = high.className;
-
-            // Kokotoa Accuracy kwa usahihi (Asilimia %)
-            const asilimia = (high.probability * 100).toFixed(1); 
-
-            // Jaza Jina la Ugonjwa na Accuracy kwenye UI
-            const jinaElement = document.getElementById("res-name");
-            if(jinaElement) {
-                // Inaonyesha mfano: "Leaf Rust (98.5%)"
-                jinaElement.innerHTML = `${high.className} <span style="color: #2e7d32; font-size: 0.8em; font-weight: normal;">(${asilimia}%)</span>`;
+        handleUpload: function(e) {
+            const f = e.target.files[0];
+            if(f) {
+                const r = new FileReader();
+                r.onload = (ev) => {
+                    document.getElementById('preview').src = ev.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                    app.startScanEffect();
+                };
+                r.readAsDataURL(f);
             }
+        },
 
-            // Jaza Maelezo ya Tiba kulingana na lugha iliyochaguliwa
-            const maelezo = data[lughaSasa]; 
-            const solText = document.getElementById("sol-text");
-            if(solText) solText.innerText = maelezo;
+        startScanEffect: function() {
+            const l = document.getElementById('laser');
+            l.style.display = 'block';
+            setTimeout(() => {
+                l.style.display = 'none';
+                const msg = "Scan imekamilika. Zao linaonekana kuwa na upungufu wa Nitrojeni.";
+                alert(msg);
+                app.speak(msg);
+            }, 3000);
+        },
 
-            // --- 5. TAYARISHA NA TOA SAUTI ---
-            const mwanzo = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ");
-            const kati = (lughaSasa === 'sw' ? ". Uhakika wetu ni asilimia " : ". Our accuracy is ");
-            const mwisho = (lughaSasa === 'sw' ? ". Tiba yake ni " : " percent. The treatment is ");
-            
-            // Unganisha sentensi kamili
-            akibaYaJibu = mwanzo + high.className + kati + asilimia + mwisho + maelezo;
-            
-            // Toa Sauti Automatic (Inatumia function yako ya ongeaSauti)
-            if (typeof ongeaSauti === "function") {
-                ongeaSauti(akibaYaJibu, lughaSasa);
-            }
-            
-            // --- 6. HIFADHI NA WHATSAPP ---
-            if (typeof wekaLinkWhatsApp === "function") wekaLinkWhatsApp(high.className);
-            if (typeof saveHistory === "function") saveHistory(high.className);
+        sendMsg: function() {
+            const inp = document.getElementById('chat-input');
+            const val = inp.value;
+            if(!val) return;
+            const box = document.getElementById('chat-box');
+            box.innerHTML += `<div style="text-align:right; margin-bottom:8px;"><b>Wewe:</b> ${val}</div>`;
+            inp.value = "";
+            setTimeout(() => {
+                const rep = "Tumia kilo 50 za mbolea ya UREA kwa kila ekari kupata matokeo bora.";
+                box.innerHTML += `<div style="color:var(--p)"><b>AI:</b> ${rep}</div>`;
+                box.scrollTop = box.scrollHeight;
+                app.speak(rep);
+            }, 1000);
+        },
 
-            // Tuma pia ujumbe kwenye Chat Box kwa muonekano mzuri
-            const chatBox = document.getElementById("chat-box");
-            if(chatBox) {
-                chatBox.innerHTML += `
-                    <div class="msg-ai">
-                        <b>Scan Imekamilika:</b><br>
-                        Ugonjwa: ${high.className}<br>
-                        Uhakika: ${asilimia}%
-                    </div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        }
-    }
-}
-// --- 3. Function za Sauti (Zimeboreshwa) ---
+        calculate: function() {
+            const a = document.getElementById('acres').value;
+            const z = document.getElementById('crop-select').value;
+            if(!a) return alert("Ingiza ekari");
+            const res = `Kwa ekari ${a} za ${z}, utahitaji mifuko ${a*2} ya mbolea.`;
+            document.getElementById('calc-res').style.display = 'block';
+            document.getElementById('calc-res').innerText = res;
+            app.speak(res);
+        },
 
-function ongeaSauti(t, lang = 'sw') {
-    window.speechSynthesis.cancel(); 
-    if (!t) return;
+        lib: function(z) {
+            const d = {'mchicha':'Mchicha unahitaji maji mengi.','kabichi':'Kabichi hupenda baridi kiasi.','mahindi':'Mahindi yanahitaji palizi ya kwanza mapema.'};
+            document.getElementById('lib-box').innerText = d[z];
+            app.speak(d[z]);
+        },
 
-    // Delay kidogo inasaidia browser kujiandaa
-    setTimeout(() => {
-        const m = new SpeechSynthesisUtterance(t);
-        m.lang = (lang === 'sw') ? 'sw-TZ' : 'en-US'; 
-        m.pitch = 1;
-        m.rate = 0.85; 
-        window.speechSynthesis.speak(m);
-    }, 150);
-}
+        speak: function(text) {
+            const msg = new SpeechSynthesisUtterance();
+            msg.text = text;
+            msg.lang = 'sw-TZ';
+            window.speechSynthesis.speak(msg);
+        },
 
-function repeatVoice() {
-    const jina = document.getElementById("res-name").innerText;
-    const tiba = document.getElementById("sol-text").innerText;
-
-    if (jina && tiba) {
-        const mwanzo = (lughaSasa === 'sw') ? "Ugonjwa ni " : "The disease is ";
-        const kati = (lughaSasa === 'sw') ? ". Tiba yake ni " : ". The treatment is ";
-        akibaYaJibu = mwanzo + jina + kati + tiba;
-        ongeaSauti(akibaYaJibu, lughaSasa);
-    } else if (akibaYaJibu) {
-        ongeaSauti(akibaYaJibu, lughaSasa);
-    } else {
-        const msg = (lughaSasa === 'sw') ? "Bado sijaona ugonjwa." : "No disease detected yet.";
-        ongeaSauti(msg, lughaSasa);
-    }
-}
-
-// --- 4. Function ya Lugha (Badili bila kurefresh) ---
-
-function badiliLugha(mpya) {
-    lughaSasa = mpya;
-    
-    // Kama kuna jibu tayari, badili maandishi na sauti papo hapo
-    if (ugonjwaWaMwisho) {
-        const data = db[ugonjwaWaMwisho];
-        const maelezo = data[lughaSasa];
-        document.getElementById("sol-text").innerText = maelezo;
-        
-        const mwanzo = (lughaSasa === 'sw' ? "Ugonjwa umetambuliwa kama " : "Disease identified as ");
-        const kati = (lughaSasa === 'sw' ? ". Tiba yake ni " : ". The treatment is ");
-        akibaYaJibu = mwanzo + ugonjwaWaMwisho + kati + maelezo;
-        
-        ongeaSauti(akibaYaJibu, lughaSasa);
-    }
-}
-   // LOGIC
-
- function calculateInputs() {
-    const size = document.getElementById("farm-size").value;
-    const crop = document.getElementById("crop-type").value;
-    const resultDiv = document.getElementById("calc-result");
-    
-    if (size <= 0) {
-        alert("Tafadhali ingiza idadi ya ekari.");
-        return;
-    }
-
-    let mbegu, mboleaDAP, mboleaUREA, mimea;
-    let maelezo = "";
-
-    if (crop === "mahindi") {
-        mbegu = size * 10; // Kilo 10 kwa ekari
-        mboleaDAP = size * 50; // Mfuko 1 wa 50kg kwa ekari
-        mboleaUREA = size * 50;
-        mimea = size * 22000; // Makadirio ya mimea 22,000
-        maelezo = `<b>Makadirio kwa Ekari ${size} za Mahindi:</b><br>
-                   • Mbegu: Kilo ${mbegu}<br>
-                   • Mbolea ya Kupanda (DAP): Kilo ${mboleaDAP}<br>
-                   • Mbolea ya Kukuzia (UREA): Kilo ${mboleaUREA}<br>
-                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}`;
-    } else if (crop === "kabichi") {
-        mbegu = size * 200; // Gramu 200 kwa ekari
-        mimea = size * 11000;
-        maelezo = `<b>Makadirio kwa Ekari ${size} za Kabichi:</b><br>
-                   • Mbegu: Gramu ${mbegu}<br>
-                   • Idadi ya Mimea: Karibu ${mimea.toLocaleString()}<br>
-                   • Mwagilia lita 15,000 - 20,000 kwa msimu.`;
-    } else {
-        maelezo = `<b>Makadirio kwa Ekari ${size} za Mchicha:</b><br>
-                   • Mbegu: Kilo 2 - 4 (Changanya na mchanga).<br>
-                   • Samadi: Tani 5 - 10 kwa matokeo bora.`;
-    }
-
-    resultDiv.innerHTML = maelezo;
-    resultDiv.style.display = "block";
-    ongeaSauti("Mahesabu ya " + crop + " kwa ekari " + size + " yako tayari.");
-}
-
-function showGuide(c) { 
-    document.getElementById("guide-content").innerHTML = cropGuides[c]; 
-    ongeaSauti("Mwongozo wa " + c); 
-}
-
-
-
-// --- 1. SPEECH RECOGNITION (Logic Moja Pekee) ---
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-var recognitionInstance; // Tunatumia jina tofauti kidogo kuzuia conflict
-
-if (Recognition && !recognitionInstance) {
-    recognitionInstance = new Recognition();
-    recognitionInstance.continuous = false;
-    recognitionInstance.interimResults = false;
-
-    recognitionInstance.onstart = () => {
-        const mic = document.getElementById("mic-btn");
-        if (mic) mic.style.color = "red";
+        startMic: function() { alert("Mic inasikiliza..."); }
     };
-
-    recognitionInstance.onresult = (event) => {
-        const maneno = event.results[0][0].transcript;
-        const input = document.getElementById("chat-input");
-        if (input) {
-            input.value = maneno;
-            sendMessage(); 
-        }
-    };
-
-    recognitionInstance.onend = () => {
-        const mic = document.getElementById("mic-btn");
-        if (mic) mic.style.color = "black";
-    };
-}
-
-function anzaKusikiliza() {
-    if (recognitionInstance) {
-        recognitionInstance.lang = (window.lughaSasa === 'sw') ? 'sw-TZ' : 'en-US';
-        try {
-            recognitionInstance.start();
-        } catch (e) {
-            console.log("Mic tayari inafanya kazi.");
-        }
-    } else {
-        alert("Browser yako hairuhusu sauti.");
-    }
-}
-
-// --- 2. CHAT LOGIC (Kutuma Meseji) ---
-async function sendMessage() {
-    const input = document.getElementById("chat-input");
-    const chatBox = document.getElementById("chat-box");
-    
-    if (!input || !chatBox || input.value.trim() === "") return;
-
-    const swali = input.value.trim();
-    const swaliLower = swali.toLowerCase();
-    
-    // 1. Message ya Mkulima
-    chatBox.innerHTML += `
-        <div style="margin-bottom:10px; text-align:right;">
-            <div style="background:#e1ffc7; padding:10px; border-radius:15px; display:inline-block; max-width:80%; text-align:left;">${swali}</div>
-        </div>`;
-    
-    input.value = ""; 
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    // 2. Tafuta Jibu
-    let jibuAI = "";
-    const maarifa = chatKnowledge[window.lughaSasa] || chatKnowledge["sw"]; 
-    let limepatikana = false;
-
-    for (let item of maarifa) {
-        if (item.key.some(k => swaliLower.includes(k))) {
-            jibuAI = item.ans;
-            limepatikana = true;
-            break;
-        }
-    }
-
-    if (!limepatikana) {
-        jibuAI = (window.lughaSasa === 'sw') 
-            ? `Asante kwa swali kuhusu "${swali}". Kwa sasa nimebobea kwenye Mahindi na Mchicha, nitaongeza maarifa zaidi hivi karibuni!` 
-            : `Thanks for your question about "${swali}". I'm currently specializing in Maize and Spinach.`;
-    }
-
-    // 3. Jibu la AI
-    setTimeout(() => {
-        chatBox.innerHTML += `
-            <div style="margin-bottom:10px; text-align:left;">
-                <div style="background:#eee; padding:10px; border-radius:15px; display:inline-block; max-width:80%;">${jibuAI}</div>
-            </div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-        
-        // Ikiwa unayo function ya Text-to-Speech
-        if (typeof ongeaSauti === "function") ongeaSauti(jibuAI, window.lughaSasa);
-    }, 800);
-}
-
-// --- 3. SWITCH TAB & DYNAMIC BUTTONS ---
-// 1. Function ya kubadili Tabo
-function switchTab(tabName) {
-    // Ficha zote
-    document.getElementById('chat-area').style.display = 'none';
-    document.getElementById('hist-area').style.display = 'none';
-    document.getElementById('scan-area').style.display = 'none';
-    
-    // Ondoa rangi ya 'active' kwenye button zote
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    
-    // Onyesha iliyochaguliwa
-    document.getElementById(tabName + '-area').style.display = 'block';
-    document.getElementById('t-' + tabName).classList.add('active');
-}
-
-// 2. Function ya kuhifadhi Historia (Inarekebisha kosa lako)
-function saveHistory(ugonjwa) {
-    const histContent = document.getElementById('hist-content');
-    const noHist = document.getElementById('no-hist');
-    
-    // Futa meseji ya "Hakuna kumbukumbu"
-    if (noHist) noHist.remove();
-
-    const muda = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const tarehe = new Date().toLocaleDateString();
-
-    const item = document.createElement('div');
-    item.className = 'hist-item';
-    item.innerHTML = `
-        <div style="display:flex; justify-content:space-between; font-size:11px; color:#999; margin-bottom:5px;">
-            <span>📅 ${tarehe}</span>
-            <span>⏰ ${muda}</span>
-        </div>
-        <b style="color:var(--p);">${ugonjwa}</b>
-        <p style="font-size:12px; margin:5px 0; color:#666;">Scan imekamilika kwa mafanikio.</p>
-    `;
-    
-    // Weka juu kabisa ya historia
-    histContent.prepend(item);
-}
-
-// 3. Function ya kurekebisha Predict ili ionyeshe matokeo kwenye Tab ya Scan
-async function predict(el) {
-    if (!isScanning) return;
-
-    const p = await model.predict(el);
-    let high = p[0];
-    for (let i = 1; i < p.length; i++) {
-        if (p[i].probability > high.probability) high = p[i];
-    }
-
-    if (high.probability > 0.90 && high.className !== "Background") {
-        isScanning = false;
-        if (webcam) webcam.pause();
-
-        // 1. Boresha UI ya Scan
-        switchTab('scan'); // Badili tabo iende kwenye Scan kuonyesha majibu
-        document.getElementById("scan-instruction").style.display = "none";
-        document.getElementById("result-area").style.display = "block";
-        document.getElementById("res-name").innerText = high.className + " (" + (high.probability * 100).toFixed(1) + "%)";
-
-        const data = db[high.className];
-        if (data) {
-            const maelezo = data[lughaSasa];
-            document.getElementById("sol-text").innerText = maelezo;
-
-            // 2. HIFADHI KWENYE HISTORIA (Siyo kwenye Chat)
-            saveHistory(high.className);
-
-            // 3. Toa Sauti
-            const sautiMsg = (lughaSasa === 'sw' ? "Umetambuliwa: " : "Identified: ") + high.className + ". " + maelezo;
-            ongeaSauti(sautiMsg, lughaSasa);
-        }
-    }
-}
-
-// 4. Safisha Historia Yote
-function clearAllHistory() {
-    if (confirm("Je, unataka kufuta historia yote?")) {
-        document.getElementById('hist-content').innerHTML = '<p id="no-hist" style="text-align:center; color:#999; margin-top:20px;">Hakuna kumbukumbu bado.</p>';
-    }
-}
-function loginUser() {
-        const u = document.getElementById("username").value.trim();
-        if(!u) return; currentUser = u;
-        document.getElementById("login-overlay").style.display = "none";
-        document.getElementById("main-app").style.display = "block";
-        document.getElementById("display-user").innerText = "👨‍🌾Mkulima: " + u;
-    }
-    function logout() {
-        
-        location.reload();
-    }
-
-    // SPLASH
-    function typeWriter(text, id, speed, callback) {
-        let i = 0; const el = document.getElementById(id);
-        function type() { if(i < text.length) { el.innerHTML += text.charAt(i); i++; setTimeout(type, speed); } else if(callback) callback(); }
-        type();
-    }
-    window.onload = () => {
-        typeWriter("Smart Kilimo AI", "type-app", 80, () => {
-            typeWriter("Developers:Mahela Issa & Erick Alfred", "type-dev", 50, () => {
-                typeWriter("KIBAHA SECONDARY SCHOOL", "type-sch", 50, () => {
-                    setTimeout(() => { document.getElementById("splash-screen").style.display="none"; }, 1000);
-
-                        loadHistory();  // Inasoma LocalStorage
-                          switchTab('chat'); // Inafungulia kwenye Chat
-                });
-            });
-        });
-    };
-
-    function wekaLinkWhatsApp(ugonjwa) {
-    const nambaYaMtaalamu = "255795023200"; // WEKA NAMBA YAKO HAPA (Anza na 255)
-    const ujumbe = `Habari mtaalamu, nimeitumia App ya Smart Kilimo na imegundua kuwa mahindi yangu yana ugonjwa wa: ${ugonjwa}. Naomba msaada zaidi.`;
-    
-    const encodedUjumbe = encodeURIComponent(ujumbe);
-    const link = `https://wa.me/${nambaYaMtaalamu}?text=${encodedUjumbe}`;
-    
-    const waContainer = document.getElementById("whatsapp-container");
-    const waLink = document.getElementById("wa-link");
-    
-    waLink.href = link;
-    waContainer.style.display = "block"; // Onyesha button ya WhatsApp
-}
-
-// --- FUNCTION YA KUPOKEA PICHA (UPLOAD) ---
-
-    
 </script>
 </body>
 </html>

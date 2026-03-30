@@ -708,51 +708,54 @@ startScanEffect: function() {
         // CHAT ENGINE
      // Function ya Chat Box (Hakikisha haichukui lastScanResult kimakosa)
   // 2. KUTUMA UJUMBE (Manual na Automatic)
-    sendMsg: function() {
-        const input = document.getElementById("chat-input");
-        const chatBox = document.getElementById("chat-box");
-        const msg = input.value.trim();
+   sendMsg: function() {
+    const input = document.getElementById("chat-input");
+    const chatBox = document.getElementById("chat-box");
+    
+    // 1. Hakikisha input ipo
+    if (!input || !chatBox) return;
+    
+    const text = input.value.trim();
+    if (!text) return;
 
-        if (!msg) return; // Kama box lipo wazi, isitume
+    // Onyesha ujumbe wa mtumiaji
+    const userDiv = document.createElement("div");
+    userDiv.style = "align-self: flex-end; background: var(--p); color: white; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; max-width: 80%; font-size: 13px;";
+    userDiv.innerText = text;
+    chatBox.appendChild(userDiv);
 
-        // Onyesha ujumbe wa mtumiaji
-        const userMsg = document.createElement("div");
-        userMsg.style = "align-self: flex-end; background: var(--p); color: white; padding: 10px 15px; border-radius: 15px 15px 0 15px; margin: 5px; max-width: 80%; font-size: 13px;";
-        userMsg.innerText = msg;
-        chatBox.appendChild(userMsg);
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
 
-        input.value = ""; // Safisha box ya kuandikia
+    setTimeout(() => {
+        // 2. Tambua Lugha
+        const engWords = ["hello", "how", "is", "help", "what", "problem"];
+        const isEnglish = engWords.some(w => text.toLowerCase().includes(w));
+        const chatLang = isEnglish ? "en" : "sw";
+
+        // 3. Pata Jibu (Tunaweka 'Fallback' kuzuia undefined)
+        const info = chatKnowledge[chatLang] || chatKnowledge["sw"]; 
+        
+        // Hapa tunahakikisha 'info' ina data, la sivyo tunatengeneza jibu la dharura
+        const reply = info 
+            ? `${info.shukrani} '${text}'${info.mtaalamu}`
+            : `Asante kwa ujumbe kuhusu ${text}. Tutajibu hivi punde.`;
+
+        const aiDiv = document.createElement("div");
+        aiDiv.style = "align-self: flex-start; background: #eee; color: #333; padding: 10px; border-radius: 15px 15px 15px 0; margin: 5px; max-width: 80%; font-size: 13px;";
+        
+        const aiTitle = (info && info.aiName) ? info.aiName : "Smart Kilimo";
+        aiDiv.innerHTML = `<b>${aiTitle}:</b> <br>${reply}`;
+        
+        chatBox.appendChild(aiDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        // Jibu la AI
-        setTimeout(() => {
-            // 1. Tambua lugha ya mtumiaji (Simple Detection)
-            // Kama ujumbe una maneno ya kawaida ya Kiingereza, tumia 'en', vinginevyo 'sw'
-            const engWords = ["hello", "how", "what", "is", "help", "problem", "maize", "disease"];
-            const isEnglish = engWords.some(word => msg.toLowerCase().includes(word));
-            const lang = isEnglish ? "en" : "sw";
+        // 4. Ongea (Speak)
+        this.currentLang = chatLang;
+        this.speak(reply);
 
-            // 2. Chukua ujumbe kutoka chatKnowledge kulingana na lugha
-            const knowledge = chatKnowledge[lang];
-            const reply = `${knowledge.shukrani} '${msg}'${knowledge.mtaalamu}`;
-
-            const aiMsg = document.createElement("div");
-            aiMsg.style = "align-self: flex-start; background: #f0f0f0; color: #333; padding: 10px 15px; border-radius: 15px 15px 15px 0; margin: 5px; max-width: 80%; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);";
-            
-            // Badili jina la AI kulingana na lugha pia
-            const aiTitle = lang === "sw" ? "Smart Kilimo" : "Smart Farming";
-            aiMsg.innerHTML = `<b>${aiTitle}:</b> <br>${reply}`;
-            
-            chatBox.appendChild(aiMsg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            
-            // 3. AI iongee (Speak) kwa lugha husika
-            // Tunapitisha 'lang' ili speak() ijue itumie sauti gani
-            this.currentLang = lang; 
-            this.speak(reply);
-
-        }, 1000);
-    },
+    }, 1000);
+}
          saveToHistory: function(name) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
             hist.unshift({ name, date: new Date().toLocaleTimeString() });

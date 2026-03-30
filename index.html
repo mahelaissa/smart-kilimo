@@ -389,7 +389,11 @@
             { key: ["pest", "insect", "worm"], ans: "For Fall Armyworm in maize, use insecticides like 'Belt' or 'Emamectin' during early morning or evening hours." },
             { key: ["offline"], ans: "This app works offline! Once installed, you can scan crops without an active internet connection." 
             }
-        ]
+        ],
+         "meta": {
+        "sw": { shukrani: "Asante kwa ujumbe kuhusu ", mtaalamu: ". Tutajibu hivi punde.", aiName: "Smart Kilimo" },
+        "en": { shukrani: "Thank you for the message about ", mtaalamu: ". We will respond shortly.", aiName: "Smart Farming" }
+    }
     };
    
 
@@ -708,55 +712,84 @@ startScanEffect: function() {
         // CHAT ENGINE
      // Function ya Chat Box (Hakikisha haichukui lastScanResult kimakosa)
   // 2. KUTUMA UJUMBE (Manual na Automatic)
-   sendMsg: function() {
-    const input = document.getElementById("chat-input");
-    const chatBox = document.getElementById("chat-box");
-    
-    // 1. Hakikisha input ipo
-    if (!input || !chatBox) return;
-    
-    const text = input.value.trim();
-    if (!text) return;
-
-    // Onyesha ujumbe wa mtumiaji
-    const userDiv = document.createElement("div");
-    userDiv.style = "align-self: flex-end; background: var(--p); color: white; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; max-width: 80%; font-size: 13px;";
-    userDiv.innerText = text;
-    chatBox.appendChild(userDiv);
-
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    setTimeout(() => {
-        // 2. Tambua Lugha
-        const engWords = ["hello", "how", "is", "help", "what", "problem"];
-        const isEnglish = engWords.some(w => text.toLowerCase().includes(w));
-        const chatLang = isEnglish ? "en" : "sw";
-
-        // 3. Pata Jibu (Tunaweka 'Fallback' kuzuia undefined)
-        const info = chatKnowledge[chatLang] || chatKnowledge["sw"]; 
+sendMsg: function() {
+        const input = document.getElementById("chat-input") || document.getElementById("chatIn");
+        const chatBox = document.getElementById("chat-box") || document.getElementById("chat-content");
         
-        // Hapa tunahakikisha 'info' ina data, la sivyo tunatengeneza jibu la dharura
-        const reply = info 
-            ? `${info.shukrani} '${text}'${info.mtaalamu}`
-            : `Asante kwa ujumbe kuhusu ${text}. Tutajibu hivi punde.`;
+        if (!input || !chatBox) return;
+        
+        const text = input.value.trim();
+        if (!text) return;
 
-        const aiDiv = document.createElement("div");
-        aiDiv.style = "align-self: flex-start; background: #eee; color: #333; padding: 10px; border-radius: 15px 15px 15px 0; margin: 5px; max-width: 80%; font-size: 13px;";
-        
-        const aiTitle = (info && info.aiName) ? info.aiName : "Smart Kilimo";
-        aiDiv.innerHTML = `<b>${aiTitle}:</b> <br>${reply}`;
-        
-        chatBox.appendChild(aiDiv);
+        // A. Onyesha ujumbe wa mtumiaji
+        const userDiv = document.createElement("div");
+        userDiv.style = "align-self: flex-end; background: var(--p); color: white; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; max-width: 80%; font-size: 13px; margin-left: auto;";
+        userDiv.innerText = text;
+        chatBox.appendChild(userDiv);
+
+        input.value = "";
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        // 4. Ongea (Speak)
-        this.currentLang = chatLang;
-        this.speak(reply);
+        setTimeout(() => {
+            // B. Tambua Lugha
+            const engWords = ["hello", "how", "is", "help", "what", "problem", "disease"];
+            const isEnglish = engWords.some(w => text.toLowerCase().includes(w));
+            const chatLang = isEnglish ? "en" : "sw";
 
-    }, 1000);
-},
-       
+            let reply = "";
+
+            // C. Tafuta jibu kwenye chatKnowledge (Keyword Matching)
+            const knowledgeBase = chatKnowledge[chatLang];
+            if (knowledgeBase) {
+                for (let item of knowledgeBase) {
+                    if (item.key.some(k => text.toLowerCase().includes(k))) {
+                        reply = item.ans;
+                        break;
+                    }
+                }
+            }
+
+            // D. Kama swali halipo (Smart Fallback Logic)
+            if (!reply) {
+                const mengine = ["nyanya", "tomato", "maharagwe", "beans", "pamba", "cotton", "mpunga", "rice"];
+                const isExtra = mengine.some(m => text.toLowerCase().includes(m));
+                const meta = chatKnowledge.meta[chatLang];
+
+                if (isExtra) {
+                    reply = (chatLang === 'sw') 
+                        ? "Asante. Kwa sasa tunatambua Mahindi, Kabichi na Mchicha tu. Mazao mengine yanakuja hivi karibuni."
+                        : "Thank you. Currently we only support Maize, Cabbage, and Spinach. More coming soon!";
+                } else {
+                    // Jibu la kawaida la "Asante kwa ujumbe..."
+                    reply = `${meta.shukrani} '${text}'${meta.mtaalamu}`;
+                }
+            }
+
+            // E. Onyesha jibu la AI
+            const aiDiv = document.createElement("div");
+            aiDiv.style = "align-self: flex-start; background: #eee; color: #333; padding: 12px; border-radius: 15px 15px 15px 0; margin: 5px; max-width: 80%; font-size: 13px; border-left: 4px solid var(--p); position: relative;";
+            
+            const aiTitle = chatKnowledge.meta[chatLang].aiName;
+            aiDiv.innerHTML = `
+                <b style="font-size: 10px; color: var(--p);">${aiTitle}:</b><br>${reply}
+                <button onclick="app.speak('${reply.replace(/'/g, "\\'")}')" style="background:none; border:none; cursor:pointer; float:right; font-size:16px;">🔊</button>
+                <div style="clear:both;"></div>
+            `;
+            
+            chatBox.appendChild(aiDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // F. Ongea (Speak)
+            this.currentLang = chatLang;
+            this.speak(reply);
+
+            // G. Hifadhi (Kama una mfumo wa LocalStorage)
+            if (typeof currentUser !== 'undefined') {
+                localStorage.setItem("chat_" + currentUser, chatBox.innerHTML);
+            }
+
+        }, 1000);
+    },
         saveToHistory: function(name) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
             hist.unshift({ name, date: new Date().toLocaleTimeString() });

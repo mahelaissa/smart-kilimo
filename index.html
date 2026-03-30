@@ -147,7 +147,7 @@
         <h2 style="color: var(--p); margin-top: 0;">Smart Kilimo AI</h2>
         <p style="color: #666; font-size: 14px;">Karibu, ingiza jina kuanza safari yako.</p>
         <input type="text" id="username" placeholder="Jina lako hapa...">
-       <button onclick="app.login()" class="btn-main" style="background: var(--p);">INGIA SASA</button>
+        <button onclick="app.login()" class="btn-main" style="background: var(--p);">INGIA SASA</button>
     </div>
 </div>
 
@@ -566,15 +566,7 @@
             this.renderMsg("ai", reply);
             // Hapa tunapitisha maandishi maalum ili isisome 'lastScanResult'
             this.speak(reply); 
-        }, 1000);
-    }
-
-            setTimeout(() => {
-                chatBox.innerHTML += `<div style="color:var(--p); font-size:13px; margin-bottom:10px;"><b>AI:</b> ${ans}</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-                this.speak(ans);
-            }, 600);
-            input.value = "";
+        }, 1000);  
         },
 
         // HISTORY

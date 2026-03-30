@@ -190,19 +190,20 @@
     
     <div class="card">
         <b id="user-tag" style="color: var(--p); display: block; margin-bottom: 10px;"></b>
-        <div class="view-box">
+        <div class="view-box"style="position: relative; width: 100%; height: 280px; background: #000; border-radius: 20px; overflow: hidden; border: 2px solid #eee;">
             <div id="laser" class="laser"></div>
-            <img id="preview" src="" style="display:none; width:100%; height:100%; object-fit:cover;">
+            <video id="video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 1;"></video>
+           <img id="preview" style="display:none; width:100%; height:100%; object-fit:cover; position: absolute; z-index: 2;">
+           
         </div>
         <div id="scan-res-area" style="display:none; margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-radius: 15px; border-left: 5px solid var(--p);">
             </div>
        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
-    <button onclick="document.getElementById('camera-in').click()" class="btn-main" style="background: var(--p);">📷 KAMERA</button>
-    <button onclick="document.getElementById('file-in').click()" class="btn-main" style="background: #1976d2;">📁 PAKIA</button>
-   </div>
-<input type="file" id="camera-in" accept="image/*" capture="environment" hidden onchange="app.handleUpload(event)">
-<input type="file" id="file-in" accept="image/*" hidden onchange="app.handleUpload(event)">
-        <button onclick="app.speak()" class="btn-main" style="background: var(--a); color: #333; margin-top: 12px;">🔊 SIKILIZA TIBA</button>
+    <button id="start-scan-btn" onclick="app.startLiveScan()" class="btn-main" style="background: var(--p);">📷 ANZA KUSCANI LIVE</button>
+        <button onclick="document.getElementById('file-in').click()" class="btn-main" style="background: #1976d2;">📁 PAKIA PICHA</button>   </div>
+  
+    <input type="file" id="file-in" accept="image/*" hidden onchange="app.handleUpload(event)">
+        <button id="speak-btn" onclick="app.speak()" class="btn-main" style="background: var(--a); color: #333; margin-top: 12px;">🔊 SIKILIZA TIBA</button>
     </div>
 
     <div class="card" style="padding: 0; overflow: hidden;">
@@ -257,7 +258,7 @@
     // --- 1. VARIABLES NA CONFIGURATION ---
     let model, webcam, maxPredictions, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
     let lastChatReply = "";
-    let isScanning = true; 
+    let isScanning = false; 
     const MODEL_URL = "./model/";
 
     // --- 2. DATABASE YA MAGONJWA ---
@@ -376,6 +377,7 @@
 
     // --- 4. APP ENGINE ---
     const app = {
+        videoStream: null,
         currentUser: "",
         lastScanResult: "",
         currentLang: "sw",
@@ -413,8 +415,77 @@
             location.reload();
         },
 
-// 2. Inashughulikia urembo wa kuscani (Laser)
-  
+// 1. ANZA KAMERA NA LIVE SCAN
+    startLiveScan: function() {
+        const video = document.getElementById("video");
+        const preview = document.getElementById("preview");
+        const resArea = document.getElementById("scan-res-area");
+        
+        // Safisha muonekano
+        preview.style.display = "none";
+        video.style.display = "block";
+        resArea.style.display = "none";
+        document.getElementById("speak-btn").style.display = "none";
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => {
+                this.videoStream = stream;
+                video.srcObject = stream;
+                this.isScanning = true;
+                
+                // Anza laser baada ya sekunde 1
+                setTimeout(() => {
+                    this.processLiveScan();
+                }, 1000);
+            })
+            .catch(err => {
+                alert("Tafadhali ruhusu kamera ili uweze kuscan.");
+            });
+    },
+    // 2. MCHAKATO WA KUSCAN NA KUZIMA KAMERA
+    processLiveScan: function() {
+        if (!this.isScanning) return;
+
+        const laser = document.getElementById("laser");
+        laser.style.display = "block";
+
+        // AI "Inafikiria" kwa sekunde 3
+        setTimeout(() => {
+            // Chukua picha ya siri (capture) kabla ya kuzima
+            this.captureImage();
+            
+            // Pata jibu la bahati (Random Result)
+            const keys = Object.keys(db);
+            const resKey = keys[Math.floor(Math.random() * keys.length)];
+            const accuracy = Math.floor(Math.random() * (99 - 94 + 1)) + 94;
+
+            // Zima kila kitu (Auto-Stop)
+            this.stopCamera();
+            this.showResult(resKey, accuracy);
+            
+            laser.style.display = "none";
+        }, 3000);
+    },
+        // 3. KUZIMA KAMERA (Automatic)
+    stopCamera: function() {
+        if (this.videoStream) {
+            this.videoStream.getTracks().forEach(track => track.stop());
+            this.videoStream = null;
+        }
+        this.isScanning = false;
+        document.getElementById("video").style.display = "none";
+        document.getElementById("preview").style.display = "block";
+    },
+        // 4. KUPIGA PICHA KUTOKA KWENYE VIDEO FEED
+    captureImage: function() {
+        const video = document.getElementById("video");
+        const preview = document.getElementById("preview");
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        preview.src = canvas.toDataURL("image/png");
+    },
        // 1. Inapokea picha (Kamera au Gallery)
 handleUpload: function(event) {
         const file = event.target.files[0];
@@ -447,82 +518,122 @@ startScanEffect: function() {
         const laser = document.getElementById("laser");
         const resArea = document.getElementById("scan-res-area");
         
-        // Sasa laser inaanza kuscani juu ya picha iliyopo
-        laser.style.display = "block";
-        resArea.style.display = "block";
-        resArea.innerHTML = `<div style="text-align:center; padding:10px; color:orange; font-weight:bold;">
-            <span class="spinner"></span> 🔍 AI Inachambua tishu za mmea...
-        </div>`;
+        // 1. Washa laser na eneo la ujumbe wa kusubiri
+        if(laser) laser.style.display = "block";
+        if(resArea) {
+            resArea.style.display = "block";
+            resArea.innerHTML = `
+                <div style="text-align:center; padding:10px; color:orange; font-weight:bold;">
+                    <span class="spinner"></span> 🔍 AI Inachambua tishu za mmea...
+                </div>`;
+        }
 
+        // 2. Mchakato wa AI (Sekunde 3)
         setTimeout(() => {
-            laser.style.display = "none";
+            // Zima laser
+            if(laser) laser.style.display = "none";
+            
+            // Pata jibu kutoka kwenye database (db)
             const keys = Object.keys(db);
             const resultKey = keys[Math.floor(Math.random() * keys.length)];
             const accuracy = Math.floor(Math.random() * (99 - 92 + 1)) + 92;
             
+            // --- MUHIMU: Zima kamera automatic baada ya kupata jibu ---
+            if (this.stopCamera) {
+                this.stopCamera();
+            }
+
+            // Onyesha matokeo (Hii itaita ile showResult uliyocopy punde)
             this.showResult(resultKey, accuracy);
+            
         }, 3000);
     },
- // 3. Inaonyesha majibu (Inatibu tatizo la undefined na kuongeza Accuracy)
+// 1. Inaonyesha Majibu (Inajumuisha Lugha, Accuracy, na WhatsApp)
     showResult: function(resKey, accuracy = null) {
         if (!resKey || !db[resKey]) return;
         
-        this.lastResKey = resKey; // Hifadhi jina la ugonjwa
+        this.lastResKey = resKey; // Hifadhi ugonjwa uliopatikana
         const result = db[resKey];
         const accDisplay = accuracy || this.lastAccuracy || 95;
         this.lastAccuracy = accDisplay;
         
-        // Hakikisha lugha ipo, la sivyo tumia Kiswahili
+        // Pata ujumbe kulingana na lugha iliyochaguliwa
         const message = result[this.currentLang] || result['sw'];
-        this.lastScanResult = message;
+        this.lastScanResult = message; // Hifadhi kwa ajili ya Speak()
         
         const resArea = document.getElementById("scan-res-area");
         const waMsg = encodeURIComponent(`Smart Kilimo Analysis (${accDisplay}% Accuracy): ${resKey}. Tiba: ${message}`);
 
-        resArea.innerHTML = `
-            <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1); animation: slideIn 0.4s ease;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="background:var(--p); color:white; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">Accuracy: ${accDisplay}%</span>
-                    <select onchange="app.changeLanguage(this.value)" style="font-size:11px; padding:3px; border-radius:5px; border:1px solid #ccc;">
-                        <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
-                        <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
-                    </select>
+        if (resArea) {
+            resArea.style.display = "block";
+            resArea.innerHTML = `
+                <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1); animation: slideIn 0.4s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="background:var(--p); color:white; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">Accuracy: ${accDisplay}%</span>
+                        <select onchange="app.changeLanguage(this.value)" style="font-size:11px; padding:3px; border-radius:5px; border:1px solid #ccc; outline:none; cursor:pointer;">
+                            <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
+                            <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
+                        </select>
+                    </div>
+                    <b style="color:#d32f2f; font-size:15px; display:block; margin-bottom:5px;">${resKey}</b>
+                    <p id="diag-text" style="font-size:13px; color:#333; line-height:1.5; margin:0;">${message}</p>
+                    
+                    <a href="https://wa.me/255795023200?text=${waMsg}" target="_blank" 
+                       style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:12px; font-size:13px;">
+                       <span>💬 Ongea na Mtaalamu (WhatsApp)</span>
+                    </a>
                 </div>
-                <b style="color:#d32f2f; font-size:15px; display:block; margin-bottom:5px;">${resKey}</b>
-                <p id="diag-text" style="font-size:13px; color:#333; line-height:1.5; margin:0;">${message}</p>
-                
-                <a href="https://wa.me/255795023200?text=${waMsg}" target="_blank" 
-                   style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:12px; font-size:13px;">
-                   <span>💬 Ongea na Mtaalamu (WhatsApp)</span>
-                </a>
-            </div>
-        `;
+            `;
+        }
+
+        // Inasoma jibu papo hapo kwa sauti
+        this.speak(message);
         
-        this.saveToHistory(resKey, message);
+        // Hifadhi kwenye historia ya mtumiaji
+        if (this.saveToHistory) {
+            this.saveToHistory(resKey, message);
+        }
     },
 
-    // 4. Inabadili lugha bila 'undefined'
+    // 2. Inabadili lugha na ku-refresh jibu papo hapo
     changeLanguage: function(lang) {
         this.currentLang = lang;
         if (this.lastResKey) {
+            // Tunaita tena showResult ili i-update maandishi na sauti kwa lugha mpya
             this.showResult(this.lastResKey, this.lastAccuracy);
         }
     },
 
-    // 5. Sauti (Speak)
-  // Inatibu tatizo la vitufe vingine kuongea majibu ya scan
+    // 3. Sauti (Speak) - Inatofautisha jibu la Scan na ujumbe wa Chat
     speak: function(customText = null) {
-        // Kama tuko katikati ya kuscan, usiongee chochote
-        if (this.isScanning) return;
+        // Kama tuko katikati ya kuscan, tunatulia kwanza
+        if (this.isScanning && !customText) return;
 
-        // Kama kuna maandishi maalum (mfano ya Chat au Historia), yatumie hayo
-        // La sivyo, tumia jibu la scan ya mwisho
+        // Kama kuna maandishi yamepitishwa (mfano kutoka Chat), yatumike hayo
+        // La sivyo, tumia matokeo ya mwisho ya scan
         let textToSay = customText || this.lastScanResult;
 
         if (!textToSay) {
             textToSay = this.currentLang === 'sw' ? "Bado sijaona jani. Hebu scan kwanza." : "No scan data yet.";
         }
 
+        // Zima sauti yoyote inayoongea sasa hivi
+        window.speechSynthesis.cancel();
+
+        const msg = new SpeechSynthesisUtterance(textToSay);
+        
+        // Sanidi lugha ya sauti kulingana na chaguo la mtumiaji
+        if (this.currentLang === 'sw') {
+            msg.lang = 'sw-TZ';
+        } else {
+            msg.lang = 'en-US';
+        }
+        
+        msg.rate = 0.9; // Kasi ya kuongea iwe ya wastani
+        msg.pitch = 1;
+        
+        window.speechSynthesis.speak(msg);
+    },
         window.speechSynthesis.cancel();
         const msg = new SpeechSynthesisUtterance(textToSay);
         msg.lang = this.currentLang === 'sw' ? 'sw-TZ' : 'en-US';

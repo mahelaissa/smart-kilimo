@@ -135,7 +135,7 @@
         <h2 style="color: var(--p); margin-top: 0;">Smart Kilimo AI</h2>
         <p style="color: #666; font-size: 14px;">Karibu, ingiza jina kuanza safari yako.</p>
         <input type="text" id="username" placeholder="Jina lako hapa...">
-        <button onclick="app.login()" class="btn-main" style="background: var(--p);">INGIA SASA</button>
+       <button onclick="app.login()" class="btn-main" style="background: var(--p);">INGIA SASA</button>
     </div>
 </div>
 
@@ -474,8 +474,6 @@
         msg.rate = 0.9;
         window.speechSynthesis.speak(msg);
     }
-
-        // CALCULATOR
        calculate: function() {
             const size = parseFloat(document.getElementById("acres").value);
             const crop = document.getElementById("crop-select").value;

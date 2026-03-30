@@ -755,7 +755,7 @@ startScanEffect: function() {
         this.speak(reply);
 
     }, 1000);
-}
+},
          saveToHistory: function(name) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
             hist.unshift({ name, date: new Date().toLocaleTimeString() });

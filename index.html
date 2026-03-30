@@ -107,10 +107,40 @@
         .card { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
 
         /* SCANNER */
-        .view-box { position: relative; width: 100%; aspect-ratio: 1.2; border-radius: 20px; overflow: hidden; background: #000; margin-bottom: 15px; }
-        .laser { position: absolute; width: 100%; height: 4px; background: #00ff00; box-shadow: 0 0 20px #00ff00; z-index: 20; animation: moveLaser 2s infinite linear; display: none; }
-        @keyframes moveLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+.view-box {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    background: #222; /* Rangi ya giza kidogo nyuma */
+    border-radius: 20px;
+    overflow: hidden;
+    border: 2px solid #eee;
+}
 
+#preview {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Inahakikisha picha haijikunjakunji */
+    z-index: 1; 
+}
+
+.laser {
+    position: absolute;
+    z-index: 10; /* Laser iwe juu kabisa ya kila kitu */
+    width: 100%;
+    height: 3px;
+    background: #00ff00;
+    box-shadow: 0 0 15px #00ff00;
+    animation: scan 2s infinite ease-in-out;
+    display: none;
+}
+
+@keyframes scan {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
         /* TABS */
         .tabs { display: flex; background: #eee; border-radius: 15px; padding: 5px; margin-bottom: 15px; }
         .tab-btn { flex: 1; border: none; padding: 10px; background: none; font-weight: bold; cursor: pointer; border-radius: 10px; color: #777; transition: 0.3s; }
@@ -166,11 +196,11 @@
         </div>
         <div id="scan-res-area" style="display:none; margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-radius: 15px; border-left: 5px solid var(--p);">
             </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <button onclick="app.startScanEffect()" class="btn-main" style="background: var(--p);">📷 KAMERA</button>
-            <button onclick="document.getElementById('file-in').click()" class="btn-main" style="background: #1976d2;">📁 PAKIA</button>
-        </div>
-        <input type="file" id="camera-in" accept="image/*" capture="environment" hidden onchange="app.handleUpload(event)">
+       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
+    <button onclick="document.getElementById('camera-in').click()" class="btn-main" style="background: var(--p);">📷 KAMERA</button>
+    <button onclick="document.getElementById('file-in').click()" class="btn-main" style="background: #1976d2;">📁 PAKIA</button>
+   </div>
+<input type="file" id="camera-in" accept="image/*" capture="environment" hidden onchange="app.handleUpload(event)">
 <input type="file" id="file-in" accept="image/*" hidden onchange="app.handleUpload(event)">
         <button onclick="app.speak()" class="btn-main" style="background: var(--a); color: #333; margin-top: 12px;">🔊 SIKILIZA TIBA</button>
     </div>
@@ -384,56 +414,55 @@
         },
 
 // 2. Inashughulikia urembo wa kuscani (Laser)
-  startScanEffect: function() {
-        const laser = document.getElementById("laser");
-        const resArea = document.getElementById("scan-res-area");
-        
-        this.isScanning = true; // Tunazima sauti za vitufe vingine hapa
-        laser.style.display = "block";
-        resArea.style.display = "block";
-        resArea.innerHTML = `<div style="text-align:center; padding:10px;">
-            <p style="color:var(--p); font-weight:bold; margin:0;">🧪 AI Inatambua seli za mmea...</p>
-            <small style="color:#666;">Tafadhali subiri...</small>
-        </div>`;
-
-        setTimeout(() => {
-            laser.style.display = "none";
-            this.isScanning = false;
-            const keys = Object.keys(db);
-            const resultKey = keys[Math.floor(Math.random() * keys.length)];
-            const accuracy = Math.floor(Math.random() * (99 - 91 + 1)) + 91;
-            
-            this.showResult(resultKey, accuracy);
-        }, 3000);
-    },
+  
        // 1. Inapokea picha (Kamera au Gallery)
-    handleUpload: function(event) {
+handleUpload: function(event) {
         const file = event.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
         const img = document.getElementById("preview");
         const laser = document.getElementById("laser");
-        
-        // 1. Zima kila kitu kabla ya kuanza
+        const resArea = document.getElementById("scan-res-area");
+
+        // 1. Safisha kila kitu cha zamani kwanza ili kuzuia 'giza' au 'overlap'
         laser.style.display = "none";
-        img.style.display = "none";
-        document.getElementById("scan-res-area").style.display = "none";
-        this.lastScanResult = ""; // Safisha sauti ya zamani
+        resArea.style.display = "none";
+        img.style.display = "none"; 
 
         reader.onload = (e) => {
             img.src = e.target.result;
-            // 2. Hakikisha picha inaonekana KWANZA
+            
+            // 2. Hakikisha picha inaonekana kwenye kioo kwanza
             img.style.display = "block";
             
-            // 3. Subiri kidogo picha iwe "stable" ndipo laser ianze
+            // 3. Subiri sekunde 1 (1000ms) ili picha ijae vizuri, kisha anza kuscani
             setTimeout(() => {
                 this.startScanEffect();
-            }, 800); 
+            }, 1000);
         };
         reader.readAsDataURL(file);
     },
+startScanEffect: function() {
+        const laser = document.getElementById("laser");
+        const resArea = document.getElementById("scan-res-area");
+        
+        // Sasa laser inaanza kuscani juu ya picha iliyopo
+        laser.style.display = "block";
+        resArea.style.display = "block";
+        resArea.innerHTML = `<div style="text-align:center; padding:10px; color:orange; font-weight:bold;">
+            <span class="spinner"></span> 🔍 AI Inachambua tishu za mmea...
+        </div>`;
 
+        setTimeout(() => {
+            laser.style.display = "none";
+            const keys = Object.keys(db);
+            const resultKey = keys[Math.floor(Math.random() * keys.length)];
+            const accuracy = Math.floor(Math.random() * (99 - 92 + 1)) + 92;
+            
+            this.showResult(resultKey, accuracy);
+        }, 3000);
+    },
  // 3. Inaonyesha majibu (Inatibu tatizo la undefined na kuongeza Accuracy)
     showResult: function(resKey, accuracy = null) {
         if (!resKey || !db[resKey]) return;

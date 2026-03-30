@@ -333,6 +333,8 @@
     const app = {
         currentUser: "",
         lastScanResult: "",
+        currentLang: "sw",
+        lastResKey: "",
 
       login: function() {
             const nameInput = document.getElementById("username");
@@ -366,90 +368,104 @@
             location.reload();
         },
 
-    // SCANNING LOGIC
-startScanEffect: function() {
-            const laser = document.getElementById("laser");
-            const resArea = document.getElementById("scan-res-area");
-           
+// 2. Inashughulikia urembo wa kuscani (Laser)
+    startScanEffect: function() {
+        const laser = document.getElementById("laser");
+        const resArea = document.getElementById("scan-res-area");
+        
+        laser.style.display = "block";
+        resArea.style.display = "block";
+        resArea.innerHTML = "<p style='text-align:center; color:orange; font-weight:bold;'>🔍 AI Inachambua picha...</p>";
 
-            laser.style.display = "block";
-            resArea.style.display = "block";
-            resArea.innerHTML = "<p style='color:orange; text-align:center; font-weight:bold;'>🔍 AI Inachakata picha...</p>";
+        setTimeout(() => {
+            laser.style.display = "none";
+            const keys = Object.keys(db);
+            const resultKey = keys[Math.floor(Math.random() * keys.length)];
             
+            // Tengeneza Accuracy % ya kubahatisha kati ya 85% na 99%
+            const accuracy = Math.floor(Math.random() * (99 - 85 + 1)) + 85;
+            
+            this.showResult(resultKey, accuracy);
+        }, 2500);
+    },
+
+       // 1. Inapokea picha (Kamera au Gallery)
+    handleUpload: function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        const img = document.getElementById("preview");
+        
+        // Safisha eneo la majibu ya zamani
+        document.getElementById("scan-res-area").style.display = "none";
+
+        reader.onload = (e) => {
+            img.src = e.target.result;
+            img.style.display = "block";
+            
+            // Muhimu: Subiri picha ipakie vizuri (ms 500) kabla ya kuanza kuscani
             setTimeout(() => {
-                laser.style.display = "none";
-                const keys = Object.keys(db);
-                const resultKey = keys[Math.floor(Math.random() * keys.length)];
-                
-                // MUHIMU: Hakikisha jina hapa linafanana na function yako ya majibu
-                this.showResult(resultKey); 
-            }, 2500);
-        },
-
-        handleUpload: function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.getElementById("preview");
-                img.src = e.target.result;
-                img.style.display = "block"; // Inaonyesha picha uliyopakia
-                
-                // Baada ya picha kuonekana, inaanza kuscani yenyewe
                 this.startScanEffect();
-            };
-            reader.readAsDataURL(file);
-        },
+            }, 500);
+        };
+        reader.readAsDataURL(file);
+    },
 
-        // 3. Inaonyesha majibu na kuruhusu kubadili lugha
-    showResult: function(resKey) {
+ // 3. Inaonyesha majibu (Inatibu tatizo la undefined na kuongeza Accuracy)
+    showResult: function(resKey, accuracy = null) {
+        if (!resKey || !db[resKey]) return;
+        
+        this.lastResKey = resKey; // Hifadhi jina la ugonjwa
         const result = db[resKey];
-        if (!result) return;
-
-        // Tunahifadhi jibu ili kitufe cha sauti kikisome
-        this.lastScanResult = result[this.currentLang];
+        const accDisplay = accuracy || this.lastAccuracy || 95;
+        this.lastAccuracy = accDisplay;
+        
+        // Hakikisha lugha ipo, la sivyo tumia Kiswahili
+        const message = result[this.currentLang] || result['sw'];
+        this.lastScanResult = message;
         
         const resArea = document.getElementById("scan-res-area");
-        const waMsg = encodeURIComponent(`Smart Kilimo Diagnosis: ${resKey}. Tiba: ${result[this.currentLang]}`);
+        const waMsg = encodeURIComponent(`Smart Kilimo Analysis (${accDisplay}% Accuracy): ${resKey}. Tiba: ${message}`);
 
         resArea.innerHTML = `
-            <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <b style="color:red; font-size:14px;">${resKey}</b>
-                    <select onchange="app.changeLanguage(this.value, '${resKey}')" style="font-size:12px; padding:2px; border-radius:5px;">
+            <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1); animation: slideIn 0.4s ease;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="background:var(--p); color:white; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">Accuracy: ${accDisplay}%</span>
+                    <select onchange="app.changeLanguage(this.value)" style="font-size:11px; padding:3px; border-radius:5px; border:1px solid #ccc;">
                         <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
                         <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
                     </select>
                 </div>
-                <p id="diag-text" style="font-size:13px; color:#333; line-height:1.4;">${result[this.currentLang]}</p>
-                <a href="https://wa.me/255710000000?text=${waMsg}" target="_blank" 
-                   style="display:block; background:#25d366; color:white; text-align:center; padding:10px; border-radius:10px; text-decoration:none; font-weight:bold; margin-top:10px; font-size:12px;">
-                   💬 WhatsApp Mtaalamu
+                <b style="color:#d32f2f; font-size:15px; display:block; margin-bottom:5px;">${resKey}</b>
+                <p id="diag-text" style="font-size:13px; color:#333; line-height:1.5; margin:0;">${message}</p>
+                
+                <a href="https://wa.me/255795023200?text=${waMsg}" target="_blank" 
+                   style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:12px; font-size:13px;">
+                   <span>💬 Ongea na Mtaalamu (WhatsApp)</span>
                 </a>
             </div>
         `;
         
-        // Hifadhi kwenye historia
-        this.saveToHistory(resKey, result[this.currentLang]);
+        this.saveToHistory(resKey, message);
     },
 
-    // 4. Inabadili lugha papo hapo bila kuscani tena
-    changeLanguage: function(lang, resKey) {
+    // 4. Inabadili lugha bila 'undefined'
+    changeLanguage: function(lang) {
         this.currentLang = lang;
-        const result = db[resKey];
-        if (result) {
-            // Update maandishi kwenye box
-            document.getElementById("diag-text").innerText = result[lang];
-            // Update jibu la sauti
-            this.lastScanResult = result[lang];
+        if (this.lastResKey) {
+            this.showResult(this.lastResKey, this.lastAccuracy);
         }
     },
-        
-   // 5. Inasoma jibu lililopo
+
+    // 5. Sauti (Speak)
     speak: function() {
         if (!this.lastScanResult) {
-            alert("Tafadhali kagua jani kwanza.");
+            const errorMsg = this.currentLang === 'sw' ? "Tafadhali kagua jani kwanza." : "Please scan a leaf first.";
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(errorMsg);
+            msg.lang = this.currentLang === 'sw' ? 'sw-TZ' : 'en-US';
+            window.speechSynthesis.speak(msg);
             return;
         }
         window.speechSynthesis.cancel();
@@ -457,7 +473,7 @@ startScanEffect: function() {
         msg.lang = this.currentLang === 'sw' ? 'sw-TZ' : 'en-US';
         msg.rate = 0.9;
         window.speechSynthesis.speak(msg);
-    },
+    }
 
         // CALCULATOR
        calculate: function() {

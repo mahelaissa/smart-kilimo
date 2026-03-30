@@ -158,8 +158,9 @@
             <button onclick="app.startScanEffect()" class="btn-main" style="background: var(--p);">📷 KAMERA</button>
             <button onclick="document.getElementById('file-in').click()" class="btn-main" style="background: #1976d2;">📁 PAKIA</button>
         </div>
-        <input type="file" id="file-in" hidden onchange="app.handleUpload(event)">
-        <button onclick="app.speak('Matokeo bado hayajachakatwa')" class="btn-main" style="background: var(--a); color: #333; margin-top: 12px;">🔊 SIKILIZA TIBA</button>
+        <input type="file" id="camera-in" accept="image/*" capture="environment" hidden onchange="app.handleUpload(event)">
+<input type="file" id="file-in" accept="image/*" hidden onchange="app.handleUpload(event)">
+        <button onclick="app.speak()" class="btn-main" style="background: var(--a); color: #333; margin-top: 12px;">🔊 SIKILIZA TIBA</button>
     </div>
 
     <div class="card" style="padding: 0; overflow: hidden;">
@@ -369,13 +370,7 @@
 startScanEffect: function() {
             const laser = document.getElementById("laser");
             const resArea = document.getElementById("scan-res-area");
-            const previewImg = document.getElementById("preview");
-
-            // Hakikisha picha inaonekana kwanza
-            if (!previewImg.src || previewImg.style.display === "none") {
-                alert("Tafadhali pakia picha kwanza!");
-                return;
-            }
+           
 
             laser.style.display = "block";
             resArea.style.display = "block";
@@ -407,61 +402,62 @@ startScanEffect: function() {
             reader.readAsDataURL(file);
         },
 
-showResult: function(resKey) {
-            const result = db[resKey];
-            if (!result) return;
+        // 3. Inaonyesha majibu na kuruhusu kubadili lugha
+    showResult: function(resKey) {
+        const result = db[resKey];
+        if (!result) return;
 
-            // 1. Tunapata eneo la majibu tuliloweka kwenye HTML
-            const resArea = document.getElementById("scan-res-area");
-            
-            // 2. Tunatunza jibu la mwisho kwa ajili ya kusomwa na sauti (Speak)
-            this.lastScanResult = result.sw;
+        // Tunahifadhi jibu ili kitufe cha sauti kikisome
+        this.lastScanResult = result[this.currentLang];
+        
+        const resArea = document.getElementById("scan-res-area");
+        const waMsg = encodeURIComponent(`Smart Kilimo Diagnosis: ${resKey}. Tiba: ${result[this.currentLang]}`);
 
-            // 3. Tunatengeneza ujumbe kwa ajili ya WhatsApp
-            const waNumber = "255795023200"; // Badili na namba yako hapa
-            const waMessage = encodeURIComponent(`Habari Mtaalamu, Smart Kilimo imegundua ugonjwa wa ${resKey} kwenye shamba langu. Maelezo: ${result.sw}`);
-            const waLink = `https://wa.me/${waNumber}?text=${waMessage}`;
-
-            // 4. Tunaweka majibu na link ya WhatsApp kwenye lile box la chini ya picha
-            resArea.innerHTML = `
-                <div style="font-size:14px; animation: fadeIn 0.5s;">
-                    <b style="color:red; display:block; margin-bottom:5px;">⚠️ UTAMBUZI: ${resKey}</b>
-                    <p style="margin: 0 0 10px 0; color: #333; line-height: 1.4;">${result.sw}</p>
-                    <a href="${waLink}" target="_blank" 
-                       style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; padding:10px; border-radius:12px; text-decoration:none; font-weight:bold; font-size:13px;">
-                       <span>💬 Tuma kwa Mtaalamu (WhatsApp)</span>
-                    </a>
+        resArea.innerHTML = `
+            <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <b style="color:red; font-size:14px;">${resKey}</b>
+                    <select onchange="app.changeLanguage(this.value, '${resKey}')" style="font-size:12px; padding:2px; border-radius:5px;">
+                        <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
+                        <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
+                    </select>
                 </div>
-            `;
-            
-            // 5. Tunalionyesha box (maana mwanzo lilikuwa display:none)
-            resArea.style.display = "block";
+                <p id="diag-text" style="font-size:13px; color:#333; line-height:1.4;">${result[this.currentLang]}</p>
+                <a href="https://wa.me/255710000000?text=${waMsg}" target="_blank" 
+                   style="display:block; background:#25d366; color:white; text-align:center; padding:10px; border-radius:10px; text-decoration:none; font-weight:bold; margin-top:10px; font-size:12px;">
+                   💬 WhatsApp Mtaalamu
+                </a>
+            </div>
+        `;
+        
+        // Hifadhi kwenye historia
+        this.saveToHistory(resKey, result[this.currentLang]);
+    },
 
-            // 6. Pia tunaweka jibu hili kwenye Chat Box kama kumbukumbu ya mazungumzo
-            const chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `
-                <div style="margin:10px 0; padding:10px; border-left:4px solid var(--p); background:#fff; font-size:13px;">
-                    <b>AI:</b> Nimegundua <b>${resKey}</b>. <br>${result.sw}
-                </div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            // 7. Tunahifadhi kwenye Historia
-            this.saveToHistory(resKey, result.sw);
-        },
-
-        speak: function(customText = null) {
-            // Kama hakuna text iliyopitishwa, inachukua lile jibu la mwisho la scan
-            const textToSpeak = customText || this.lastScanResult || "Samahani, bado huja-scan jani lolote. Tafadhali piga picha kwanza.";
-            
-            // Zima sauti yoyote inayoongea sasa hivi
-            window.speechSynthesis.cancel();
-            
-            const msg = new SpeechSynthesisUtterance(textToSpeak);
-            msg.lang = 'sw-TZ'; // Inatumia lugha ya Kiswahili
-            msg.rate = 0.9;      // Kasi ya kuongea (0.9 ni nzuri kwa kueleweka)
-            
-            window.speechSynthesis.speak(msg);
-        },
+    // 4. Inabadili lugha papo hapo bila kuscani tena
+    changeLanguage: function(lang, resKey) {
+        this.currentLang = lang;
+        const result = db[resKey];
+        if (result) {
+            // Update maandishi kwenye box
+            document.getElementById("diag-text").innerText = result[lang];
+            // Update jibu la sauti
+            this.lastScanResult = result[lang];
+        }
+    },
+        
+   // 5. Inasoma jibu lililopo
+    speak: function() {
+        if (!this.lastScanResult) {
+            alert("Tafadhali kagua jani kwanza.");
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(this.lastScanResult);
+        msg.lang = this.currentLang === 'sw' ? 'sw-TZ' : 'en-US';
+        msg.rate = 0.9;
+        window.speechSynthesis.speak(msg);
+    },
 
         // CALCULATOR
        calculate: function() {

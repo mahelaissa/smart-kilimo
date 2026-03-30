@@ -556,19 +556,9 @@ showResult: function(resKey) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
             box.innerHTML = hist.length ? hist.map(h => `<div style="padding:10px; border-bottom:1px solid #eee; text-align:left;">📜 <b>${h.name}</b> <small>(${h.date})</small></div>`).join("") : "Hakuna historia.";
         }
-    };
+    },
 
-    window.onload = () => {
-        const savedUser = localStorage.getItem("smart_kilimo_user");
-        if (savedUser) {
-            // Kama alishalogin, mwingize ndani moja kwa moja
-            app.currentUser = savedUser;
-            document.getElementById("login-overlay").style.display = "none";
-            document.getElementById("app-body").style.display = "block";
-            document.getElementById("user-tag").innerText = "👤 Karibu, " + savedUser;
-            app.loadHistory();
-        }
-    };
+ 
     startMic: function() {
             // 1. Angalia kama kivinjari kinasupport Speech Recognition
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -614,6 +604,18 @@ showResult: function(resKey) {
                 alert("Kuna tatizo kwenye Maikrofoni: " + event.error);
             };
         },
+    
+       window.onload = () => {
+        const savedUser = localStorage.getItem("smart_kilimo_user");
+        if (savedUser) {
+            // Kama alishalogin, mwingize ndani moja kwa moja
+            app.currentUser = savedUser;
+            document.getElementById("login-overlay").style.display = "none";
+            document.getElementById("app-body").style.display = "block";
+            document.getElementById("user-tag").innerText = "👤 Karibu, " + savedUser;
+            app.loadHistory();
+        }
+    };
 </script>
 
 </body>

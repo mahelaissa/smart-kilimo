@@ -559,8 +559,7 @@
         // Onyesha ujumbe wako
         this.renderMsg("user", text);
         input.value = "";
-
-        // Jibu la AI (Hapa AI isiongee majibu ya scan, iongee jibu la swali)
+       // Jibu la AI (Hapa AI isiongee majibu ya scan, iongee jibu la swali)
         setTimeout(() => {
             const reply = "Asante kwa swali lako kuhusu " + text + ". Mtaalamu wetu atajibu hivi punde.";
             this.renderMsg("ai", reply);
@@ -568,8 +567,7 @@
             this.speak(reply); 
         }, 1000);  
         },
-
-        // HISTORY
+       // HISTORY
         saveToHistory: function(name) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
             hist.unshift({ name, date: new Date().toLocaleTimeString() });

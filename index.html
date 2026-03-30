@@ -555,9 +555,9 @@ showResult: function(resKey) {
         const box = document.getElementById("hist-ui");
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
             box.innerHTML = hist.length ? hist.map(h => `<div style="padding:10px; border-bottom:1px solid #eee; text-align:left;">📜 <b>${h.name}</b> <small>(${h.date})</small></div>`).join("") : "Hakuna historia.";
-        }
+        
     },
-
+        
  
     startMic: function() {
             // 1. Angalia kama kivinjari kinasupport Speech Recognition

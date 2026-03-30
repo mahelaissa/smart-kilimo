@@ -551,22 +551,36 @@
 
         // CHAT ENGINE
      // Function ya Chat Box (Hakikisha haichukui lastScanResult kimakosa)
-    sendMsg: function() {
-        const input = document.getElementById("chat-input");
-        const text = input.value.trim();
-        if (!text) return;
+   sendMsg: function() {
+    const input = document.getElementById("chat-input");
+    const message = input.value.trim();
+    if (!message) return;
 
-        // Onyesha ujumbe wako
-        this.renderMsg("user", text);
-        input.value = "";
-       // Jibu la AI (Hapa AI isiongee majibu ya scan, iongee jibu la swali)
-        setTimeout(() => {
-            const reply = "Asante kwa swali lako kuhusu " + text + ". Mtaalamu wetu atajibu hivi punde.";
-            this.renderMsg("ai", reply);
-            // Hapa tunapitisha maandishi maalum ili isisome 'lastScanResult'
-            this.speak(reply); 
-        }, 1000);  
-        },
+    // 1. Onyesha ujumbe wa mtumiaji kwenye kioo
+    const chatBox = document.getElementById("chat-box");
+    chatBox.innerHTML += `
+        <div style="align-self: flex-end; background: var(--p); color: white; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; max-width: 80%; font-size: 13px;">
+            ${message}
+        </div>`;
+    
+    input.value = ""; // Safisha box
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // 2. AI inajibu (Simulated AI reply)
+    setTimeout(() => {
+        let replyText = "Asante kwa swali lako kuhusu '" + message + "'. Mtaalamu wetu wa kilimo atawasiliana nawe hivi punde kupitia WhatsApp.";
+        
+        chatBox.innerHTML += `
+            <div style="align-self: flex-start; background: #eee; color: #333; padding: 10px; border-radius: 15px 15px 15px 0; margin: 5px; max-width: 80%; font-size: 13px;">
+                <b>AI:</b> ${replyText}
+            </div>`;
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+        
+        // 3. AI inaongea jibu la chat (Siyo jibu la Scan!)
+        this.speak(replyText); 
+    }, 1000);
+},
        // HISTORY
         saveToHistory: function(name) {
             let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
@@ -580,53 +594,46 @@
             box.innerHTML = hist.length ? hist.map(h => `<div style="padding:10px; border-bottom:1px solid #eee; text-align:left;">📜 <b>${h.name}</b> <small>(${h.date})</small></div>`).join("") : "Hakuna historia.";
         
     },
-        
-        startMic: function() {
-            // 1. Angalia kama kivinjari kinasupport Speech Recognition
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            
-            if (!SpeechRecognition) {
-                alert("Samahani, kivinjari chako hakisupport utambuzi wa sauti.");
-                return;
-            }
+       startMic: function() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Browser yako haina uwezo wa kusikiliza sauti.");
+        return;
+    }
 
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'sw-TZ'; // Inasikiliza Kiswahili cha Tanzania
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'sw-TZ'; // Inasikiliza Kiswahili
+    const micBtn = document.querySelector(".mic-btn");
+    const input = document.getElementById("chat-input");
 
-            const micBtn = document.querySelector(".mic-btn");
-            const chatInput = document.getElementById("chat-input");
-
-            // 2. Badilisha muonekano wa mic ikianza kusikiliza
-            micBtn.style.color = "red";
-            micBtn.innerHTML = "🔴"; // Inabadilika kuonyesha inarekodi
-
-            recognition.start();
-
-            // 3. Matokeo yakipatikana
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                chatInput.value = transcript; // Inajaza maandishi kwenye input box
-                this.sendMsg(); // Inatuma ujumbe moja kwa moja
-            };
-
-            // 4. Ikimaliza kusikiliza (ama kwa kupata jibu au muda kuisha)
-            recognition.onspeechend = () => {
-                recognition.stop();
-                micBtn.style.color = "";
-                micBtn.innerHTML = "🎤";
-            };
-
-            // 5. Ikitokea kosa (mfano: mic imezimwa)
-            recognition.onerror = (event) => {
-                console.error(event.error);
-                micBtn.style.color = "";
-                micBtn.innerHTML = "🎤";
-                alert("Kuna tatizo kwenye Maikrofoni: " + event.error);
-            };
-        },
+    recognition.onstart = () => {
+        micBtn.innerHTML = "🔴"; // Inabadilika rangi ikisikiliza
+        micBtn.style.color = "red";
     };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        input.value = transcript; // Inaingiza maandishi kwenye box
+        
+        // MUHIMU: Inatuma ujumbe moja kwa moja baada ya sekunde 1
+        setTimeout(() => {
+            this.sendMsg(); 
+        }, 500);
+    };
+
+    recognition.onerror = () => {
+        micBtn.innerHTML = "🎤";
+        micBtn.style.color = "";
+    };
+
+    recognition.onend = () => {
+        micBtn.innerHTML = "🎤";
+        micBtn.style.color = "";
+    };
+
+    recognition.start();
+}, 
+};
        window.onload = () => {
           const savedUser = localStorage.getItem("smart_kilimo_user");
         if (savedUser) {

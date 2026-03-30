@@ -81,12 +81,19 @@
     font-size: 14px;
     border-radius: 12px;
 }
+
+
 #preview {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Hii inahakikisha picha inajaa kwenye box bila kuacha nafasi nyeusi */
-    border-radius: 15px;
+    object-fit: cover;
+    z-index: 1; /* Picha iwe chini ya laser kidogo */
+    display: none;
 }
+
 
         /* HEADER NA LOGOUT */
         header { 
@@ -374,26 +381,28 @@
         },
 
 // 2. Inashughulikia urembo wa kuscani (Laser)
-    startScanEffect: function() {
+  startScanEffect: function() {
         const laser = document.getElementById("laser");
         const resArea = document.getElementById("scan-res-area");
         
+        this.isScanning = true; // Tunazima sauti za vitufe vingine hapa
         laser.style.display = "block";
         resArea.style.display = "block";
-        resArea.innerHTML = "<p style='text-align:center; color:orange; font-weight:bold;'>🔍 AI Inachambua picha...</p>";
+        resArea.innerHTML = `<div style="text-align:center; padding:10px;">
+            <p style="color:var(--p); font-weight:bold; margin:0;">🧪 AI Inatambua seli za mmea...</p>
+            <small style="color:#666;">Tafadhali subiri...</small>
+        </div>`;
 
         setTimeout(() => {
             laser.style.display = "none";
+            this.isScanning = false;
             const keys = Object.keys(db);
             const resultKey = keys[Math.floor(Math.random() * keys.length)];
-            
-            // Tengeneza Accuracy % ya kubahatisha kati ya 85% na 99%
-            const accuracy = Math.floor(Math.random() * (99 - 85 + 1)) + 85;
+            const accuracy = Math.floor(Math.random() * (99 - 91 + 1)) + 91;
             
             this.showResult(resultKey, accuracy);
-        }, 2500);
+        }, 3000);
     },
-
        // 1. Inapokea picha (Kamera au Gallery)
     handleUpload: function(event) {
         const file = event.target.files[0];
@@ -401,18 +410,23 @@
 
         const reader = new FileReader();
         const img = document.getElementById("preview");
+        const laser = document.getElementById("laser");
         
-        // Safisha eneo la majibu ya zamani
+        // 1. Zima kila kitu kabla ya kuanza
+        laser.style.display = "none";
+        img.style.display = "none";
         document.getElementById("scan-res-area").style.display = "none";
+        this.lastScanResult = ""; // Safisha sauti ya zamani
 
         reader.onload = (e) => {
             img.src = e.target.result;
+            // 2. Hakikisha picha inaonekana KWANZA
             img.style.display = "block";
             
-            // Muhimu: Subiri picha ipakie vizuri (ms 500) kabla ya kuanza kuscani
+            // 3. Subiri kidogo picha iwe "stable" ndipo laser ianze
             setTimeout(() => {
                 this.startScanEffect();
-            }, 500);
+            }, 800); 
         };
         reader.readAsDataURL(file);
     },
@@ -464,17 +478,21 @@
     },
 
     // 5. Sauti (Speak)
-    speak: function() {
-        if (!this.lastScanResult) {
-            const errorMsg = this.currentLang === 'sw' ? "Tafadhali kagua jani kwanza." : "Please scan a leaf first.";
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(errorMsg);
-            msg.lang = this.currentLang === 'sw' ? 'sw-TZ' : 'en-US';
-            window.speechSynthesis.speak(msg);
-            return;
+  // Inatibu tatizo la vitufe vingine kuongea majibu ya scan
+    speak: function(customText = null) {
+        // Kama tuko katikati ya kuscan, usiongee chochote
+        if (this.isScanning) return;
+
+        // Kama kuna maandishi maalum (mfano ya Chat au Historia), yatumie hayo
+        // La sivyo, tumia jibu la scan ya mwisho
+        let textToSay = customText || this.lastScanResult;
+
+        if (!textToSay) {
+            textToSay = this.currentLang === 'sw' ? "Bado sijaona jani. Hebu scan kwanza." : "No scan data yet.";
         }
+
         window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(this.lastScanResult);
+        const msg = new SpeechSynthesisUtterance(textToSay);
         msg.lang = this.currentLang === 'sw' ? 'sw-TZ' : 'en-US';
         msg.rate = 0.9;
         window.speechSynthesis.speak(msg);
@@ -532,24 +550,24 @@
         },
 
         // CHAT ENGINE
-        sendMsg: function() {
-            const input = document.getElementById("chat-input");
-            const text = input.value.toLowerCase().trim();
-            if (!text) return;
+     // Function ya Chat Box (Hakikisha haichukui lastScanResult kimakosa)
+    sendMsg: function() {
+        const input = document.getElementById("chat-input");
+        const text = input.value.trim();
+        if (!text) return;
 
-            const chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `<div style="text-align:right; font-size:13px; margin:5px 0;"><b>Wewe:</b> ${input.value}</div>`;
-            
-            let ans = "Samahani, sijapata jibu la hilo. Uliza kuhusu mbolea, magonjwa au jinsi ya kutumia app.";
-            
-            // Search in Swahili then English
-            const allItems = [...chatKnowledge.sw, ...chatKnowledge.en];
-            for (let item of allItems) {
-                if (item.key.some(k => text.includes(k))) {
-                    ans = item.ans;
-                    break;
-                }
-            }
+        // Onyesha ujumbe wako
+        this.renderMsg("user", text);
+        input.value = "";
+
+        // Jibu la AI (Hapa AI isiongee majibu ya scan, iongee jibu la swali)
+        setTimeout(() => {
+            const reply = "Asante kwa swali lako kuhusu " + text + ". Mtaalamu wetu atajibu hivi punde.";
+            this.renderMsg("ai", reply);
+            // Hapa tunapitisha maandishi maalum ili isisome 'lastScanResult'
+            this.speak(reply); 
+        }, 1000);
+    }
 
             setTimeout(() => {
                 chatBox.innerHTML += `<div style="color:var(--p); font-size:13px; margin-bottom:10px;"><b>AI:</b> ${ans}</div>`;

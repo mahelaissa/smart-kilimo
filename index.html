@@ -266,7 +266,7 @@
 </div>
 <script>
     // --- 1. VARIABLES NA CONFIGURATION ---
-    let model, webcam, maxPredictions, lastSol = "", currentD = "", currentUser = "", currentTab = "chat";
+    let model, webcam, maxPredictions, lastSol = "", currentD = "", currentUser = "null", currentTab = "chat";
     let lastChatReply = "";
     let isScanning = false; 
     const MODEL_URL = "./model/";
@@ -410,7 +410,7 @@
     // --- 4. APP ENGINE ---
     const app = {
         videoStream: null,
-        currentUser: "Mkulima1",
+       currentUser: localStorage.getItem("smart_kilimo_user") || null,
         lastScanResult: "",
         currentLang: "sw",
         lastResKey: "",
@@ -430,7 +430,7 @@
                 
                 // Onyesha jina la mkulima
                 const userTag = document.getElementById("user-tag");
-                if(userTag) userTag.innerText = "👤 Karibu, " + name;
+                if(userTag) userTag.innerText = "👤 Karibu: " + name;
 
                 // 4. MUHIMU: Safisha kioo cha chat na historia kabla ya kupakia mpya
             // Hii inazuia kuona mabaki ya mtu aliyepita
@@ -810,43 +810,58 @@ sendMsg: function() {
     }, currentUser: "Mkulima1", // Hakikisha hapa kuna jina la mtu aliyeingia
 // A. HIFADHI HISTORIA (Inatenganisha kwa Jina)
 saveToHistory: function(resKey, message) {
-        // 1. Tambua mtumiaji wa sasa (Safety Fallback)
+        // 1. Tambua mtumiaji (Safety Fallback kuzuia undefined)
         const user = this.currentUser || localStorage.getItem("smart_kilimo_user") || "Mgeni";
         const historyKey = "scans_" + user;
 
         try {
             // 2. Pata historia iliyopo
-            let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+            let history = [];
+            const savedData = localStorage.getItem(historyKey);
+            if (savedData) {
+                history = JSON.parse(savedData);
+            }
 
-            // 3. Tengeneza rekodi mpya
+            // 3. Tengeneza muda wa sasa
+            const sasa = new Date();
+            const tarehe = sasa.toLocaleDateString('en-GB'); // Inaleta 01/04/2026
+            const muda = sasa.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+            // 4. Tengeneza rekodi mpya
             const newEntry = {
-                date: new Date().toLocaleDateString('sw-TZ') + " " + new Date().toLocaleTimeString('sw-TZ', {hour: '2-digit', minute:'2-digit'}),
+                date: tarehe + " " + muda,
                 disease: resKey,
-                treatment: message // Hifadhi ujumbe wote
+                treatment: message,
+                timestamp: sasa.getTime() // Tunatumia namba kamili kulinganisha muda
             };
 
-            // 4. Zuia kurudia ugonjwa ule ule ndani ya dakika 1 (Optional - kuzuia spam)
+            // 5. Zuia kurudia ugonjwa ule ule ndani ya sekunde 30
             if (history.length > 0) {
                 const lastEntry = history[history.length - 1];
-                if (lastEntry.disease === resKey && (new Date() - new Date(lastEntry.rawDate) < 60000)) {
-                    return; // Usihifadhi kama ni ugonjwa ule ule ndani ya sekunde 60
+                // Kama ugonjwa ni uleule na haujapita muda wa sekunde 30, usihifadhi
+                if (lastEntry.disease === resKey && (sasa.getTime() - lastEntry.timestamp < 30000)) {
+                    console.log("Scan imejirudia haraka, haijahifadhiwa.");
+                    return; 
                 }
             }
             
-            newEntry.rawDate = new Date(); // Kwa ajili ya comparison tu
+            // 6. Ongeza kwenye list na hifadhi
             history.push(newEntry);
+            
+            // Limit historia isizidi rekodi 50 (kuzuia simu kujaa/slow down)
+            if (history.length > 50) history.shift(); 
 
-            // 5. Hifadhi na Refresh kioo
             localStorage.setItem(historyKey, JSON.stringify(history));
             
-            // Hapa ndipo kioo kinaposasishwa (Update UI)
+            // 7. Refresh kioo cha historia
             if (typeof this.loadHistory === "function") {
                 this.loadHistory();
             }
             
-            console.log("History saved for: " + user);
+            console.log("History saved successfully for: " + user);
+
         } catch (e) {
-            console.error("Imeshindwa kuhifadhi historia:", e);
+            console.error("Hitilafu kwenye saveToHistory:", e);
         }
     },
     // B. PAKIA HISTORIA (Inasoma za mtu husika tu)

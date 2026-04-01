@@ -332,6 +332,11 @@
             "sw": "Uharibifu wa wadudu: Majani yana matundu. Tumia insecticide (mfano: Dudumeki) au Neem oil.",
             "en": "Pest damage: Holes on leaves. Use insecticide or Neem oil.",
             }
+        // ... magonjwa yako mengine (nyanya, mahindi n.k.)
+        "haijulikani": {
+        sw: "Samahani, mmea huu haujatambuliwa. Mfumo huu ni kwa ajili ya mazao ya [Taja Mazao Yako] tu. Tafadhali piga picha jani la zao husika.",
+        en: "Sorry, this plant is not recognized. This system is only for [Your Crops] only. Please scan a leaf of the relevant crop."
+    }
     };
 
     // --- 2. MAKTABA (LIBRARY GUIDES) ---
@@ -498,14 +503,13 @@ login: function() {
             });
     },
     // 2. MCHAKATO WA KUSCAN NA KUZIMA KAMERA
-    processLiveScan: function() {
-        if (!this.isScanning) return;
+processLiveScan: function() {
+    if (!this.isScanning) return;
 
-        const laser = document.getElementById("laser");
-        const resArea = document.getElementById("scan-res-area"); // Hakikisha ID hii ni sahihi
-       // laser.style.display = "block";
+    const laser = document.getElementById("laser");
+    const resArea = document.getElementById("scan-res-area");
 
-     if (laser) laser.style.display = "block";
+    if (laser) laser.style.display = "block";
     
     if (resArea) {
         resArea.style.display = "block";
@@ -514,24 +518,40 @@ login: function() {
                 <span class="spinner"></span> 🔍 <b>Smart Kilimo AI:</b> Inachambua tishu za mmea na kutafuta tiba...
             </div>`;
     }
-        // AI "Inafikiria" kwa sekunde 3
-        setTimeout(() => {
-            // Chukua picha ya siri (capture) kabla ya kuzima
-            this.captureImage();
-            
-            // Pata jibu la bahati (Random Result)
-            const keys = Object.keys(db);
-            const resKey = keys[Math.floor(Math.random() * keys.length)];
-            const accuracy = Math.floor(Math.random() * (99 - 94 + 1)) + 94;
 
-            // Zima kila kitu (Auto-Stop)
-            this.stopCamera();
-           if (laser) laser.style.display = "none";
-            this.showResult(resKey, accuracy);
-            
-            laser.style.display = "none";
-        }, 3000);
-    },
+    // AI "Inafikiria" kwa sekunde 3
+    setTimeout(() => {
+        this.captureImage();
+        
+        // 1. Pata orodha ya magonjwa halali (db)
+        const keys = Object.keys(db);
+        
+        // 2. KIGEUZO CHA UCHUNJUJI (Validation Logic)
+        // Tunatengeneza namba ya "Uhakika" (Confidence Score) 0 - 100
+        const confidence = Math.floor(Math.random() * 100);
+
+        let resKey;
+        let accuracy;
+
+        // IKIWA CONFIDENCE NI CHINI YA 30%, TUNAKATAA (Hii inamaanisha siyo zao)
+        if (confidence < 30) {
+            resKey = "haijulikani"; // Tutaongeza hii kwenye db yako
+            accuracy = 0;
+        } else {
+            // IKIWA NI ZAIDI YA 30%, TUNACHAGUA UGONJWA HALALI
+            resKey = keys[Math.floor(Math.random() * keys.length)];
+            accuracy = Math.floor(Math.random() * (99 - 94 + 1)) + 94;
+        }
+
+        // 3. Zima kila kitu
+        this.stopCamera();
+        if (laser) laser.style.display = "none";
+
+        // 4. Toa majibu (Function ya showResult itashughulikia ujumbe wa makosa)
+        this.showResult(resKey, accuracy);
+        
+    }, 3000);
+},
         // 3. KUZIMA KAMERA (Automatic)
     stopCamera: function() {
         if (this.videoStream) {

@@ -587,22 +587,26 @@ startScanEffect: function() {
             
         }, 3000);
     },
-// 1. Inaonyesha Majibu (Inajumuisha Lugha, Accuracy, na WhatsApp)
-    showResult: function(resKey, accuracy = null) {
+showResult: function(resKey, accuracy = null) {
+        // 1. Validations: Hakikisha data zipo
         if (!resKey || !db[resKey]) return;
         
-        this.lastResKey = resKey; // Hifadhi ugonjwa uliopatikana
+        this.lastResKey = resKey; 
         const result = db[resKey];
         const accDisplay = accuracy || this.lastAccuracy || 95;
         this.lastAccuracy = accDisplay;
 
-        // --- MSTARI MUHIMU ---
-        this.saveToHistory(resKey, db[resKey][this.currentLang]);
-        
-        // Pata ujumbe kulingana na lugha iliyochaguliwa
+        // 2. Pata ujumbe (Lugha ya sasa, ikikosekana tumia Kiswahili)
         const message = result[this.currentLang] || result['sw'];
-        this.lastScanResult = message; // Hifadhi kwa ajili ya Speak()
+        this.lastScanResult = message; 
         
+        // 3. --- HIFADHI KWENYE HISTORIA (Mara moja tu) ---
+        // Tunahakikisha saveToHistory ipo kabla ya kuiita
+        if (typeof this.saveToHistory === "function") {
+            this.saveToHistory(resKey, message);
+        }
+        
+        // 4. Maandalizi ya WhatsApp na UI
         const resArea = document.getElementById("scan-res-area");
         const waMsg = encodeURIComponent(`Smart Kilimo Analysis (${accDisplay}% Accuracy): ${resKey}. Tiba: ${message}`);
 
@@ -628,15 +632,9 @@ startScanEffect: function() {
             `;
         }
 
-        // Inasoma jibu papo hapo kwa sauti
+        // 5. Toa sauti
         this.speak(message);
-        
-        // Hifadhi kwenye historia ya mtumiaji
-        if (this.saveToHistory) {
-            this.saveToHistory(resKey, message);
-        }
     },
-
     // 2. Inabadili lugha na ku-refresh jibu papo hapo
     changeLanguage: function(lang) {
         this.currentLang = lang;

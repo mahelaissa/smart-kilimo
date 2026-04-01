@@ -220,11 +220,21 @@
                <input type="text" id="chat-input" 
            onkeypress="if(event.key === 'Enter') app.sendMsg()" 
            placeholder="Ongea au andika hapa..." 
-           style="flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #ddd; outline: none;">
+           style="flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #ddd; outline: none;"
                 <button class="send-btn" onclick="app.sendMsg()">🚀</button>
+                >
             </div>
         </div>
         <div id="hist-ui" style="display: none; padding: 20px; text-align: center; color: #999;">Hakuna historia bado.</div>
+        <div style="padding: 20px; text-align: center;">
+    <button onclick="app.clearAccountHistory()" 
+            style="background: #ff4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        🗑️ Futa Historia na Chat Zangu
+    </button>
+    <p style="font-size: 11px; color: #888; margin-top: 8px;">
+        Hatua hii haitafuta data za watumiaji wengine.
+    </p>
+</div>
     </div>
 
     <div class="card">
@@ -400,7 +410,7 @@
     // --- 4. APP ENGINE ---
     const app = {
         videoStream: null,
-        currentUser: "",
+        currentUser: "Mkulima1",
         lastScanResult: "",
         currentLang: "sw",
         lastResKey: "",
@@ -421,6 +431,13 @@
                 // Onyesha jina la mkulima
                 const userTag = document.getElementById("user-tag");
                 if(userTag) userTag.innerText = "👤 Karibu, " + name;
+
+                // 4. MUHIMU: Safisha kioo cha chat na historia kabla ya kupakia mpya
+            // Hii inazuia kuona mabaki ya mtu aliyepita
+            const chatBox = document.getElementById("chat-content") || document.getElementById("chat-box");
+            const historyList = document.getElementById("history-list");
+            if(chatBox) chatBox.innerHTML = "";
+            if(historyList) historyList.innerHTML = "";
                 
                 // Pakia historia ya huyu mkulima
                 this.loadHistory();
@@ -790,17 +807,69 @@ sendMsg: function() {
 
         }, 1000);
     },
-        saveToHistory: function(name) {
-            let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
-            hist.unshift({ name, date: new Date().toLocaleTimeString() });
-            localStorage.setItem("kilimo_hist", JSON.stringify(hist.slice(0, 10)));
-        },
+const app = {
+    currentUser: "Mkulima1", // Hakikisha hapa kuna jina la mtu aliyeingia
 
-        loadHistory: function() {
-        const box = document.getElementById("hist-ui");
-            let hist = JSON.parse(localStorage.getItem("kilimo_hist") || "[]");
-            box.innerHTML = hist.length ? hist.map(h => `<div style="padding:10px; border-bottom:1px solid #eee; text-align:left;">📜 <b>${h.name}</b> <small>(${h.date})</small></div>`).join("") : "Hakuna historia.";
+    // A. HIFADHI HISTORIA (Inatenganisha kwa Jina)
+    saveToHistory: function(resKey, message) {
+        const historyKey = "scans_" + this.currentUser;
+        let history = JSON.parse(localStorage.getItem(historyKey)) || [];
         
+        history.push({
+            date: new Date().toLocaleString(),
+            crop: resKey,
+            detail: message
+        });
+
+        localStorage.setItem(historyKey, JSON.stringify(history));
+    },
+
+    // B. PAKIA HISTORIA (Inasoma za mtu husika tu)
+    loadHistory: function() {
+        const historyKey = "scans_" + this.currentUser;
+        const chatKey = "chat_" + this.currentUser;
+        
+        // Pakia Scans
+        const scans = JSON.parse(localStorage.getItem(historyKey)) || [];
+        const historyArea = document.getElementById("history-list");
+        if(historyArea) {
+            historyArea.innerHTML = scans.map(s => `
+                <div style="border-bottom:1px solid #eee; padding:10px;">
+                    <small>${s.date}</small><br>
+                    <b>${s.crop}</b>
+                </div>
+            `).join('');
+        }
+
+        // Pakia Chats
+        const chatBox = document.getElementById("chat-content") || document.getElementById("chat-box");
+        const savedChat = localStorage.getItem(chatKey);
+        if (chatBox && savedChat) {
+            chatBox.innerHTML = savedChat;
+        }
+    },
+
+    // C. KIFUTE CHA KUFUTA HISTORIA NA CHATS
+    clearAccountHistory: function() {
+        const confirmDelete = confirm("Je, una uhakika unataka kufuta historia yako yote ya scan na mazungumzo?");
+        if (confirmDelete) {
+            const historyKey = "scans_" + this.currentUser;
+            const chatKey = "chat_" + this.currentUser;
+
+            localStorage.removeItem(historyKey);
+            localStorage.removeItem(chatKey);
+
+            // Safisha muonekano wa kioo hapo hapo
+            const chatBox = document.getElementById("chat-content") || document.getElementById("chat-box");
+            const historyArea = document.getElementById("history-list");
+            
+            if(chatBox) chatBox.innerHTML = "<p style='text-align:center; color:#888;'>Mazungumzo yamefutwa.</p>";
+            if(historyArea) historyArea.innerHTML = "<p style='text-align:center; color:#888;'>Historia haina kitu.</p>";
+
+            alert("Historia yako imefutwa kikamilifu.");
+        }
+    }
+};
     },
        // 1. MAIKROFONI (Inatuma Automatic)
     startMic: function() {

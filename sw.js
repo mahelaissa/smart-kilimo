@@ -1,4 +1,4 @@
-const cacheName = 'smart-kilimo-v11'; // Nimeongeza version ili browser isome upya
+const cacheName = 'smart-kilimo-v12'; // Nimeongeza version ili browser isome upya
 const assets = [
   './',
   './index.html',

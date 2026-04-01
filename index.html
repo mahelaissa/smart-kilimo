@@ -902,7 +902,8 @@ sendMsg: function() {
                 
                 if (scans.length === 0) {
                     historyArea.innerHTML = "<p style='text-align:center; color:#999; font-size:12px; padding:20px;'>Bado haujascan jani lolote.</p>";
-                } else {
+                } 
+                else {
                     // Tunazipanga kuanzia ya mwisho (Reverse) ili mpya iwe juu
                     historyArea.innerHTML = scans.slice().reverse().map(s => `
                         <div style="background:#fff; margin-bottom:10px; padding:12px; border-radius:10px; border-left:4px solid var(--p); box-shadow:0 2px 5px rgba(0,0,0,0.05);">
@@ -934,7 +935,8 @@ sendMsg: function() {
                 // Kama hakuna chat, safisha chatbox
                 chatBox.innerHTML = "<p style='text-align:center; color:#ccc; font-size:11px; margin-top:20px;'>Anza mazungumzo hapa...</p>";
             }
-        },
+        }
+    },
  
     // C. KIFUTE CHA KUFUTA HISTORIA NA CHATS
     clearAccountHistory: function() {

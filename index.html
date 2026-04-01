@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Kilimo AI Pro</title>
+    <title>Smart Kilimo </title>
     <style>
         :root { 
             --p: #2e7d32; --s: #1b5e20; --a: #fbc02d; --bg: #f4f7f4; 
@@ -183,7 +183,7 @@
 
 <header>
     <span>🌽 Smart Kilimo</span>
-    <button class="logout-btn" onclick="app.logout()">LOGOUT</button>
+    <button class="logout-btn" onclick="app.logout()">TOKA</button>
 </header>
 
 <div class="container" id="app-body" style="display: none;">
@@ -216,12 +216,12 @@
                 <div style="color:var(--p)"><b>AI:</b> Karibu! Naweza kukusaidia leo?</div>
             </div>
             <div class="chat-input-wrapper">
-                <button class="mic-btn" onclick="app.startMic()">🎤</button>
+                <button class="mic-btn" onclick="app.startMic()" style="flex-shrink: 0; background: #f0f0f0; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;">🎤</button>
                <input type="text" id="chat-input" 
            onkeypress="if(event.key === 'Enter') app.sendMsg()" 
            placeholder="Ongea au andika hapa..." 
-           style="flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #ddd; outline: none;">
-                <button class="send-btn" onclick="app.sendMsg()">🚀</button>
+           style="flex: 1; padding: 12px 12px; border-radius: 25px; border: 1px solid #ddd; outline: none;">
+                <button class="send-btn" onclick="app.sendMsg()" style="flex-shrink: 0; background: var(--p, #2e7d32); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;">🚀</button>
                 
             </div>
         </div>

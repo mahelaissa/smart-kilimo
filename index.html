@@ -501,6 +501,38 @@ login: function() {
                 alert("Tafadhali ruhusu kamera ili uweze kuscan.");
             });
     },
+
+     reScan: function() {
+        const video = document.getElementById("video");
+        const preview = document.getElementById("preview");
+        const resArea = document.getElementById("scan-res-area");
+        const speakBtn = document.getElementById("speak-btn");
+
+        // 1. Safisha muonekano (Reset UI)
+        if (preview) preview.style.display = "none"; 
+        if (video) video.style.display = "block";
+        if (resArea) resArea.style.display = "none";
+        if (speakBtn) speakBtn.style.display = "none";
+
+        // 2. Washa Kamera na Anza Scan (Inatumia Logic ileile ya startLiveScan)
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => {
+                this.videoStream = stream;
+                video.srcObject = stream;
+                this.isScanning = true;
+                
+                console.log("Re-scanning started...");
+
+                // 3. Anza laser na uchambuzi baada ya sekunde 1
+                setTimeout(() => {
+                    this.processLiveScan();
+                }, 1000);
+            })
+            .catch(err => {
+                console.error("Kamera imegoma kwenye reScan:", err);
+                alert("Tafadhali ruhusu kamera ili uweze kuscan tena.");
+            });
+    },
     // 2. MCHAKATO WA KUSCAN NA KUZIMA KAMERA
 processLiveScan: function() {
     if (!this.isScanning) return;
@@ -658,7 +690,7 @@ showResult: function(resKey, accuracy = null) {
                     <b style="color:#c53030; font-size:15px; display:block; text-align:center; margin-bottom:8px;">Haikutambuliwa!</b>
                     <p style="font-size:13px; color:#742a2a; line-height:1.5; margin:0; text-align:center;">${warningMsg}</p>
                     
-                    <button onclick="app.startLiveScan()" style="width:100%; margin-top:15px; background:#c53030; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer;">
+                    <button onclick="app.reScan()" style="width:100%; margin-top:15px; background:#c53030; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer;">
                         🔄 Jaribu Tena
                     </button>
                 </div>

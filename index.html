@@ -225,7 +225,7 @@
                 
             </div>
         </div>
-        <div id="hist-ui" style="display: none; padding: 20px; text-align: center; color: #999;">Hakuna historia bado.</div>
+        <div id="history-list" style="display: none;  text-align: center; color: #999;height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 14px;">Hakuna historia bado.</div>
         <div style="padding: 20px; text-align: center;">
     <button onclick="app.clearAccountHistory()" 
             style="background: #ff4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
@@ -244,11 +244,12 @@
             <button class="btn-kabichi" onclick="app.lib('kabichi')">🥬 Kabichi</button>
             <button class="btn-mahindi" onclick="app.lib('mahindi')">🌽 Mahindi</button>
         </div>
-        <div id="lib-box" style="margin-top:15px; font-size:14px; background:#f1f8e9; padding:15px; border-radius:15px;">Gusa zao...</div>
+        <div id="lib-box" style="margin-top:15px; font-size:14px; background:#f1f8e9; padding:15px; border-radius:15px;">Gusa zao kupata maelezo zaidi...</div>
     </div>
 
     <div class="card" style="background: #e3f2fd;">
         <h3 style="margin:0 0 15px 0; color: #1565c0; font-size: 16px;">🧮 Kikokotoo</h3>
+     <h4>Ingiza ekari ili kupata njia sahihi ya kulima zao husika </h4>
         <div class="calc-series">
             <div class="calc-box"><label>Ekari</label><input type="number" id="acres" placeholder="0"></div>
             <div class="calc-box">
@@ -444,7 +445,7 @@ login: function() {
             // 6. Onyesha jina la mkulima kwenye tag ya juu
             const userTag = document.getElementById("user-tag");
             if (userTag) {
-                userTag.innerText = "👤 Karibu: " + name;
+                userTag.innerText = "👤 Karibuu: " + name;
                 userTag.style.fontWeight = "bold"; // Ongeza urembo kidogo
             }
 
@@ -501,8 +502,18 @@ login: function() {
         if (!this.isScanning) return;
 
         const laser = document.getElementById("laser");
-        laser.style.display = "block";
+        const resArea = document.getElementById("scan-res-area"); // Hakikisha ID hii ni sahihi
+       // laser.style.display = "block";
 
+     if (laser) laser.style.display = "block";
+    
+    if (resArea) {
+        resArea.style.display = "block";
+        resArea.innerHTML = `
+            <div style="text-align:center; padding:15px; color:#ef6c00; background:#fff3e0; border-radius:15px; border:1px dashed #ef6c00; margin-top:10px; animation: pulse 1.5s infinite;">
+                <span class="spinner"></span> 🔍 <b>Smart Kilimo AI:</b> Inachambua tishu za mmea na kutafuta tiba...
+            </div>`;
+    }
         // AI "Inafikiria" kwa sekunde 3
         setTimeout(() => {
             // Chukua picha ya siri (capture) kabla ya kuzima
@@ -515,6 +526,7 @@ login: function() {
 
             // Zima kila kitu (Auto-Stop)
             this.stopCamera();
+           if (laser) laser.style.display = "none";
             this.showResult(resKey, accuracy);
             
             laser.style.display = "none";
@@ -731,7 +743,7 @@ showResult: function(resKey, accuracy = null) {
         // TABS & LIBRARY
         switchTab: function(tab) {
             document.getElementById("chat-ui").style.display = tab === 'chat' ? 'block' : 'none';
-            document.getElementById("hist-ui").style.display = tab === 'hist' ? 'block' : 'none';
+            document.getElementById("history-list").style.display = tab === 'hist' ? 'block' : 'none';
             document.getElementById("tab-c").className = tab === 'chat' ? 'tab-btn active' : 'tab-btn';
             document.getElementById("tab-h").className = tab === 'hist' ? 'tab-btn active' : 'tab-btn';
         },
@@ -937,6 +949,14 @@ sendMsg: function() {
             }
         }
    },
+    funguaHistoria:function(){
+    // 1. Onyesha eneo la historia
+    document.getElementById("history-list").style.display = "block";
+    
+    // 2. Pakia data mpya kabisa
+    app.loadHistory();
+    
+    },
  
     // C. KIFUTE CHA KUFUTA HISTORIA NA CHATS
     clearAccountHistory: function() {

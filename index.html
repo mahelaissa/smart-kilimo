@@ -806,12 +806,8 @@ sendMsg: function() {
             }
 
         }, 1000);
-    },
-        
- 
-    currentUser: "Mkulima1", // Hakikisha hapa kuna jina la mtu aliyeingia
-
-    // A. HIFADHI HISTORIA (Inatenganisha kwa Jina)
+    }, currentUser: "Mkulima1", // Hakikisha hapa kuna jina la mtu aliyeingia
+// A. HIFADHI HISTORIA (Inatenganisha kwa Jina)
     saveToHistory: function(resKey, message) {
         const historyKey = "scans_" + this.currentUser;
         let history = JSON.parse(localStorage.getItem(historyKey)) || [];

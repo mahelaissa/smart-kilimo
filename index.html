@@ -334,8 +334,8 @@
             }
         // ... magonjwa yako mengine (nyanya, mahindi n.k.)
         "haijulikani": {
-        sw: "Samahani, mmea huu haujatambuliwa. Mfumo huu ni kwa ajili ya mazao ya [Taja Mazao Yako] tu. Tafadhali piga picha jani la zao husika.",
-        en: "Sorry, this plant is not recognized. This system is only for [Your Crops] only. Please scan a leaf of the relevant crop."
+        sw: "⚠️ Samahani, mmea huu haujatambuliwa. Mfumo huu ni kwa ajili ya mazao ya [Mahindi,mchicha na kabechi] tu. Tafadhali piga picha jani la zao husika.",
+        en: "⚠️ Sorry, this plant is not recognized. This system is only for [Maize,spinach,cabbage] only. Please scan a leaf of the relevant crop."
     }
     };
 
@@ -515,40 +515,44 @@ processLiveScan: function() {
         resArea.style.display = "block";
         resArea.innerHTML = `
             <div style="text-align:center; padding:15px; color:#ef6c00; background:#fff3e0; border-radius:15px; border:1px dashed #ef6c00; margin-top:10px; animation: pulse 1.5s infinite;">
-                <span class="spinner"></span> 🔍 <b>Smart Kilimo AI:</b> Inachambua tishu za mmea na kutafuta tiba...
+                <span class="spinner"></span> 🔍 <b>Smart Kilimo AI:</b> Inachambua tishu za mmea...
             </div>`;
     }
 
-    // AI "Inafikiria" kwa sekunde 3
     setTimeout(() => {
         this.captureImage();
         
-        // 1. Pata orodha ya magonjwa halali (db)
-        const keys = Object.keys(db);
+        // 1. Pata orodha ya magonjwa halali (db) bila 'haijulikani'
+        const validKeys = Object.keys(db).filter(k => k !== "haijulikani");
         
-        // 2. KIGEUZO CHA UCHUNJUJI (Validation Logic)
-        // Tunatengeneza namba ya "Uhakika" (Confidence Score) 0 - 100
-        const confidence = Math.floor(Math.random() * 100);
+        // 2. KIGEUZO CHA UCHUNJUJI (Simulation of AI Confidence)
+        // Tunatengeneza namba kuanzia 0 mpaka 100
+        const confidence = Math.floor(Math.random() * 101);
 
         let resKey;
-        let accuracy;
+        let finalAccuracy;
 
-        // IKIWA CONFIDENCE NI CHINI YA 30%, TUNAKATAA (Hii inamaanisha siyo zao)
-        if (confidence < 30) {
-            resKey = "haijulikani"; // Tutaongeza hii kwenye db yako
-            accuracy = 0;
+        // --- MASHARTI YA UTAMBUZI ---
+        if (confidence < 50) { 
+            // Ikiwa AI haina uhakika (Chini ya 50%), kataa picha
+            resKey = "haijulikani";
+            finalAccuracy = confidence; // Itatokea 0 au namba ndogo
         } else {
-            // IKIWA NI ZAIDI YA 30%, TUNACHAGUA UGONJWA HALALI
-            resKey = keys[Math.floor(Math.random() * keys.length)];
-            accuracy = Math.floor(Math.random() * (99 - 94 + 1)) + 94;
+            // Ikiwa AI ina uhakika (50% na kuendelea), toa ugonjwa
+            resKey = validKeys[Math.floor(Math.random() * validKeys.length)];
+            
+            // Accuracy sasa inalingana na confidence (plus/minus kidogo kwa urembo)
+            finalAccuracy = Math.min(confidence + Math.floor(Math.random() * 5), 99);
         }
 
-        // 3. Zima kila kitu
+        // 3. Zima kioo na laser
         this.stopCamera();
         if (laser) laser.style.display = "none";
 
-        // 4. Toa majibu (Function ya showResult itashughulikia ujumbe wa makosa)
-        this.showResult(resKey, accuracy);
+        // 4. Tuma matokeo (Hakikisha showResult inaelewa resKey ya "haijulikani")
+        this.showResult(resKey, finalAccuracy);
+        
+        console.log(`Scan Result - User: ${this.currentUser}, Confidence: ${confidence}%, Result: ${resKey}`);
         
     }, 3000);
 },
@@ -634,63 +638,83 @@ startScanEffect: function() {
             
         }, 3000);
     },
+
 showResult: function(resKey, accuracy = null) {
         // 1. Validations: Hakikisha data zipo
         if (!resKey || !db[resKey]) return;
         
+        const resArea = document.getElementById("scan-res-area");
+        if (!resArea) return;
+
+        // --- FEATURE MPYA: ANGALIA KAMA NI ZAOO AU KITU KINGINE ---
+        if (resKey === "haijulikani") {
+            const warningMsg = db[resKey][this.currentLang] || db[resKey]['sw'];
+            
+            resArea.style.display = "block";
+            resArea.innerHTML = `
+                <div style="background:#fff5f5; padding:18px; border-radius:15px; border:1px solid #feb2b2; box-shadow:0 4px 10px rgba(211,47,47,0.1); animation: shake 0.4s ease;">
+                    <div style="text-align:center; margin-bottom:10px;">
+                        <span style="font-size:30px;">⚠️</span>
+                    </div>
+                    <b style="color:#c53030; font-size:15px; display:block; text-align:center; margin-bottom:8px;">Haikutambuliwa!</b>
+                    <p style="font-size:13px; color:#742a2a; line-height:1.5; margin:0; text-align:center;">${warningMsg}</p>
+                    
+                    <button onclick="app.startCamera()" style="width:100%; margin-top:15px; background:#c53030; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer;">
+                        🔄 Jaribu Tena
+                    </button>
+                </div>
+            `;
+            this.speak(warningMsg);
+            return; // MUHIMU: Inazuia isihifadhiwe kwenye historia (saveToHistory)
+        }
+
+        // 2. KAMA NI ZAO HALALI, ENDELEA HAPA:
         this.lastResKey = resKey; 
         const result = db[resKey];
         const accDisplay = accuracy || this.lastAccuracy || 95;
         this.lastAccuracy = accDisplay;
 
-        // 2. Pata ujumbe (Lugha ya sasa, ikikosekana tumia Kiswahili)
         const message = result[this.currentLang] || result['sw'];
         this.lastScanResult = message; 
         
-        // 3. --- HIFADHI KWENYE HISTORIA (Mara moja tu) ---
-        // Tunahakikisha saveToHistory ipo kabla ya kuiita
+        // 3. --- HIFADHI KWENYE HISTORIA ---
         if (typeof this.saveToHistory === "function") {
             this.saveToHistory(resKey, message);
         }
         
         // 4. Maandalizi ya WhatsApp na UI
-        const resArea = document.getElementById("scan-res-area");
         const waMsg = encodeURIComponent(`Smart Kilimo Analysis (${accDisplay}% Accuracy): ${resKey}. Tiba: ${message}`);
 
-        if (resArea) {
-            resArea.style.display = "block";
-            resArea.innerHTML = `
-                <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1); animation: slideIn 0.4s ease;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="background:var(--p); color:white; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">Accuracy: ${accDisplay}%</span>
-                        <select onchange="app.changeLanguage(this.value)" style="font-size:11px; padding:3px; border-radius:5px; border:1px solid #ccc; outline:none; cursor:pointer;">
-                            <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
-                            <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
-                        </select>
-                    </div>
-                    <b style="color:#d32f2f; font-size:15px; display:block; margin-bottom:5px;">${resKey}</b>
-                    <p id="diag-text" style="font-size:13px; color:#333; line-height:1.5; margin:0;">${message}</p>
-                    
-                    <a href="https://wa.me/255795023200?text=${waMsg}" target="_blank" 
-                       style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:12px; font-size:13px;">
-                       <span>💬 Ongea na Mtaalamu (WhatsApp)</span>
-                    </a>
+        resArea.style.display = "block";
+        resArea.innerHTML = `
+            <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1); animation: slideIn 0.4s ease;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="background:var(--p); color:white; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">Accuracy: ${accDisplay}%</span>
+                    <select onchange="app.changeLanguage(this.value)" style="font-size:11px; padding:3px; border-radius:5px; border:1px solid #ccc; outline:none; cursor:pointer;">
+                        <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
+                        <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
+                    </select>
                 </div>
-            `;
-        }
+                <b style="color:#d32f2f; font-size:15px; display:block; margin-bottom:5px;">${resKey}</b>
+                <p id="diag-text" style="font-size:13px; color:#333; line-height:1.5; margin:0;">${message}</p>
+                
+                <a href="https://wa.me/255795023200?text=${waMsg}" target="_blank" 
+                   style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:12px; font-size:13px;">
+                    <span>💬 Ongea na Mtaalamu (WhatsApp)</span>
+                </a>
+            </div>
+        `;
 
         // 5. Toa sauti
         this.speak(message);
     },
-    // 2. Inabadili lugha na ku-refresh jibu papo hapo
+
     changeLanguage: function(lang) {
         this.currentLang = lang;
         if (this.lastResKey) {
-            // Tunaita tena showResult ili i-update maandishi na sauti kwa lugha mpya
             this.showResult(this.lastResKey, this.lastAccuracy);
         }
     },
-
     // 3. Sauti (Speak) - Inatofautisha jibu la Scan na ujumbe wa Chat
     speak: function(customText = null) {
         // Kama tuko katikati ya kuscan, tunatulia kwanza

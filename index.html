@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+ <!DOCTYPE html> 
 <html lang="sw">
 <head>
     <meta charset="UTF-8">
@@ -810,59 +810,94 @@ sendMsg: function() {
     }, currentUser: "Mkulima1", // Hakikisha hapa kuna jina la mtu aliyeingia
 // A. HIFADHI HISTORIA (Inatenganisha kwa Jina)
 saveToHistory: function(resKey, message) {
-        // 1. Hakikisha kuna mtumiaji, kama hakuna tumia 'Mgeni'
+        // 1. Tambua mtumiaji wa sasa (Safety Fallback)
         const user = this.currentUser || localStorage.getItem("smart_kilimo_user") || "Mgeni";
         const historyKey = "scans_" + user;
 
-        // 2. Pata historia ya zamani
-        let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+        try {
+            // 2. Pata historia iliyopo
+            let history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-        // 3. Ongeza ugonjwa mpya uliopatikana
-       history.push({
-        date: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-        disease: resKey,
-        treatment: message.substring(0, 60) + "..." // Tunatunza sehemu ya tiba tu
-        });
+            // 3. Tengeneza rekodi mpya
+            const newEntry = {
+                date: new Date().toLocaleDateString('sw-TZ') + " " + new Date().toLocaleTimeString('sw-TZ', {hour: '2-digit', minute:'2-digit'}),
+                disease: resKey,
+                treatment: message // Hifadhi ujumbe wote
+            };
 
-        // 4. Hifadhi tena kwenye simu
-        localStorage.setItem(historyKey, JSON.stringify(history));
-        
-        // 5. Update kioo cha historia hapo hapo
-        this.loadHistory();
+            // 4. Zuia kurudia ugonjwa ule ule ndani ya dakika 1 (Optional - kuzuia spam)
+            if (history.length > 0) {
+                const lastEntry = history[history.length - 1];
+                if (lastEntry.disease === resKey && (new Date() - new Date(lastEntry.rawDate) < 60000)) {
+                    return; // Usihifadhi kama ni ugonjwa ule ule ndani ya sekunde 60
+                }
+            }
+            
+            newEntry.rawDate = new Date(); // Kwa ajili ya comparison tu
+            history.push(newEntry);
+
+            // 5. Hifadhi na Refresh kioo
+            localStorage.setItem(historyKey, JSON.stringify(history));
+            
+            // Hapa ndipo kioo kinaposasishwa (Update UI)
+            if (typeof this.loadHistory === "function") {
+                this.loadHistory();
+            }
+            
+            console.log("History saved for: " + user);
+        } catch (e) {
+            console.error("Imeshindwa kuhifadhi historia:", e);
+        }
     },
     // B. PAKIA HISTORIA (Inasoma za mtu husika tu)
-    loadHistory: function() {
+loadHistory: function() {
+    // 1. Tambua mtumiaji (Hakikisha jina linasomwa kwa usahihi)
     const user = this.currentUser || localStorage.getItem("smart_kilimo_user") || "Mgeni";
     const historyKey = "scans_" + user;
     const chatKey = "chat_" + user;
     
-    // 1. Pakia na Onyesha Scans
-    const scans = JSON.parse(localStorage.getItem(historyKey)) || [];
+    // 2. Pakia na Onyesha Scans
     const historyArea = document.getElementById("history-list");
-    
     if (historyArea) {
-        if (scans.length === 0) {
-            historyArea.innerHTML = "<p style='text-align:center; color:#999; font-size:12px; padding:20px;'>Bado haujascan jani lolote.</p>";
-        } else {
-            // Tunazipanga kuanzia ya mwisho (Reverse)
-            historyArea.innerHTML = scans.slice().reverse().map(s => `
-                <div style="background:#fff; margin-bottom:10px; padding:12px; border-radius:10px; border-left:4px solid var(--p); box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b style="color:#d32f2f; font-size:14px;">${s.disease}</b>
-                        <small style="color:#888; font-size:10px;">${s.date}</small>
+        try {
+            // Tumia JSON.parse kwa usalama
+            const rawData = localStorage.getItem(historyKey);
+            const scans = rawData ? JSON.parse(rawData) : [];
+            
+            if (scans.length === 0) {
+                historyArea.innerHTML = "<p style='text-align:center; color:#999; font-size:12px; padding:20px;'>Bado haujascan jani lolote.</p>";
+            } else {
+                // Tunazipanga kuanzia ya mwisho (Reverse)
+                historyArea.innerHTML = scans.slice().reverse().map(s => `
+                    <div style="background:#fff; margin-bottom:10px; padding:12px; border-radius:10px; border-left:4px solid var(--p); box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b style="color:#d32f2f; font-size:14px;">${s.disease || 'Unknown'}</b>
+                            <small style="color:#888; font-size:10px;">${s.date || ''}</small>
+                        </div>
+                        <p style="font-size:11px; color:#666; margin:4px 0 0 0;">${s.treatment || ''}</p>
                     </div>
-                    <p style="font-size:11px; color:#666; margin:4px 0 0 0;">${s.treatment}</p>
-                </div>
-            `).join('');
+                `).join('');
+            }
+        } catch (e) {
+            console.error("Error loading scans:", e);
+            historyArea.innerHTML = "<p style='text-align:center; color:red; font-size:11px;'>Hitilafu ya kupakia historia.</p>";
         }
     }
 
-    // 2. Pakia na Onyesha Chats
+    // 3. Pakia na Onyesha Chats
     const chatBox = document.getElementById("chat-content") || document.getElementById("chat-box");
-    const savedChat = localStorage.getItem(chatKey);
-    if (chatBox && savedChat) {
-        chatBox.innerHTML = savedChat;
-        chatBox.scrollTop = chatBox.scrollHeight;
+    if (chatBox) {
+        const savedChat = localStorage.getItem(chatKey);
+        if (savedChat) {
+            chatBox.innerHTML = savedChat;
+            // Shusha chini mpaka kwenye meseji ya mwisho
+            setTimeout(() => {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 100);
+        } else {
+            // Kama hakuna chat, safisha chatbox
+            chatBox.innerHTML = "<p style='text-align:center; color:#ccc; font-size:11px; margin-top:20px;'>Anza mazungumzo hapa...</p>";
+        }
     }
 },
     // C. KIFUTE CHA KUFUTA HISTORIA NA CHATS

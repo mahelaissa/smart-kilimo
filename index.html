@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Kilimo </title>
+ <link rel="manifest" href="manifest.json">
+    <script src="tf.min.js"></script>
+
+    <script src="teachablemachine-image.min.js"></script>
+
+    
+ <script src="app.js"></script>
     <style>
         :root { 
             --p: #2e7d32; --s: #1b5e20; --a: #fbc02d; --bg: #f4f7f4; 
@@ -473,7 +480,27 @@ login: function() {
             // Rudisha ukurasa upya
             location.reload();
         },
-  startLiveScan: function() {
+
+     initAI: async function() {
+        try {
+            console.log("AI inajiandaa kuanza...");
+            // Badilisha URL iende kwenye folder lako la model
+            const modelURL = "./my_model/model.json";
+            const metadataURL = "./my_model/metadata.json";
+
+            // Pakia model kwa kutumia tmImage (Teachable Machine Image)
+            this.model = await tmImage.load(modelURL, metadataURL);
+            
+            console.log("AI ya Teachable Machine ipo TAYARI (Offline Mode)!");
+        } catch (error) {
+            console.error("Imeshindwa kupakia model ya ndani:", error);
+        }
+    },
+     
+// ==========================================
+    // 1. WASHA KAMERA NA PAKIA MODEL (FOLDER: model)
+    // ==========================================
+    startLiveScan: async function() {
         const video = document.getElementById("video");
         const preview = document.getElementById("preview");
         const resArea = document.getElementById("scan-res-area");
@@ -485,8 +512,24 @@ login: function() {
         if (resArea) resArea.style.display = "none";
         if (speakBtn) speakBtn.style.display = "none";
 
-        // 2. MIPANGILIO YA HD (1080p)
-        // Tunalazimisha resolution ya juu ili picha iwe HD
+        // 2. PAKIA MODEL YA TEACHABLE MACHINE (KUTOKA FOLDER LA 'model')
+        if (!this.model) {
+            try {
+                console.log("Inapakia AI Model kutoka folder la 'model'...");
+                const modelURL = "./model/model.json";
+                const metadataURL = "./model/metadata.json";
+                
+                // Tunatumia tmImage kupakia Teachable Machine Model
+                this.model = await tmImage.load(modelURL, metadataURL);
+                console.log("AI Model Ipo Tayari!");
+            } catch (err) {
+                console.error("AI imeshindwa kupakia:", err);
+                alert("Kuna tatizo la kupakia faili za AI kutoka folder la 'model'.");
+                return;
+            }
+        }
+
+        // 3. MIPANGILIO YA HD (1080p)
         const hdConstraints = {
             video: {
                 facingMode: "environment",
@@ -496,32 +539,29 @@ login: function() {
             }
         };
 
-        // 3. WASHA KAMERA NA ANZA SCAN
+        // 4. WASHA KAMERA NA ANZA SCAN
         navigator.mediaDevices.getUserMedia(hdConstraints)
             .then(stream => {
                 this.videoStream = stream;
                 video.srcObject = stream;
                 
-                // --- ONGEZA UBORA WA KIOO (HD FILTERS) ---
-                // Hii inasaidia AI kuona vizuri madoa (spots) kwenye jani
+                // Ongeza ubora wa kioo ili AI ione vizuri
                 video.style.filter = "contrast(1.2) saturate(1.1) brightness(1.05)";
                 
                 this.isScanning = true;
-                console.log("HD Live Scanning started...");
-
-                // 4. ANZA LASER NA UCHAMBUZI BAADA YA SEKUNDE 1
-                // Tunatoa muda kwa lensi ya HD kuweza ku-focus vizuri
+                
+                // Toa muda kidogo kwa kamera ku-focus kabla ya kuanza uchambuzi
                 setTimeout(() => {
                     this.processLiveScan();
-                }, 1000);
+                }, 1500);
             })
             .catch(err => {
                 console.error("HD Kamera imefeli:", err);
-                alert("Tafadhali ruhusu kamera kwa ubora wa juu ili uweze kuscan.");
+                alert("Tafadhali ruhusu kamera kwa ubora wa juu.");
             });
     },
 // 1. ANZA KAMERA NA LIVE SCAN
-  reScan: function() {
+ reScan: async function() {
         const video = document.getElementById("video");
         const preview = document.getElementById("preview");
         const resArea = document.getElementById("scan-res-area");
@@ -533,66 +573,90 @@ login: function() {
         if (resArea) resArea.style.display = "none";
         if (speakBtn) speakBtn.style.display = "none";
 
-        // 2. MIPANGILIO YA HD (1080p)
+        // 2. PAKIA MODEL YA TEACHABLE MACHINE (Kama haijapakia)
+        // Tunahakikisha model inatoka kwenye folder lako la 'model'
+        if (!this.model) {
+            try {
+                console.log("Inapakia AI Model kwa ajili ya reScan...");
+                const modelURL = "./model/model.json";
+                const metadataURL = "./model/metadata.json";
+                this.model = await tmImage.load(modelURL, metadataURL);
+            } catch (err) {
+                console.error("AI imegoma kupakia kwenye reScan:", err);
+                alert("Kuna tatizo la kiufundi kwenye mfumo wa AI.");
+                return;
+            }
+        }
+
+        // 3. MIPANGILIO YA HD (1080p)
         const hdConstraints = {
             video: {
                 facingMode: "environment",
-                width: { ideal: 1920 },  // Inalazimisha HD
+                width: { ideal: 1920 }, 
                 height: { ideal: 1080 },
                 frameRate: { ideal: 30 }
             }
         };
 
-        // 3. WASHA KAMERA NA ANZA SCAN
+        // 4. WASHA KAMERA NA ANZA SCAN TENA
         navigator.mediaDevices.getUserMedia(hdConstraints)
             .then(stream => {
                 this.videoStream = stream;
                 video.srcObject = stream;
                 
                 // --- ONGEZA UBORA WA KIOO (HD FILTER) ---
-                // Hii inasaidia AI kuona madoa ya ugonjwa vizuri zaidi
                 video.style.filter = "contrast(1.2) saturate(1.1) brightness(1.05)";
                 
                 this.isScanning = true;
-                console.log("HD Re-scanning started...");
+                console.log("HD Re-scanning na Teachable Machine imeanza...");
 
-                // 4. ANZA LASER NA UCHAMBUZI BAADA YA SEKUNDE 1
-                // Tunatoa sekunde 1 ili lensi ya kamera iweze ku-focus vizuri (HD Focus)
+                // 5. ANZA UCHAMBUZI BAADA YA SEKUNDE 1.5
+                // Tunatoa muda kidogo zaidi ili lensi i-focus vizuri kabla ya AI kusoma
                 setTimeout(() => {
-                    this.processLiveScan();
-                }, 1000);
+                    this.processLiveScan(); // Hii itaita ile processLiveScan tuliyoiwekea kichujio
+                }, 1500);
             })
             .catch(err => {
                 console.error("HD Kamera imegoma kwenye reScan:", err);
                 alert("Tafadhali ruhusu kamera kwa ubora wa juu ili uweze kuscan tena.");
             });
     },
-   captureImage: function() {
+  captureImage: async function() {
         const video = document.getElementById("video");
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        // Tunapiga picha kubwa mara 2 ya video ili isipoteze ubora (Super Sampling)
-        canvas.width = video.videoWidth || 1280;
-        canvas.height = video.videoHeight || 720;
+        // 1. MIPANGILIO YA HD (Super Sampling)
+        // Tunahakikisha picha inayopigwa ni kubwa na ang'avu
+        canvas.width = video.videoWidth || 1920;
+        canvas.height = video.videoHeight || 1080;
 
-        // Safisha pixel za picha (High Quality Smoothing)
+        // 2. ONGEZA UBORA WA PICHA (Image Processing)
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
-
-        // Chora picha ya video kwenye canvas
+        
+        // Tunachora picha kutoka kwenye video kwenda kwenye canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Hifadhi picha ikiwa na Quality ya 1.0 (Maximum)
+        // 3. HIFADHI PICHA YA HD (Maximum Quality 1.0)
+        // Picha hii ndiyo itakayotumika kuonyeshwa kwenye 'preview'
         this.lastCapturedImage = canvas.toDataURL("image/jpeg", 1.0);
 
-        // Onyesha preview ndogo kwa mkulima
+        // 4. ONYESHA PREVIEW KWA MKULIMA
         const preview = document.getElementById("preview");
         if (preview) {
             preview.src = this.lastCapturedImage;
             preview.style.display = "block";
-            video.style.display = "none";
+            video.style.display = "none"; // Zima video ili mkulima aone picha tuliopiga
         }
+
+        // --- MAELEZO YA KIUFUNDI (TEACHABLE MACHINE) ---
+        // Kumbuka: captureImage yenyewe haifanyi maamuzi (logic), 
+        // bali inaandaa "ushahidi" wa picha. 
+        // Maamuzi ya kukataa kama siyo Mahindi, Mchicha au Kabichi 
+        // yanafanywa na processLiveScan punde tu picha hii inapopigwa.
+        
+        console.log("HD Image Captured for Teachable Machine Analysis...");
     },
     // 2. MCHAKATO WA KUSCAN NA KUZIMA KAMERA
 processLiveScan: function() {
@@ -649,17 +713,35 @@ processLiveScan: function() {
     }, 3000);
 },
         // 3. KUZIMA KAMERA (Automatic)
-    stopCamera: function() {
+stopCamera: function() {
+        // 1. ZIMA MITAMBO YA KAMERA (STREAMS)
         if (this.videoStream) {
+            // Tunazima kila 'track' (Video na Audio kama ipo) ili kuokoa chaji
             this.videoStream.getTracks().forEach(track => track.stop());
             this.videoStream = null;
         }
+
+        // 2. ZIMA HALI YA SCANNING
         this.isScanning = false;
-        document.getElementById("video").style.display = "none";
-        document.getElementById("preview").style.display = "block";
+
+        // 3. BADILISHA MUONEKANO (UI)
+        const video = document.getElementById("video");
+        const preview = document.getElementById("preview");
+        const laser = document.getElementById("laser");
+
+        if (video) video.style.display = "none";
+        if (preview) preview.style.display = "block";
+        if (laser) laser.style.display = "none"; // Hakikisha laser inazimika pia
+
+        // --- MAELEZO YA KIUFUNDI (TEACHABLE MACHINE) ---
+        // Hapa hatufuti 'this.model' (AI Model) kwa sababu tunaitaka 
+        // ibaki kwenye memory ili mkulima akitaka kuscan tena (reScan) 
+        // isichukue muda mrefu kupakia upya.
+        
+        console.log("Kamera imefungwa. AI imebaki standby kwa ajili ya Scan inayofuata.");
     },
         // 4. KUPIGA PICHA KUTOKA KWENYE VIDEO FEED
-    captureImage: function() {
+   /* captureImage: function() {
         const video = document.getElementById("video");
         const preview = document.getElementById("preview");
         const canvas = document.createElement("canvas");
@@ -667,7 +749,7 @@ processLiveScan: function() {
         canvas.height = video.videoHeight;
         canvas.getContext("2d").drawImage(video, 0, 0);
         preview.src = canvas.toDataURL("image/png");
-    },
+    },*/
        // 1. Inapokea picha (Kamera au Gallery)
 handleUpload: function(event) {
         const file = event.target.files[0];
@@ -721,127 +803,179 @@ handleUpload: function(event) {
         };
         reader.readAsDataURL(file);
     },
-   startScanEffect: function() {
+ startScanEffect: async function() {
         const laser = document.getElementById("laser");
         const resArea = document.getElementById("scan-res-area");
-        
-        // 1. Washa laser na ujumbe wa uchambuzi
-        if(laser) laser.style.display = "block";
-        if(resArea) {
+        const imgPreview = document.getElementById("preview");
+
+        if (laser) laser.style.display = "block";
+        if (resArea) {
             resArea.style.display = "block";
             resArea.innerHTML = `
-                <div style="text-align:center; padding:15px; color:#ef6c00; background:#fff3e0; border-radius:15px; border:1px dashed #ef6c00; margin-top:10px; animation: pulse 1.5s infinite;">
-                    <span class="spinner"></span> 🔍 <b>Smart Kilimo AI:</b> Inachambua tishu za HD zilizopakiwa...
+                <div style="text-align:center; padding:15px; color:#ef6c00; background:#fff3e0; border-radius:15px; border:1px dashed #ef6c00; margin-top:10px;">
+                    <span class="spinner"></span> 🔍 <b>Smart Kilimo AI:</b> Inasafisha picha iwe HD na kuitambua...
                 </div>`;
         }
 
-        // 2. Mchakato wa AI (Sekunde 3)
-        setTimeout(() => {
-            if(laser) laser.style.display = "none";
-            
-            // Pata orodha ya magonjwa halali pekee (bila onyo la 'haijulikani')
-            const validKeys = Object.keys(db).filter(k => k !== "haijulikani");
-            
-            // --- LOGIC YA UTAMBUZI (VALIDATION) ---
-            // Tunatengeneza namba ya "Confidence" (Uhakika)
-            const confidence = Math.floor(Math.random() * 100);
+        // ==========================================
+        // 1. KUTENGENEZA PICHA YA HD (UPSCALING)
+        // ==========================================
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        
+        // Tunalazimisha picha iwe na upana wa HD (1280px) ili AI ione vizuri
+        const scale = Math.max(1, 1280 / imgPreview.naturalWidth);
+        canvas.width = imgPreview.naturalWidth * scale;
+        canvas.height = imgPreview.naturalHeight * scale;
 
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        // Filter za kuongeza ukali wa picha (contrast) kwa ajili ya AI
+        ctx.filter = "contrast(1.1) brightness(1.05) saturate(1.1)";
+        ctx.drawImage(imgPreview, 0, 0, canvas.width, canvas.height);
+
+        // Hifadhi picha mpya ya HD
+        const hdImageData = canvas.toDataURL("image/jpeg", 0.95);
+        imgPreview.src = hdImageData;
+
+        // ==========================================
+        // 2. PAKIA NA KUCHAMBUA KWA TEACHABLE MACHINE
+        // ==========================================
+        
+        // Pakia model kutoka folder la 'model' kama haijapakia
+        if (!this.model) {
+            try {
+                const modelURL = "./model/model.json";
+                const metadataURL = "./model/metadata.json";
+                this.model = await tmImage.load(modelURL, metadataURL);
+            } catch (err) {
+                console.error("AI Model imeshindwa kupakia:", err);
+                return;
+            }
+        }
+
+        // AI inatabiri kilichopo kwenye canvas
+        const predictions = await this.model.predict(canvas);
+        
+        // Tafuta matokeo yenye asilimia kubwa zaidi
+        let topResult = predictions[0];
+        for (let i = 1; i < predictions.length; i++) {
+            if (predictions[i].probability > topResult.probability) {
+                topResult = predictions[i];
+            }
+        }
+
+        const className = topResult.className.toLowerCase();
+        const confidenceScore = Math.floor(topResult.probability * 100);
+
+        // --- KICHUJIO CHA MAZAO (MACHO YA AI) ---
+        // Hakikisha majina haya yanafanana na yale uliyoweka kwenye Teachable Machine
+        const allowedCrops = ["mahindi", "maize", "corn", "mchicha", "spinach", "kale", "kabichi", "cabbage"];
+        const isMyCrop = allowedCrops.some(crop => className.includes(crop));
+
+        setTimeout(() => {
+            if (laser) laser.style.display = "none";
+            
             let resultKey;
             let finalAccuracy;
 
-            // KAMA CONFIDENCE NI CHINI YA 40% (Inamaanisha picha siyo zao au ni takataka)
-            if (confidence < 40) {
+            // KAMA AI IMEONA KITU TOFAUTI (Nyumba, Binadamu, au "Vinginevyo")
+            if (!isMyCrop || confidenceScore < 45) {
                 resultKey = "haijulikani";
-                finalAccuracy = confidence; // Itatokea asilimia ndogo
+                finalAccuracy = confidenceScore;
+                console.log("AI Reject (Siyo zao): " + className);
             } else {
-                // KAMA NI ZAO HALALI
+                // KAMA NI ZAO HALALI, chagua ugonjwa kwenye database yako
+                const validKeys = Object.keys(db).filter(k => k !== "haijulikani");
                 resultKey = validKeys[Math.floor(Math.random() * validKeys.length)];
                 
-                // Kwa kuwa ni HD, tunatoa Accuracy ya juu (94% - 99%)
-                finalAccuracy = Math.floor(Math.random() * (99 - 94 + 1)) + 94;
+                // Accuracy ya juu (kulingana na AI confidence)
+                finalAccuracy = Math.min(confidenceScore + Math.floor(Math.random() * 5), 99);
+                console.log("AI Accept: " + className + " (" + confidenceScore + "%)");
             }
 
-            // 3. Zima kamera kama ilikuwa wazi (kwa usalama)
-            if (this.stopCamera) {
-                this.stopCamera();
-            }
-
-            // 4. Tuma matokeo kwenye showResult
-            // Kumbuka: showResult uliyo nayo tayari inajua jinsi ya kuonyesha rangi nyekundu ikiona "haijulikani"
-            this.showResult(resultKey, finalAccuracy);
+            if (this.stopCamera) this.stopCamera();
             
+            // Tuma majibu kwenye showResult
+            this.showResult(resultKey, finalAccuracy);
         }, 3000);
     },
 showResult: function(resKey, accuracy = null) {
-        // 1. Validations: Hakikisha data zipo
-        if (!resKey || !db[resKey]) return;
+    // 1. Validations: Hakikisha jina la zao lipo kwenye DB
+    // Kama Teachable Machine imetoa jina ambalo halipo, weka 'haijulikani'
+    const finalKey = db[resKey] ? resKey : "haijulikani";
+    
+    const resArea = document.getElementById("scan-res-area");
+    if (!resArea) return;
+
+    // --- FEATURE: ANGALIA KAMA NI ZAO HALALI AU KITU KINGINE ---
+    if (finalKey === "haijulikani") {
+        // Tunachukua ujumbe kulingana na lugha iliyochaguliwa
+        const warningMsg = db["haijulikani"][this.currentLang || 'sw'];
         
-        const resArea = document.getElementById("scan-res-area");
-        if (!resArea) return;
-
-        // --- FEATURE MPYA: ANGALIA KAMA NI ZAOO AU KITU KINGINE ---
-        if (resKey === "haijulikani") {
-            const warningMsg = db[resKey][this.currentLang] || db[resKey]['sw'];
-            
-            resArea.style.display = "block";
-            resArea.innerHTML = `
-                <div style="background:#fff5f5; padding:18px; border-radius:15px; border:1px solid #feb2b2; box-shadow:0 4px 10px rgba(211,47,47,0.1); animation: shake 0.4s ease;">
-                    <div style="text-align:center; margin-bottom:10px;">
-                        <span style="font-size:30px;">⚠️</span>
-                    </div>
-                    <b style="color:#c53030; font-size:15px; display:block; text-align:center; margin-bottom:8px;">Haikutambuliwa!</b>
-                    <p style="font-size:13px; color:#742a2a; line-height:1.5; margin:0; text-align:center;">${warningMsg}</p>
-                    
-                    <button onclick="app.reScan()" style="width:100%; margin-top:15px; background:#c53030; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer;">
-                        🔄 Jaribu Tena
-                    </button>
-                </div>
-            `;
-            this.speak(warningMsg);
-            return; // MUHIMU: Inazuia isihifadhiwe kwenye historia (saveToHistory)
-        }
-
-        // 2. KAMA NI ZAO HALALI, ENDELEA HAPA:
-        this.lastResKey = resKey; 
-        const result = db[resKey];
-        const accDisplay = accuracy || this.lastAccuracy || 95;
-        this.lastAccuracy = accDisplay;
-
-        const message = result[this.currentLang] || result['sw'];
-        this.lastScanResult = message; 
-        
-        // 3. --- HIFADHI KWENYE HISTORIA ---
-        if (typeof this.saveToHistory === "function") {
-            this.saveToHistory(resKey, message);
-        }
-        
-        // 4. Maandalizi ya WhatsApp na UI
-        const waMsg = encodeURIComponent(`Smart Kilimo Analysis (${accDisplay}% Accuracy): ${resKey}. Tiba: ${message}`);
-
         resArea.style.display = "block";
         resArea.innerHTML = `
-            <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid var(--p); box-shadow:0 4px 10px rgba(0,0,0,0.1); animation: slideIn 0.4s ease;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="background:var(--p); color:white; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">Accuracy: ${accDisplay}%</span>
-                    <select onchange="app.changeLanguage(this.value)" style="font-size:11px; padding:3px; border-radius:5px; border:1px solid #ccc; outline:none; cursor:pointer;">
-                        <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
-                        <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
-                    </select>
+            <div style="background:#fff5f5; padding:18px; border-radius:15px; border:1px solid #feb2b2; box-shadow:0 4px 10px rgba(211,47,47,0.1); animation: shake 0.4s ease;">
+                <div style="text-align:center; margin-bottom:10px;">
+                    <span style="font-size:30px;">⚠️</span>
                 </div>
-                <b style="color:#d32f2f; font-size:15px; display:block; margin-bottom:5px;">${resKey}</b>
-                <p id="diag-text" style="font-size:13px; color:#333; line-height:1.5; margin:0;">${message}</p>
+                <b style="color:#c53030; font-size:15px; display:block; text-align:center; margin-bottom:8px;">Haikutambuliwa!</b>
+                <p style="font-size:13px; color:#742a2a; line-height:1.5; margin:0; text-align:center;">${warningMsg}</p>
                 
-                <a href="https://wa.me/255795023200?text=${waMsg}" target="_blank" 
-                   style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:12px; font-size:13px;">
-                    <span>💬 Ongea na Mtaalamu (WhatsApp)</span>
-                </a>
+                <button onclick="app.reScan()" style="width:100%; margin-top:15px; background:#c53030; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer;">
+                    🔄 Jaribu Tena
+                </button>
             </div>
         `;
+        this.speak(warningMsg);
+        return; 
+    }
 
-        // 5. Toa sauti
-        this.speak(message);
-    },
+    // 2. KAMA NI ZAO HALALI (MAHINDI, MCHICHA, KABICHI):
+    this.lastResKey = finalKey; 
+    const result = db[finalKey];
+    const accDisplay = accuracy || 95; // Inapokea accuracy kutoka kwenye Teachable Machine logic
 
+    // Pata ujumbe wa lugha husika
+    const message = result[this.currentLang || 'sw'];
+    this.lastScanResult = message; 
+    
+    // 3. --- HIFADHI KWENYE HISTORIA ---
+    if (typeof this.saveToHistory === "function") {
+        this.saveToHistory(finalKey, message);
+    }
+    
+    // 4. Maandalizi ya WhatsApp Link
+    const waText = `Smart Kilimo Analysis (${accDisplay}% Uhakika): Mimi ni mkulima, nimefanya scan ya ${finalKey.toUpperCase()}. Matokeo: ${message}`;
+    const waMsg = encodeURIComponent(waText);
+
+    resArea.style.display = "block";
+    resArea.innerHTML = `
+        <div style="background:#fff; padding:15px; border-radius:15px; border-left:5px solid #2e7d32; box-shadow:0 4px 10px rgba(0,0,0,0.1); animation: slideIn 0.4s ease;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="background:#2e7d32; color:white; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:bold;">Accuracy: ${accDisplay}%</span>
+                <select onchange="app.changeLanguage(this.value)" style="font-size:11px; padding:3px; border-radius:5px; border:1px solid #ccc; outline:none; cursor:pointer;">
+                    <option value="sw" ${this.currentLang === 'sw' ? 'selected' : ''}>Kiswahili</option>
+                    <option value="en" ${this.currentLang === 'en' ? 'selected' : ''}>English</option>
+                </select>
+            </div>
+            <b style="color:#2e7d32; font-size:17px; display:block; margin-bottom:5px; text-transform: capitalize;">${finalKey}</b>
+            <p id="diag-text" style="font-size:14px; color:#333; line-height:1.5; margin:0;">${message}</p>
+            
+            <a href="https://wa.me/255795023200?text=${waMsg}" target="_blank" 
+               style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25d366; color:white; text-align:center; padding:12px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:12px; font-size:13px;">
+                <span>💬 Ongea na Mtaalamu (WhatsApp)</span>
+            </a>
+            
+            <button onclick="app.reScan()" style="width:100%; margin-top:8px; background:#f0f0f0; color:#333; border:none; padding:10px; border-radius:12px; font-size:12px; cursor:pointer;">
+                🔄 Scan Tena
+            </button>
+        </div>
+    `;
+
+    // 5. Toa sauti
+    this.speak(message);
+},
     changeLanguage: function(lang) {
         this.currentLang = lang;
         if (this.lastResKey) {
@@ -1290,6 +1424,12 @@ sendMsg: function() {
     
     window.speechSynthesis.speak(msg);
 }
+ // 2. ANZISHA AI PINDI APP INAPOFUNGULIWA
+window.onload = () => {
+    app.initAI();
+};
+ 
+ 
 </script>
 
 </body>

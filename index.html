@@ -215,12 +215,12 @@
             <div id="chat-box" style="height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 14px;">
                 <div style="color:var(--p)"><b>AI:</b> Karibu! Naweza kukusaidia leo?</div>
             </div>
-            <div class="chat-input-wrapper">
+            <div class="chat-input-wrapper" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #eee; box-sizing: border-box; width: 100%;">
                 <button class="mic-btn" onclick="app.startMic()" style="flex-shrink: 0; background: #f0f0f0; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;">🎤</button>
                <input type="text" id="chat-input" 
            onkeypress="if(event.key === 'Enter') app.sendMsg()" 
            placeholder="Ongea au andika hapa..." 
-           style="flex: 1; padding: 12px 12px; border-radius: 25px; border: 1px solid #ddd; outline: none;">
+           style="flex: 1; min-width: 0; padding: 12px; border-radius: 25px; border: 1px solid #ddd; outline: none; box-sizing: border-box;">
                 <button class="send-btn" onclick="app.sendMsg()" style="flex-shrink: 0; background: var(--p, #2e7d32); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;">🚀</button>
                 
             </div>

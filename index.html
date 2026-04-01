@@ -872,7 +872,7 @@ sendMsg: function() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return alert("Browser yako haikubali Mic.");
 
-        const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognition();
         recognition.lang = 'sw-TZ';
         const micBtn = document.querySelector(".mic-btn");
         const chatInput = document.getElementById("chat-input");

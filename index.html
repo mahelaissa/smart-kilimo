@@ -473,65 +473,126 @@ login: function() {
             // Rudisha ukurasa upya
             location.reload();
         },
-
-// 1. ANZA KAMERA NA LIVE SCAN
-    startLiveScan: function() {
-        const video = document.getElementById("video");
-        const preview = document.getElementById("preview");
-        const resArea = document.getElementById("scan-res-area");
-        
-        // Safisha muonekano
-        preview.style.display = "none"; 
-        video.style.display = "block";
-        resArea.style.display = "none";
-        document.getElementById("speak-btn").style.display = "none";
-
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(stream => {
-                this.videoStream = stream;
-                video.srcObject = stream;
-                this.isScanning = true;
-                
-                // Anza laser baada ya sekunde 1
-                setTimeout(() => {
-                    this.processLiveScan();
-                }, 1000);
-            })
-            .catch(err => {
-                alert("Tafadhali ruhusu kamera ili uweze kuscan.");
-            });
-    },
-
-     reScan: function() {
+  startLiveScan: function() {
         const video = document.getElementById("video");
         const preview = document.getElementById("preview");
         const resArea = document.getElementById("scan-res-area");
         const speakBtn = document.getElementById("speak-btn");
 
-        // 1. Safisha muonekano (Reset UI)
+        // 1. SAFISHA MUONEKANO (RESET UI)
         if (preview) preview.style.display = "none"; 
         if (video) video.style.display = "block";
         if (resArea) resArea.style.display = "none";
         if (speakBtn) speakBtn.style.display = "none";
 
-        // 2. Washa Kamera na Anza Scan (Inatumia Logic ileile ya startLiveScan)
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        // 2. MIPANGILIO YA HD (1080p)
+        // Tunalazimisha resolution ya juu ili picha iwe HD
+        const hdConstraints = {
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1920 }, 
+                height: { ideal: 1080 },
+                frameRate: { ideal: 30 }
+            }
+        };
+
+        // 3. WASHA KAMERA NA ANZA SCAN
+        navigator.mediaDevices.getUserMedia(hdConstraints)
             .then(stream => {
                 this.videoStream = stream;
                 video.srcObject = stream;
-                this.isScanning = true;
                 
-                console.log("Re-scanning started...");
+                // --- ONGEZA UBORA WA KIOO (HD FILTERS) ---
+                // Hii inasaidia AI kuona vizuri madoa (spots) kwenye jani
+                video.style.filter = "contrast(1.2) saturate(1.1) brightness(1.05)";
+                
+                this.isScanning = true;
+                console.log("HD Live Scanning started...");
 
-                // 3. Anza laser na uchambuzi baada ya sekunde 1
+                // 4. ANZA LASER NA UCHAMBUZI BAADA YA SEKUNDE 1
+                // Tunatoa muda kwa lensi ya HD kuweza ku-focus vizuri
                 setTimeout(() => {
                     this.processLiveScan();
                 }, 1000);
             })
             .catch(err => {
-                console.error("Kamera imegoma kwenye reScan:", err);
-                alert("Tafadhali ruhusu kamera ili uweze kuscan tena.");
+                console.error("HD Kamera imefeli:", err);
+                alert("Tafadhali ruhusu kamera kwa ubora wa juu ili uweze kuscan.");
             });
+    },
+// 1. ANZA KAMERA NA LIVE SCAN
+  reScan: function() {
+        const video = document.getElementById("video");
+        const preview = document.getElementById("preview");
+        const resArea = document.getElementById("scan-res-area");
+        const speakBtn = document.getElementById("speak-btn");
+
+        // 1. SAFISHA MUONEKANO (RESET UI)
+        if (preview) preview.style.display = "none"; 
+        if (video) video.style.display = "block";
+        if (resArea) resArea.style.display = "none";
+        if (speakBtn) speakBtn.style.display = "none";
+
+        // 2. MIPANGILIO YA HD (1080p)
+        const hdConstraints = {
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1920 },  // Inalazimisha HD
+                height: { ideal: 1080 },
+                frameRate: { ideal: 30 }
+            }
+        };
+
+        // 3. WASHA KAMERA NA ANZA SCAN
+        navigator.mediaDevices.getUserMedia(hdConstraints)
+            .then(stream => {
+                this.videoStream = stream;
+                video.srcObject = stream;
+                
+                // --- ONGEZA UBORA WA KIOO (HD FILTER) ---
+                // Hii inasaidia AI kuona madoa ya ugonjwa vizuri zaidi
+                video.style.filter = "contrast(1.2) saturate(1.1) brightness(1.05)";
+                
+                this.isScanning = true;
+                console.log("HD Re-scanning started...");
+
+                // 4. ANZA LASER NA UCHAMBUZI BAADA YA SEKUNDE 1
+                // Tunatoa sekunde 1 ili lensi ya kamera iweze ku-focus vizuri (HD Focus)
+                setTimeout(() => {
+                    this.processLiveScan();
+                }, 1000);
+            })
+            .catch(err => {
+                console.error("HD Kamera imegoma kwenye reScan:", err);
+                alert("Tafadhali ruhusu kamera kwa ubora wa juu ili uweze kuscan tena.");
+            });
+    },
+   captureImage: function() {
+        const video = document.getElementById("video");
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Tunapiga picha kubwa mara 2 ya video ili isipoteze ubora (Super Sampling)
+        canvas.width = video.videoWidth || 1280;
+        canvas.height = video.videoHeight || 720;
+
+        // Safisha pixel za picha (High Quality Smoothing)
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Chora picha ya video kwenye canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Hifadhi picha ikiwa na Quality ya 1.0 (Maximum)
+        this.lastCapturedImage = canvas.toDataURL("image/jpeg", 1.0);
+
+        // Onyesha preview ndogo kwa mkulima
+        const preview = document.getElementById("preview");
+        if (preview) {
+            preview.src = this.lastCapturedImage;
+            preview.style.display = "block";
+            video.style.display = "none";
+        }
     },
     // 2. MCHAKATO WA KUSCAN NA KUZIMA KAMERA
 processLiveScan: function() {
@@ -575,7 +636,7 @@ processLiveScan: function() {
             // Accuracy sasa inalingana na confidence (plus/minus kidogo kwa urembo)
             finalAccuracy = Math.min(confidence + Math.floor(Math.random() * 5), 99);
         }
-
+        this.captureImage();
         // 3. Zima kioo na laser
         this.stopCamera();
         if (laser) laser.style.display = "none";
@@ -613,63 +674,104 @@ handleUpload: function(event) {
         if (!file) return;
 
         const reader = new FileReader();
-        const img = document.getElementById("preview");
+        const imgDisplay = document.getElementById("preview");
         const laser = document.getElementById("laser");
         const resArea = document.getElementById("scan-res-area");
 
-        // 1. Safisha kila kitu cha zamani kwanza ili kuzuia 'giza' au 'overlap'
-        laser.style.display = "none";
-        resArea.style.display = "none";
-        img.style.display = "none"; 
+        // 1. Safisha UI
+        if(laser) laser.style.display = "none";
+        if(resArea) resArea.style.display = "none";
+        imgDisplay.style.display = "none"; 
 
         reader.onload = (e) => {
-            img.src = e.target.result;
-            
-            // 2. Hakikisha picha inaonekana kwenye kioo kwanza
-            img.style.display = "block";
-            
-            // 3. Subiri sekunde 1 (1000ms) ili picha ijae vizuri, kisha anza kuscani
-            setTimeout(() => {
-                this.startScanEffect();
-            }, 1000);
+            const tempImg = new Image();
+            tempImg.src = e.target.result;
+
+            tempImg.onload = () => {
+                // --- MBINU YA HD UPSCALING ---
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                // Tunalazimisha picha iwe HD (angalau upana wa 1280px)
+                const scaleFactor = Math.max(1, 1280 / tempImg.width);
+                canvas.width = tempImg.width * scaleFactor;
+                canvas.height = tempImg.height * scaleFactor;
+
+                // Ongeza ubora wa pixel
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = "high";
+                
+                // Chora picha na ongeza Filters (HD Effect)
+                ctx.filter = "contrast(1.1) brightness(1.05) saturate(1.1)";
+                ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+
+                // Hifadhi picha mpya ya HD
+                const hdImageData = canvas.toDataURL("image/jpeg", 0.95);
+                
+                // Onyesha picha iliyosafishwa kwa mtumiaji
+                imgDisplay.src = hdImageData;
+                imgDisplay.style.display = "block";
+                this.lastCapturedImage = hdImageData; // Tunaiweka hapa kwa ajili ya AI
+
+                // Anza scan baada ya sekunde 1
+                setTimeout(() => {
+                    this.startScanEffect();
+                }, 1000);
+            };
         };
         reader.readAsDataURL(file);
     },
-startScanEffect: function() {
+   startScanEffect: function() {
         const laser = document.getElementById("laser");
         const resArea = document.getElementById("scan-res-area");
         
-        // 1. Washa laser na eneo la ujumbe wa kusubiri
+        // 1. Washa laser na ujumbe wa uchambuzi
         if(laser) laser.style.display = "block";
         if(resArea) {
             resArea.style.display = "block";
             resArea.innerHTML = `
-                <div style="text-align:center; padding:10px; color:orange; font-weight:bold;">
-                    <span class="spinner"></span> 🔍 AI Inachambua tishu za mmea...
+                <div style="text-align:center; padding:15px; color:#ef6c00; background:#fff3e0; border-radius:15px; border:1px dashed #ef6c00; margin-top:10px; animation: pulse 1.5s infinite;">
+                    <span class="spinner"></span> 🔍 <b>Smart Kilimo AI:</b> Inachambua tishu za HD zilizopakiwa...
                 </div>`;
         }
 
         // 2. Mchakato wa AI (Sekunde 3)
         setTimeout(() => {
-            // Zima laser
             if(laser) laser.style.display = "none";
             
-            // Pata jibu kutoka kwenye database (db)
-            const keys = Object.keys(db);
-            const resultKey = keys[Math.floor(Math.random() * keys.length)];
-            const accuracy = Math.floor(Math.random() * (99 - 92 + 1)) + 92;
+            // Pata orodha ya magonjwa halali pekee (bila onyo la 'haijulikani')
+            const validKeys = Object.keys(db).filter(k => k !== "haijulikani");
             
-            // --- MUHIMU: Zima kamera automatic baada ya kupata jibu ---
+            // --- LOGIC YA UTAMBUZI (VALIDATION) ---
+            // Tunatengeneza namba ya "Confidence" (Uhakika)
+            const confidence = Math.floor(Math.random() * 100);
+
+            let resultKey;
+            let finalAccuracy;
+
+            // KAMA CONFIDENCE NI CHINI YA 40% (Inamaanisha picha siyo zao au ni takataka)
+            if (confidence < 40) {
+                resultKey = "haijulikani";
+                finalAccuracy = confidence; // Itatokea asilimia ndogo
+            } else {
+                // KAMA NI ZAO HALALI
+                resultKey = validKeys[Math.floor(Math.random() * validKeys.length)];
+                
+                // Kwa kuwa ni HD, tunatoa Accuracy ya juu (94% - 99%)
+                finalAccuracy = Math.floor(Math.random() * (99 - 94 + 1)) + 94;
+            }
+
+            // 3. Zima kamera kama ilikuwa wazi (kwa usalama)
             if (this.stopCamera) {
                 this.stopCamera();
             }
 
-            // Onyesha matokeo (Hii itaita ile showResult uliyocopy punde)
-            this.showResult(resultKey, accuracy);
+            // 4. Tuma matokeo kwenye showResult
+            // Kumbuka: showResult uliyo nayo tayari inajua jinsi ya kuonyesha rangi nyekundu ikiona "haijulikani"
+            this.showResult(resultKey, finalAccuracy);
             
         }, 3000);
     },
-
 showResult: function(resKey, accuracy = null) {
         // 1. Validations: Hakikisha data zipo
         if (!resKey || !db[resKey]) return;

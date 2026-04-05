@@ -1,25 +1,26 @@
-const cacheName = 'smart-kilimo-v12'; // Nimeongeza version ili browser isome upya
+const cacheName = 'smart-kilimo-v13'; 
 const assets = [
   './',
   './index.html',
   './tf.min.js',
   './teachablemachine-image.min.js',
-  './html2pdf.bundle.min.js',
-  './manifest.json',
   './model/model.json',
   './model/metadata.json',
   './model/weights.bin'
 ];
 
-// Install Service Worker
+// 1. INSTALL: Inahifadhi files zote muhimu (Pre-caching)
 self.addEventListener('install', evt => {
   evt.waitUntil(
     caches.open(cacheName).then(cache => {
-      console.log('Inahifadhi faili (Caching assets)...');
-      // Kutumia Promise.all na map hapa inasaidia kama faili moja ikikosekana nyingine ziendelee
+      console.log('Inahifadhi faili za Kilimo (Caching assets)...');
       return Promise.all(
         assets.map(asset => {
-          return cache.add(asset).catch(err => console.error("Imeshindwa kuhifadhi:", asset, err));
+          // fetch() inahakikisha tunapata file kabla ya ku-add ili kuzuia error
+          return fetch(asset).then(response => {
+            if (!response.ok) throw new Error(`File halipo: ${asset}`);
+            return cache.put(asset, response);
+          }).catch(err => console.error("Imeshindwa kuhifadhi file hili:", asset, err));
         })
       );
     })
@@ -27,7 +28,7 @@ self.addEventListener('install', evt => {
   self.skipWaiting();
 });
 
-// Activate Event - Futa cache za zamani
+// 2. ACTIVATE: Inafuta version za zamani ili kupata kodi mpya
 self.addEventListener('activate', evt => {
   evt.waitUntil(
     caches.keys().then(keys => {
@@ -37,15 +38,25 @@ self.addEventListener('activate', evt => {
       );
     })
   );
+  return self.clients.claim(); // Inachukua control ya page haraka
 });
 
-// Fetch Event - Inasoma kutoka kwenye Cache hata kama hakuna Internet
+// 3. FETCH: Siri ya kufanya kazi Offline
 self.addEventListener('fetch', evt => {
+  // Hatupendi ku-cache maombi ya nje (kama analytics) au POST requests
+  if (evt.request.method !== 'GET') return;
+
   evt.respondWith(
     caches.match(evt.request).then(cacheRes => {
-      // Kama faili lipo kwenye cache, rudi nalo. Kama halipo, nenda mtandaoni (fetch)
-      return cacheRes || fetch(evt.request).catch(() => {
-        // Kama mtandao umekatika na anatafuta ukurasa wa HTML, mrudishe index.html
+      // Kama lipo kwenye cache, tumia hicho. Kama hakuna, nenda Internet.
+      return cacheRes || fetch(evt.request).then(fetchRes => {
+        return caches.open(cacheName).then(cache => {
+          // Hiari: Unaweza ku-cache files mpya zinazopatikana njiani
+          // cache.put(evt.request.url, fetchRes.clone()); 
+          return fetchRes;
+        });
+      }).catch(() => {
+        // Ikiwa mtandao umekatika na file halipo cache
         if (evt.request.url.indexOf('.html') > -1) {
           return caches.match('./index.html'); 
         }

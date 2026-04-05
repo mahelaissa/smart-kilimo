@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Kilimo </title>
- <link rel="manifest" href="manifest.json">
+     <link rel="manifest" href="manifest.json">
     <script src="tf.min.js"></script>
-
-    <script src="teachablemachine-image.min.js"></script>
-
-    
- <script src="app.js"></script>
+     <script src="teachablemachine-image.min.js"></script>
+ 
     <style>
         :root { 
             --p: #2e7d32; --s: #1b5e20; --a: #fbc02d; --bg: #f4f7f4; 
@@ -1429,7 +1426,13 @@ window.onload = () => {
     app.initAI();
 };
  
- 
+ if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Smart Kilimo sasa inafanya kazi Offline!', reg))
+                .catch(err => console.log('Service Worker imegoma:', err));
+        });
+    }
 </script>
 
 </body>

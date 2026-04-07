@@ -1062,6 +1062,20 @@ showResult: function(resKey, accuracy = null) {
             this.speak(box.innerText);
         },
 
+     startVoiceChat: function() {
+        // Angalia kama kuna internet
+        if (!navigator.onLine) {
+            alert("Samahani, utambuzi wa sauti (Mic) unahitaji internet. Tafadhali andika ujumbe wako kwa mkono.");
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        // ... (Kodi yako ya mic iendelee hapa)
+        this.currentLang = chatLang;
+            this.speak(reply);
+
+    }
+
         // CHAT ENGINE
      // Function ya Chat Box (Hakikisha haichukui lastScanResult kimakosa)
   // 2. KUTUMA UJUMBE (Manual na Automatic)

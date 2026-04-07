@@ -1062,20 +1062,7 @@ showResult: function(resKey, accuracy = null) {
             this.speak(box.innerText);
         },
 
-     startVoiceChat: function() {
-        // Angalia kama kuna internet
-        if (!navigator.onLine) {
-            alert("Samahani, utambuzi wa sauti (Mic) unahitaji internet. Tafadhali andika ujumbe wako kwa mkono.");
-            return;
-        }
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        // ... (Kodi yako ya mic iendelee hapa)
-        this.currentLang = chatLang;
-            this.speak(reply);
-
-    }
-
+    
         // CHAT ENGINE
      // Function ya Chat Box (Hakikisha haichukui lastScanResult kimakosa)
   // 2. KUTUMA UJUMBE (Manual na Automatic)
@@ -1301,20 +1288,48 @@ sendMsg: function() {
         }
     },
       // 1. MAIKROFONI (Inatuma Automatic)
-    startMic: function() {
+   startMic: function() {
+        // --- 1. Ulinzi wa Offline ---
+        if (!navigator.onLine) {
+            alert("Samahani, Mic inahitaji Internet ili kutafsiri sauti ya Kiswahili.");
+            return;
+        }
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return alert("Browser yako haikubali Mic.");
 
-    const recognition = new SpeechRecognition();
+        const recognition = new SpeechRecognition();
         recognition.lang = 'sw-TZ';
         const micBtn = document.querySelector(".mic-btn");
         const chatInput = document.getElementById("chat-input");
 
         recognition.onstart = () => {
             micBtn.innerHTML = "🔴";
-            micBtn.style.color = "red";
+            micBtn.style.background = "#fff0f0"; // Ongeza urembo kidogo
         };
 
+        // --- 2. Shughulikia Error za Offline ---
+        recognition.onerror = (event) => {
+            console.error("Mic Error: ", event.error);
+            if (event.error === 'network') {
+                alert("Internet imekata! Mic imeshindwa kufanya kazi.");
+            }
+            this.stopMicUI(); // Function ya kurudisha muonekano wa kawaida
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            this.handleChat(transcript); // Tuma ujumbe moja kwa moja
+        };
+
+        recognition.onend = () => {
+            micBtn.innerHTML = "🎤"; // Rudisha icon ya kawaida
+            micBtn.style.color = "";
+        };
+
+        recognition.start();
+    },
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
             chatInput.value = transcript; // Inaweka maneno kwenye box

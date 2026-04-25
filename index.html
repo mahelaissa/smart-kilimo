@@ -2,6 +2,7 @@
 <html lang="sw"> 
 <head>
     <meta charset="UTF-8">
+ <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; object-src 'self';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Smart Kilimo </title>
      <link rel="manifest" href="manifest.json">
@@ -71,6 +72,7 @@
     width: 100%; 
     /* Padding ya ndani imepunguzwa kidogo */
     padding: 12px 15px; 
+ 
     border-radius: 12px; 
     border: 2px solid #f0f0f0; 
     margin-bottom: 15px; 
@@ -180,7 +182,7 @@
         <div class="login-plant">🌱</div>
         <h2 style="color: var(--p); margin-top: 0;">Smart Kilimo AI</h2>
         <p style="color: #666; font-size: 14px;">Karibu, ingiza jina kuanza safari yako.</p>
-        <input type="text" id="username" placeholder="Jina lako hapa...">
+        <input type="text" id="username" autocomplete="name" placeholder="Jina lako hapa...">
       <button onclick="app.login()" class="btn-main" style="background: var(--p);">INGIA SASA</button>
     </div>
 </div>
@@ -1334,7 +1336,7 @@ sendMsg: function() {
             }, 600); // Inasubiri nusu sekunde kisha inatuma
         };
 
-        recognition.onend = () => {
+         recognition.onend = () => {
             micBtn.innerHTML = "🎤";
             micBtn.style.color = "";
         };

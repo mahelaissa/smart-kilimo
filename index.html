@@ -1324,8 +1324,8 @@ sendMsg: function() {
             micBtn.style.color = "";
         };
 
-        recognition.start();
-    },
+       recognition.start();
+    }
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
             chatInput.value = transcript; // Inaweka maneno kwenye box

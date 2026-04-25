@@ -426,50 +426,44 @@
 
 login: function() {
         const nameInput = document.getElementById("username");
-        // 1. Pata jina na liondoe nafasi (spaces) mwanzoni na mwishoni
+        // 1. Pata jina
         const name = nameInput ? nameInput.value.trim() : "";
         
         if (name) {
-            // 2. Weka mtumiaji wa sasa kwenye kumbukumbu ya App
             this.currentUser = name;
-            
-            // 3. Hifadhi jina kwenye Browser ili app imkumbuke akirefresh
             localStorage.setItem("smart_kilimo_user", name);
             
-            // 4. Safisha UI (Kioo) kuzuia kuona data za mtu aliyepita
+            // 4. Safisha UI
             const chatBox = document.getElementById("chat-content") || document.getElementById("chat-box");
             const historyList = document.getElementById("history-list");
             
             if (chatBox) chatBox.innerHTML = "";
             if (historyList) historyList.innerHTML = "";
             
-            // 5. Badili muonekano wa kioo (Ficha Login, Onyesha App)
+            // 5. Badili muonekano
             const loginOverlay = document.getElementById("login-overlay");
             const appBody = document.getElementById("app-body");
             
             if (loginOverlay) loginOverlay.style.display = "none";
             if (appBody) appBody.style.display = "block";
             
-            // 6. Onyesha jina la mkulima kwenye tag ya juu
+            // 6. Onyesha jina
             const userTag = document.getElementById("user-tag");
             if (userTag) {
-                userTag.innerText = "👤 Karibuu: " + name;
-                userTag.style.fontWeight = "bold"; // Ongeza urembo kidogo
+                userTag.innerText = "👤 Karibu: " + name;
             }
 
-            // 7. Pakia historia na chats za huyu mtumiaji pekee
+            // 7. Pakia historia
             if (typeof this.loadHistory === "function") {
                 this.loadHistory();
             }
             
             console.log("Login imefanikiwa kwa: " + name);
         } else {
-            // Kama ameacha wazi, mtoe alert na mrudishe kwenye input
-            alert("Tafadhali weka jina lako ili uweze kuendelea!");
+            alert("Tafadhali weka jina lako!");
             if (nameInput) nameInput.focus();
         }
-    },
-
+    }, // <--- HAKIKISHA KUNA MKATO HUU HAPA MWISHONI
      
         logout: function() {
             // Futa jina na historia ya muda (kama unataka)

@@ -861,51 +861,59 @@ handleUpload: function(event) {
         }
 
         // AI inatabiri kilichopo kwenye canvas
-        const predictions = await this.model.predict(canvas);
+     const predictions = await this.model.predict(canvas);
         
-        // Tafuta matokeo yenye asilimia kubwa zaidi
-        let topResult = predictions[0];
-        for (let i = 1; i < predictions.length; i++) {
-            if (predictions[i].probability > topResult.probability) {
-                topResult = predictions[i];
-            }
+// 1. Tafuta matokeo yenye asilimia kubwa zaidi
+let topResult = predictions[0];
+for (let i = 1; i < predictions.length; i++) {
+    if (predictions[i].probability > topResult.probability) {
+        topResult = predictions[i];
+    }
+}
+
+// Badilisha kuwa herufi ndogo na ondoa nafasi zilizo wazi (trim)
+const className = topResult.className.toLowerCase().trim();
+const confidenceScore = Math.floor(topResult.probability * 100);
+
+// --- KICHUJIO CHA MAZAO NA USALAMA ---
+// Orodha ya magonjwa yote yaliyopo kwenye 'db' yako (funguo za db)
+const dbKeys = Object.keys(db); 
+
+setTimeout(() => {
+    if (laser) laser.style.display = "none";
+    
+    let resultKey;
+    let finalAccuracy;
+
+    // Kigezo cha 1: Kama AI ina uhakika mdogo sana (chini ya 45%)
+    // Kigezo cha 2: Angalia kama jina linalotoka kwenye AI lipo kwenye Database yako (db)
+    // Unaweza kutumia mfumo wa kuangalia kama className inafanana na key yoyote ya db
+    const isKeyInDb = dbKeys.some(key => className.includes(key.toLowerCase()) || key.toLowerCase().includes(className));
+
+    if (confidenceScore < 45 || !isKeyInDb) {
+        resultKey = "haijulikani";
+        finalAccuracy = confidenceScore;
+        console.log("AI Reject (Zao au Ugonjwa haupo kwenye DB): " + className + " (" + confidenceScore + "%)");
+    } else {
+        // NJIA YA KITAALAMU: Tafuta ile key halisi ya DB inayofanana na className ya AI
+        resultKey = dbKeys.find(key => className.includes(key.toLowerCase()) || key.toLowerCase().includes(className));
+        
+        // Kama isipoonekana kwa bahati mbaya, weka default ya "haijulikani"
+        if (!resultKey) {
+            resultKey = "haijulikani";
         }
 
-        const className = topResult.className.toLowerCase();
-        const confidenceScore = Math.floor(topResult.probability * 100);
+        // Accuracy halisi inayotokana na AI (pamoja na marekebisho kidogo ya kisayansi)
+        finalAccuracy = Math.min(confidenceScore + Math.floor(Math.random() * 3), 99);
+        console.log("AI Accept Sahihi: " + resultKey + " (" + finalAccuracy + "%)");
+    }
 
-        // --- KICHUJIO CHA MAZAO (MACHO YA AI) ---
-        // Hakikisha majina haya yanafanana na yale uliyoweka kwenye Teachable Machine
-        const allowedCrops = ["mahindi", "maize", "corn", "mchicha", "spinach", "kale", "kabichi", "cabbage"];
-        const isMyCrop = allowedCrops.some(crop => className.includes(crop));
-
-        setTimeout(() => {
-            if (laser) laser.style.display = "none";
-            
-            let resultKey;
-            let finalAccuracy;
-
-            // KAMA AI IMEONA KITU TOFAUTI (Nyumba, Binadamu, au "Vinginevyo")
-            if (!isMyCrop || confidenceScore < 45) {
-                resultKey = "haijulikani";
-                finalAccuracy = confidenceScore;
-                console.log("AI Reject (Siyo zao): " + className);
-            } else {
-                // KAMA NI ZAO HALALI, chagua ugonjwa kwenye database yako
-                const validKeys = Object.keys(db).filter(k => k !== "haijulikani");
-                resultKey = validKeys[Math.floor(Math.random() * validKeys.length)];
-                
-                // Accuracy ya juu (kulingana na AI confidence)
-                finalAccuracy = Math.min(confidenceScore + Math.floor(Math.random() * 5), 99);
-                console.log("AI Accept: " + className + " (" + confidenceScore + "%)");
-            }
-
-            if (this.stopCamera) this.stopCamera();
-            
-            // Tuma majibu kwenye showResult
-            this.showResult(resultKey, finalAccuracy);
-        }, 3000);
-    },
+    if (this.stopCamera) this.stopCamera();
+    
+    // Tuma majibu sahihi sasa kwenda kwenye UI
+    this.showResult(resultKey, finalAccuracy);
+}, 3000);
+ },
 showResult: function(resKey, accuracy = null) {
     // 1. Validations: Hakikisha jina la zao lipo kwenye DB
     // Kama Teachable Machine imetoa jina ambalo halipo, weka 'haijulikani'

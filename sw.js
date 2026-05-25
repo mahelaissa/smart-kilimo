@@ -1,4 +1,4 @@
-const cacheName = 'smart-kilimo-v14'; 
+const cacheName = 'smart-kilimo-v15'; 
 const assets = [
   './',
   './index.html',
